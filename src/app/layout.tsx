@@ -1,18 +1,18 @@
+// src/app/layout.tsx
 import "./globals.css";
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+import LandingHeader from "@/components/layout/landing/Header";
+import LandingFooter from "@/components/layout/landing/Footer";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className="min-h-screen flex flex-col bg-[#f5f7f8] text-gray-800">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <LandingHeader />
+        <main className="flex-1">
+          {children}
+        </main>
+        <LandingFooter />
       </body>
     </html>
   );
