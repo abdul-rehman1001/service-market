@@ -15,7 +15,7 @@ export default function LoginPage() {
           <PasswordInput placeholder="Password" />
         </div>
 
-        <Link href="/(auth)/forgot-password" className="block mt-2 text-right text-sm text-blue-500 hover:underline">
+        <Link href="/forgot-password" className="block mt-2 text-right text-sm text-blue-500 hover:underline">
           Forgot password?
         </Link>
 
@@ -25,7 +25,7 @@ export default function LoginPage() {
 
         <p className="text-center mt-4 text-sm text-gray-600">
           Dont have an account?{" "}
-          <Link href="/(auth)/register" className="text-blue-600 font-medium">
+          <Link href="/register" className="text-blue-600 font-medium">
             Sign Up
           </Link>
         </p>

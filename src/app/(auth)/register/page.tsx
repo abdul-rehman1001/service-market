@@ -10,14 +10,14 @@ export default function RegisterChooseRole() {
 
         <div className="flex gap-4 mt-6">
           <RoleCard
-            href="/(auth)/register/seeker"
+            href="/register/seeker"
             title="Service Seeker"
             description="Find professionals for your task."
             icon="🔍"
           />
 
           <RoleCard
-            href="/(auth)/register/provider"
+            href="/register/provider"
             title="Service Provider"
             description="Offer your skills and services."
             icon="🧰"
