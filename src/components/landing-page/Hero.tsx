@@ -12,11 +12,15 @@ export default function Hero() {
       </p>
 
       <div className="flex justify-center gap-4 mt-8">
-        <Button className="bg-blue-600 text-white hover:bg-blue-700">
+        <Button
+        href="/register/seeker"
+         className="bg-blue-600 text-white hover:bg-blue-700">
           Find a Service
         </Button>
 
-        <Button className="bg-emerald-600 text-white hover:bg-emerald-700">
+        <Button 
+         href="/register/provider"
+        className="bg-emerald-600 text-white hover:bg-emerald-700">
           Offer a Service
         </Button>
       </div>

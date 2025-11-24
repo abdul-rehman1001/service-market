@@ -15,11 +15,15 @@ export default function CTA() {
         </p>
 
         <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
-          <Button className="bg-blue-600 text-white hover:bg-blue-700 w-full sm:w-auto">
+          <Button 
+           href="/register/seeker"
+          className="bg-blue-600 text-white hover:bg-blue-700 w-full sm:w-auto">
             Find a Service Now
           </Button>
 
-          <Button className="bg-emerald-600 text-white hover:bg-emerald-700 w-full sm:w-auto">
+          <Button 
+           href="/register/provider"
+          className="bg-emerald-600 text-white hover:bg-emerald-700 w-full sm:w-auto">
             Become a Provider
           </Button>
         </div>

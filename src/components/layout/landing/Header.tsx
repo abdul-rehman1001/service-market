@@ -25,7 +25,7 @@ export default function LandingHeader() {
 
           {/* Sign Up Button (white text ensured) */}
           <Button
-            href="/signup"
+            href="/register"
             className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition !text-white"
           >
             Sign Up
