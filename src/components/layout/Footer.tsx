@@ -1,25 +1,60 @@
-"use client";
+// app/components/layout/Footer.tsx
 
 export default function Footer() {
   return (
-    <footer className="bg-[#f5f7f8] border-t mt-16 py-10">
-      <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-        {/* Logo / Brand */}
-        <div className="text-blue-600 font-bold text-lg md:text-xl">ServiceApp</div>
+    <footer className="bg-gray-900 text-gray-300 py-10 mt-16">
+      <div className="max-w-7xl mx-auto px-4">
+        
+        {/* Top Sections */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+          
+          {/* Brand */}
+          <div>
+            <h2 className="text-white text-xl font-semibold">ServiceMarket</h2>
+            <p className="mt-3 text-sm text-gray-400">
+              Find trusted service providers for your daily needs.
+            </p>
+          </div>
 
-        {/* Navigation Links */}
-        <div className="flex flex-wrap justify-center gap-6 text-gray-600">
-          <a href="#" className="hover:text-blue-600 transition-colors">About Us</a>
-          <a href="#" className="hover:text-blue-600 transition-colors">Contact</a>
-          <a href="#" className="hover:text-blue-600 transition-colors">FAQ</a>
-          <a href="#" className="hover:text-blue-600 transition-colors">Terms of Service</a>
-          <a href="#" className="hover:text-blue-600 transition-colors">Privacy Policy</a>
+          {/* Categories */}
+          <div>
+            <h3 className="text-white font-medium mb-3">Categories</h3>
+            <ul className="space-y-2 text-sm">
+              <li>Home Cleaning</li>
+              <li>Plumbing</li>
+              <li>Shifting Service</li>
+              <li>Electrician</li>
+              <li>Painting</li>
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div>
+            <h3 className="text-white font-medium mb-3">Company</h3>
+            <ul className="space-y-2 text-sm">
+              <li>About Us</li>
+              <li>Contact</li>
+              <li>Privacy Policy</li>
+              <li>Terms & Conditions</li>
+            </ul>
+          </div>
+
+          {/* Support */}
+          <div>
+            <h3 className="text-white font-medium mb-3">Support</h3>
+            <ul className="space-y-2 text-sm">
+              <li>Help Center</li>
+              <li>FAQs</li>
+              <li>Report a Problem</li>
+            </ul>
+          </div>
         </div>
 
-        {/* Copyright */}
-        <p className="text-gray-500 text-sm mt-4 md:mt-0 text-center md:text-left">
-          © {new Date().getFullYear()} ServiceApp. All rights reserved.
-        </p>
+        {/* Bottom Section */}
+        <div className="border-t border-gray-700 mt-10 pt-5 text-center text-sm text-gray-500">
+          © {new Date().getFullYear()} ServiceMarket — All rights reserved.
+        </div>
+
       </div>
     </footer>
   );
