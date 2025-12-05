@@ -1,24 +1,88 @@
-import AuthCard from "@/components/auth/AuthCard";
-import Input from "@/components/auth/Input";
-import PasswordInput from "@/components/auth/PasswordInput";
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import AuthCard from '@/components/auth/AuthCard';
+import Input from '@/components/auth/Input';
+import PasswordInput from '@/components/auth/PasswordInput';
 
 export default function RegisterProvider() {
+  const router = useRouter();
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+  });
+  const [error, setError] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    // Send registration request
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        role: 'PROVIDER', // fixed role
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || 'Something went wrong');
+      return;
+    }
+
+    router.push('/dashboard'); // redirect after successful registration
+  };
+
   return (
     <div className="min-h-screen flex justify-center items-center bg-[#f5f7f8]">
       <AuthCard>
         <h2 className="text-3xl font-bold text-center">Service Provider</h2>
         <p className="text-center mt-1 text-gray-500">Offer your services</p>
 
-        <div className="mt-6 space-y-4">
-          <Input placeholder="Full Name" />
-          <Input placeholder="Email Address" />
-          <Input placeholder="Your Skill (e.g., Plumber, Designer)" />
-          <PasswordInput placeholder="Password" />
-        </div>
+        {error && <p className="text-red-500 text-center mt-2">{error}</p>}
 
-        <button className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl transition">
-          Create Account
-        </button>
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          <Input
+            placeholder="Full Name"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            required
+          />
+          <Input
+            placeholder="Email Address"
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
+          <PasswordInput
+            placeholder="Password"
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
+
+          <button
+            type="submit"
+            className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl transition"
+          >
+            Create Account
+          </button>
+        </form>
       </AuthCard>
     </div>
   );
