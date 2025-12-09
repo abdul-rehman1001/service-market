@@ -51,6 +51,15 @@ export default function SearchSection() {
 
       const data = await response.json();
       setResult(data);
+
+      // Dispatch a global event so other components (categories, providers) can filter
+      try {
+        window.dispatchEvent(new CustomEvent('filterProviders', {
+          detail: { category: data.category ?? null, subcategory: data.subcategory ?? null }
+        }));
+      } catch (e) {
+        // ignore (server-side render or restricted env)
+      }
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {
@@ -209,7 +218,16 @@ export default function SearchSection() {
                       </div>
                     </div>
 
-                    <button className="w-full px-4 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => {
+                        try {
+                          window.dispatchEvent(new CustomEvent('filterProviders', {
+                            detail: { category: result.category ?? null, subcategory: result.subcategory ?? null }
+                          }));
+                        } catch (e) {}
+                      }}
+                      className="w-full px-4 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition flex items-center justify-center gap-2"
+                    >
                       Find {formatCategoryName(result.category)}s Near You
                       <ArrowRight className="w-4 h-4" />
                     </button>
@@ -227,6 +245,13 @@ export default function SearchSection() {
                     {result.allMatches.slice(1, 4).map((match, idx) => (
                       <div 
                         key={idx}
+                        onClick={() => {
+                          try {
+                            window.dispatchEvent(new CustomEvent('filterProviders', {
+                              detail: { category: match.category ?? null, subcategory: match.subcategory ?? null }
+                            }));
+                          } catch (e) {}
+                        }}
                         className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-emerald-300 transition cursor-pointer"
                       >
                         <div className="flex items-center gap-3">

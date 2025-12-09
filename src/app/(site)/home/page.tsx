@@ -5,7 +5,7 @@ import Footer from "@/components/layout/Footer";
 
 export default function HomePage() {
   return (
-    <div>
+    <div className="bg-[#f5f7f8] min-h-screen">
       <SearchSection />
       <Categories />
       <FeaturedProviders />
