@@ -174,7 +174,7 @@ export default function FeaturedProviders() {
   };
 
   return (
-    <section id="featured-providers" className="w-full py-12 bg-white scroll-mt-20">
+    <section id="featured-providers" className="w-full py-12 bg-[#f5f7f8] scroll-mt-20">
       <div className="max-w-7xl mx-auto px-6">
 
         {/* Header with Filter Info */}

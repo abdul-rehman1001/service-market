@@ -19,7 +19,7 @@ export default function Footer() {
 
           {/* Brand */}
           <div>
-            <h2 className="text-white text-2xl font-bold">ServiceMarket</h2>
+            <h2 className="text-white text-2xl font-bold">Servizo</h2>
             <p className="mt-3 text-gray-400 text-sm">
               Find trusted service providers for your daily needs.
             </p>
@@ -49,7 +49,7 @@ export default function Footer() {
               <li>Plumbing</li>
               <li>Shifting Service</li>
               <li>Electrician</li>
-              <li>Painting</li>
+             
             </ul>
           </div>
 
@@ -76,7 +76,7 @@ export default function Footer() {
             {/* Contact Info */}
             <div className="mt-4 space-y-1 text-sm text-gray-400">
               <p className="flex items-center gap-2">
-                <FaEnvelope className="w-4 h-4" /> support@servicemarket.com
+                <FaEnvelope className="w-4 h-4" /> support@servizo.com
               </p>
               <p className="flex items-center gap-2">
                 <FaPhoneAlt className="w-4 h-4" /> +1 234 567 890
@@ -87,7 +87,7 @@ export default function Footer() {
 
         {/* Bottom Section */}
         <div className="border-t border-gray-700 mt-10 pt-5 text-center text-sm text-gray-500">
-          © {new Date().getFullYear()} ServiceMarket — All rights reserved.
+          © {new Date().getFullYear()} Servizo — All rights reserved.
         </div>
       </div>
     </footer>

@@ -8,7 +8,7 @@ export default function Header() {
   const pathname = usePathname();
 
   const navItems = [
-    { label: "Dashboard", href: "/home" },
+    { label: "Home", href: "/home" },
     { label: "My Bookings", href: "/bookings" },
     { label: "Messages", href: "/messages" },
   ];
