@@ -131,19 +131,16 @@ export default function FeaturedProviders() {
   }>({ category: null, subcategory: null });
 
   useEffect(() => {
-    // Listen for AI search results
     const handleFilterProviders = (event: any) => {
       const { category, subcategory } = event.detail;
       setActiveFilter({ category, subcategory });
 
-      // Filter providers based on category and subcategory
       const filtered = allProviders.filter(
         (provider) =>
           provider.category === category &&
           provider.subcategory === subcategory
       );
 
-      // If no exact match, show all providers in that category
       if (filtered.length === 0) {
         const categoryFiltered = allProviders.filter(
           (provider) => provider.category === category
@@ -163,24 +160,18 @@ export default function FeaturedProviders() {
     setFilteredProviders(allProviders);
   };
 
-  const formatCategoryName = (name: string) => {
-    return name.charAt(0).toUpperCase() + name.slice(1);
-  };
-
-  const formatSubcategoryName = (name: string) => {
-    return name.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-  };
+  const formatCategoryName = (name: string) => name.charAt(0).toUpperCase() + name.slice(1);
+  const formatSubcategoryName = (name: string) =>
+    name.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
   return (
     <section id="featured-providers" className="w-full py-12 bg-[#f5f7f8] scroll-mt-20">
       <div className="max-w-7xl mx-auto px-6">
 
-        {/* Header with Filter Info */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-semibold">Featured Providers</h2>
+            <h2 className="text-2xl md:text-3xl font-semibold">Featured Providers</h2>
             {activeFilter.category && (
               <p className="text-sm text-gray-600 mt-1">
                 Showing results for {formatCategoryName(activeFilter.category)}
@@ -217,56 +208,57 @@ export default function FeaturedProviders() {
 
         {/* Providers Grid */}
         {filteredProviders.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {filteredProviders.map((provider) => (
               <div
                 key={provider.id}
-                className={`border rounded-2xl bg-white p-6 shadow-sm hover:shadow-md transition ${
-                  activeFilter.subcategory === provider.subcategory
-                    ? 'ring-2 ring-emerald-500 border-emerald-500'
-                    : ''
-                }`}
+                className={`group relative flex flex-col justify-between bg-white p-6 rounded-2xl shadow-md transition-transform duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02]`}
               >
-                {/* Best Match Badge */}
-                {activeFilter.subcategory === provider.subcategory && (
-                  <div className="mb-3 px-3 py-1 bg-emerald-600 text-white text-xs font-semibold rounded-full inline-block">
-                    Best Match
+                {/* Top row: avatar + name/role */}
+                <div className="flex items-start gap-4">
+                  <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 ring-1 ring-gray-100">
+                    <Image
+                      src={provider.avatar}
+                      alt={provider.name}
+                      width={64}
+                      height={64}
+                      className="object-cover w-full h-full"
+                    />
                   </div>
-                )}
 
-                {/* Avatar */}
-                <div className="w-14 h-14 rounded-full overflow-hidden mb-4 bg-gray-200">
-                  <Image
-                    src={provider.avatar}
-                    alt={provider.name}
-                    width={56}
-                    height={56}
-                    className="object-cover"
-                  />
-                </div>
-
-                {/* Name + Role */}
-                <h3 className="text-lg font-semibold">{provider.name}</h3>
-                <p className="text-sm text-gray-500">{provider.role}</p>
-
-                {/* Rating */}
-                <div className="flex items-center gap-1 mt-2">
-                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                  <span className="font-semibold">{provider.rating}</span>
-                  <span className="text-gray-500 text-sm">
-                    ({provider.reviews} reviews)
-                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                       
+                        <h3 className="text-md md:text-lg font-semibold text-gray-900 truncate">{provider.name}</h3>
+                      </div>
+                      <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-full text-sm text-gray-700">
+                        <Star className="w-4 h-4 text-yellow-400" />
+                        <span className="font-medium">{provider.rating}</span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-500 truncate mt-0.5">{provider.role}</p>
+                  </div>
                 </div>
 
                 {/* Description */}
-                <p className="text-gray-600 text-sm mt-3 leading-relaxed">
+                <p className="text-gray-600 text-sm mt-4 leading-relaxed max-h-[4.8rem] overflow-hidden">
                   {provider.description}
                 </p>
 
-                {/* Button */}
-                <button className="w-full mt-5 py-2 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition">
-                  View Profile
-                </button>
+                {/* Footer: reviews + button */}
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <span className="text-xs text-gray-500">
+                    ({provider.reviews} reviews)
+                  </span>
+
+                  <button
+                    className="ml-auto px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium text-sm hover:bg-emerald-700 transition-colors"
+                    aria-label={`View profile of ${provider.name}`}
+                  >
+                    View Profile
+                  </button>
+                </div>
               </div>
             ))}
           </div>
