@@ -42,13 +42,13 @@ export default function HowItWorks() {
     {
       icon: <FaBell className="text-white text-2xl" />,
       title: "Receive Leads",
-      desc: "Get notified about new job opportunities that match your expertise.",
+      desc: "Get alerts when clients need your service, fast and easy.",
       color: "bg-pink-500",
     },
     {
       icon: <FaMoneyBill className="text-white text-2xl" />,
       title: "Get Hired & Paid",
-      desc: "Connect with clients, complete the work, and get paid securely.",
+      desc: "Accept the job and begin working on the assigned tasks.",
       color: "bg-pink-500",
     },
   ];

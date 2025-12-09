@@ -36,13 +36,13 @@ export default function Features() {
     {
       icon: <FaTools className="text-white text-3xl" />,
       title: "Easy Booking",
-      description: "Manage appointments with a few clicks.",
+      description: "Easily book services in just a few clicks.",
       bg: "bg-gradient-to-br from-purple-500 to-pink-500",
     },
     {
       icon: <FaUsers className="text-white text-3xl" />,
       title: "Simple Management",
-      description: "Manage clients, schedules, and payments easily.",
+      description: "Manage bookings and schedules easily.",
       bg: "bg-gradient-to-br from-yellow-400 to-orange-500",
     },
   ];

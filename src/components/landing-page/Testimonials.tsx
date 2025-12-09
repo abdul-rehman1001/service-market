@@ -20,22 +20,24 @@ function Card({ children, className }: CardProps) {
 
 export default function Testimonials() {
   const reviews = [
-    {
-      text: "Finding a reliable plumber has never been easier. I posted a job and had three quotes within an hour. The AI matching is a game-changer!",
-      name: "Alex R.",
-      role: "Homeowner",
-    },
-    {
-      text: "As a freelance designer, ServiceApp has filled my pipeline with quality leads. The management tools are intuitive and save me so much admin time.",
-      name: "Jenna S.",
-      role: "Graphic Designer",
-    },
-    {
-      text: "The platform is so easy to use. I booked a house cleaner for my parents in another city. The process was secure and completely transparent.",
-      name: "Mike T.",
-      role: "Family Manager",
-    },
-  ];
+  {
+    text: "I needed a plumber urgently, and I found one within an hour. Quick and reliable service!",
+    name: "Farhan",
+    role: "Homeowner",
+  },
+  {
+    text: "My car needed repair, and the mechanic I booked was professional and fast. Very satisfied!",
+    name: "Umer",
+    role: "Car Owner",
+  },
+  {
+    text: "“Booking a house cleaner was quick and easy. He arrived on time and provided an excellent, reliable service.”",
+    name: "Ali",
+    role: "Homeowner",
+  },
+
+];
+
 
   const cardVariants: Variants = {
     hidden: { opacity: 0, y: 40 },

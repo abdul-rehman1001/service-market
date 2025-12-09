@@ -5,7 +5,7 @@ export default function LandingFooter() {
     <footer className="bg-[#f5f7f8] border-t mt-16 py-10">
       <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
         {/* Logo / Brand */}
-        <div className="text-blue-600 font-bold text-lg md:text-xl">ServiceApp</div>
+        <div className="text-blue-600 font-bold text-lg md:text-xl">Servizo</div>
 
         {/* Navigation Links */}
         <div className="flex flex-wrap justify-center gap-6 text-gray-600">
