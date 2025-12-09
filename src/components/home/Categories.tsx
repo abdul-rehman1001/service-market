@@ -64,7 +64,7 @@ export default function Categories() {
   };
 
   return (
-   <div className="w-full py-12 bg-[#f5f7f8]">
+   <div className="w-full py-12 bg-[#f5f7f8] border-t border-gray-300">
       <div className="max-w-7xl mx-auto px-6">
         <h2 className="text-3xl font-bold mb-8 text-gray-900">Browse by Category</h2>
 

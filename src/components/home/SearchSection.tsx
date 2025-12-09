@@ -64,7 +64,7 @@ export default function SearchSection() {
       .join(" ");
 
   return (
-    <section className="w-full bg-white pt-10 pb-16 border-b">
+    <section className="w-full bg-white pt-10 pb-16 ">
       <div className="max-w-4xl mx-auto px-6 text-center">
         <h1 className="text-4xl font-bold text-gray-900">
           Find the perfect service, <span className="text-emerald-600">your way.</span>
