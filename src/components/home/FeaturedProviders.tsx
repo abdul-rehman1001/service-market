@@ -20,7 +20,7 @@ const allProviders: Provider[] = [
   // Plumbers
   {
     id: 1,
-    name: "Ahmed Khan",
+    name: "Ahmed",
     role: "Expert Plumber",
     rating: 4.9,
     reviews: 138,
@@ -31,7 +31,7 @@ const allProviders: Provider[] = [
   },
   {
     id: 2,
-    name: "Sarah Wilson",
+    name: "Ahsan",
     role: "Professional Plumber",
     rating: 5.0,
     reviews: 95,
@@ -42,7 +42,7 @@ const allProviders: Provider[] = [
   },
   {
     id: 3,
-    name: "Mike Johnson",
+    name: "Farhan",
     role: "Licensed Plumber",
     rating: 4.8,
     reviews: 112,
@@ -55,7 +55,7 @@ const allProviders: Provider[] = [
   // Electricians
   {
     id: 4,
-    name: "David Lee",
+    name: "Hamza",
     role: "Master Electrician",
     rating: 4.9,
     reviews: 156,
@@ -66,7 +66,7 @@ const allProviders: Provider[] = [
   },
   {
     id: 5,
-    name: "Emma Brown",
+    name: "Omar",
     role: "Licensed Electrician",
     rating: 4.7,
     reviews: 89,
@@ -77,7 +77,7 @@ const allProviders: Provider[] = [
   },
   {
     id: 6,
-    name: "James Miller",
+    name: "Zain",
     role: "Electrical Expert",
     rating: 5.0,
     reviews: 124,
@@ -90,7 +90,7 @@ const allProviders: Provider[] = [
   // Carpenters
   {
     id: 7,
-    name: "Robert Garcia",
+    name: "Ali",
     role: "Master Carpenter",
     rating: 4.8,
     reviews: 143,
@@ -101,7 +101,7 @@ const allProviders: Provider[] = [
   },
   {
     id: 8,
-    name: "Lisa Anderson",
+    name: "Bilal",
     role: "Professional Carpenter",
     rating: 4.9,
     reviews: 97,
@@ -112,7 +112,7 @@ const allProviders: Provider[] = [
   },
   {
     id: 9,
-    name: "Chris Taylor",
+    name: "Haris",
     role: "Skilled Carpenter",
     rating: 4.7,
     reviews: 108,

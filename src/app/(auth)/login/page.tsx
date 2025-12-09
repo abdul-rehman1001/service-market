@@ -68,11 +68,12 @@ export default function LoginPage() {
           </Link>
 
           <button
-            type="submit"
-            className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl transition"
-          >
-            Login
-          </button>
+  type="submit"
+  className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl transition"
+>
+  Login
+</button>
+
         </form>
 
         <p className="text-center mt-4 text-sm text-gray-600">
