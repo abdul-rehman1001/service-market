@@ -1,17 +1,40 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Brush, Settings, Home, Laptop, Leaf, Palette, BookOpen, Zap, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Wrench,
+  Droplets,
+  Circle,
+  Battery,
+  Zap,
+  Hammer,
+  Paintbrush,
+  Snowflake,
+  Plug,
+  Home,
+  Brush,
+  Settings,
+  Laptop,
+  Leaf,
+  Palette,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight
+} from "lucide-react";
+
 
 const categories = [
-  { id: 1, key: 'cleaning', label: "Home Cleaning", icon: Home },
-  { id: 2, key: 'tutoring', label: "Tutoring", icon: BookOpen },
-  { id: 3, key: 'web_design', label: "Web Design", icon: Laptop },
-  { id: 4, key: 'gardening', label: "Gardening", icon: Leaf },
-  { id: 5, key: 'painting', label: "Painting", icon: Palette },
-  { id: 6, key: 'plumber', label: "Plumbing", icon: Settings },
-  { id: 7, key: 'electrician', label: "Electrical", icon: Zap },
-  { id: 8, key: 'carpenter', label: "Carpentry", icon: Brush },
+  { id: 1, key: 'engine_repair', label: "Engine Repair", icon: Wrench },
+  { id: 2, key: 'oil_change', label: "Oil Change", icon: Droplets },
+  { id: 3, key: 'tire_service', label: "Tire Service", icon: Circle },
+  { id: 4, key: 'battery_replacement', label: "Battery Replacement", icon: Battery },
+  
+  { id: 5, key: 'plumbing', label: "Plumbing", icon: Wrench },
+  { id: 6, key: 'electrical', label: "Electrical Repair", icon: Zap },
+  { id: 7, key: 'carpentry', label: "Carpentry", icon: Hammer },
+  { id: 8, key: 'painting', label: "Painting", icon: Paintbrush },
+  { id: 9, key: 'ac_repair', label: "A/C Repair", icon: Snowflake },
+  { id: 10, key: 'appliance_repair', label: "Appliance Repair", icon: Plug },
 ];
 
 export default function Categories() {

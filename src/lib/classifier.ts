@@ -15,7 +15,6 @@ interface ClassificationResult {
 }
 
 export async function classifyQuery(query: string): Promise<ClassificationResult> {
-  // Get query embedding
   const queryEmbedding = await getEmbedding(query);
   
   const matches: Array<{
@@ -24,10 +23,8 @@ export async function classifyQuery(query: string): Promise<ClassificationResult
     similarity: number;
   }> = [];
 
-  // Compare with all training examples
   for (const [category, subcategories] of Object.entries(trainingData)) {
     for (const [subcategory, examples] of Object.entries(subcategories)) {
-      // Calculate similarity with each example
       for (const example of examples) {
         const exampleEmbedding = await getEmbedding(example);
         const similarity = cosineSimilarity(queryEmbedding, exampleEmbedding);
@@ -41,16 +38,15 @@ export async function classifyQuery(query: string): Promise<ClassificationResult
     }
   }
 
-  // Sort by similarity
   matches.sort((a, b) => b.similarity - a.similarity);
 
-  // Get the best match
+
   const bestMatch = matches[0];
 
   return {
     category: bestMatch.category,
     subcategory: bestMatch.subcategory,
     confidence: bestMatch.similarity,
-    allMatches: matches.slice(0, 5) // Top 5 matches
+    allMatches: matches.slice(0, 5) 
   };
 }

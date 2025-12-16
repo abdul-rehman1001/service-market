@@ -17,40 +17,35 @@ interface Provider {
 }
 
 export function useCategoryFilters(providers: Provider[]) {
-  // ------------------------
-  // FILTER STATES
-  // ------------------------
+ 
   const [sort, setSort] = useState("Best Match");
   const [minRating, setMinRating] = useState(0);
   const [maxDistance, setMaxDistance] = useState(100);
   const [priceRange, setPriceRange] = useState(200);
 
-  // Quick filters
+
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [openNowOnly, setOpenNowOnly] = useState(false);
   const [nearbyOnly, setNearbyOnly] = useState(false);
 
-  // ------------------------
-  // MAIN FILTER + SORT LOGIC
-  // ------------------------
+  
   const filteredProviders = useMemo(() => {
     let list = [...providers];
 
-    // 1. Rating filter
     list = list.filter((p) => p.rating >= minRating);
 
-    // 2. Distance filter
+   
     list = list.filter((p) => (p.distance ?? 0) <= maxDistance);
 
-    // 3. Price filter
+   
     list = list.filter((p) => (p.price ?? 0) <= priceRange);
 
-    // 4. Quick filters
+    
     if (verifiedOnly) list = list.filter((p) => p.isVerified);
     if (openNowOnly) list = list.filter((p) => p.isOpenNow);
     if (nearbyOnly) list = list.filter((p) => (p.distance ?? 0) <= 10);
 
-    // 5. Sorting logic
+  
     switch (sort) {
       case "Top Rated":
         list.sort((a, b) => b.rating - a.rating);
@@ -75,9 +70,7 @@ export function useCategoryFilters(providers: Provider[]) {
     return list;
   }, [providers, minRating, maxDistance, priceRange, sort, verifiedOnly, openNowOnly, nearbyOnly]);
 
-  // ------------------------
-  // RESET FILTERS
-  // ------------------------
+
   function resetFilters() {
     setSort("Best Match");
     setMinRating(0);
@@ -89,7 +82,7 @@ export function useCategoryFilters(providers: Provider[]) {
   }
 
   return {
-    // values
+  
     filteredProviders,
     sort,
     minRating,
@@ -99,7 +92,7 @@ export function useCategoryFilters(providers: Provider[]) {
     openNowOnly,
     nearbyOnly,
 
-    // setters
+  
     setSort,
     setMinRating,
     setPriceRange,

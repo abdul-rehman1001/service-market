@@ -1,4 +1,3 @@
-// lib/cookies.ts
 import { NextResponse } from 'next/server';
 
 export function setTokenCookie(res: NextResponse, token: string) {
@@ -6,7 +5,7 @@ export function setTokenCookie(res: NextResponse, token: string) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     path: '/',
-    maxAge: 7 * 24 * 60 * 60, // 7 days
+    maxAge: 7 * 24 * 60 * 60, 
   });
 }
 

@@ -1,4 +1,3 @@
-// lib/jwt.ts
 import jwt from 'jsonwebtoken';
 import type { SignOptions, Secret } from 'jsonwebtoken';
 
