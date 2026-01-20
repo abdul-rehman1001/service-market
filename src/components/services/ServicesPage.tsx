@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { usePagination } from "./hooks/usePagination";
 import SearchHeader from "./SearchHeader";
@@ -34,15 +34,20 @@ export default function ServicesPage({
 
   return (
     <div className="min-h-screen bg-white">
-        <Header />  
+      {/* Header */}
+      <Header />
+
+      {/* Page Title & Summary */}
       <SearchHeader
         searchQuery={searchQuery}
         location={location}
         totalResults={totalResults}
       />
 
-      <div className="flex">
-        <main className="flex-1 px-6 py-8">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 flex gap-6">
+        {/* Left Column */}
+        <main className="flex-1 py-8">
           <SearchFilters
             searchQuery={searchQuery}
             location={location}
@@ -59,10 +64,13 @@ export default function ServicesPage({
           />
         </main>
 
+        {/* Right Column / Map */}
         <aside className="w-2/5 h-screen sticky top-0 border-l">
           <SearchMap location={location} />
         </aside>
       </div>
+
+      {/* Footer */}
       <Footer />
     </div>
   );

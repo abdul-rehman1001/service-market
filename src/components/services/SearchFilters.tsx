@@ -46,11 +46,7 @@ export default function SearchFilters({ searchQuery, location }: Props) {
         </button>
       </div>
 
-      {/* Right: AI Suggest */}
-      <button className="px-6 py-3 bg-emerald-600 text-white rounded-lg flex items-center gap-2 hover:bg-emerald-700 transition mt-2 md:mt-0">
-        <Zap className="w-4 h-4" />
-        AI Suggest
-      </button>
+     
     </div>
   );
 }
