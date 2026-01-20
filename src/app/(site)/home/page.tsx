@@ -1,6 +1,6 @@
 import SearchSection from "@/components/home/SearchSection";
 import Categories from "@/components/home/Categories";
-import FeaturedProviders from "@/components/home/FeaturedProviders";
+import FeaturedProviders from "@/components/home/providers/FeaturedProviders";
 import Footer from "@/components/layout/Footer";
 
 export default function HomePage() {
