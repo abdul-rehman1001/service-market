@@ -1,6 +1,6 @@
 'use client';
 
-import SearchResults from '@/components/home/services/services';
+import SearchResults from '@/components/services/ServicesPage';
 import { Provider } from '@/components/home/providers/types';
 
 // Sample data - Replace with actual API call
