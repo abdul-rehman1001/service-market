@@ -1,88 +1,76 @@
+// src/components/dashboard/Sidebar.tsx
 'use client';
 
-import Link from 'next/link';
+import React from 'react';
+import clsx from 'clsx';
 
-interface MenuItem {
-  icon: string;
-  label: string;
-  href: string;
-  active?: boolean;
-}
-
-interface SidebarProps {
+type Props = {
   isOpen: boolean;
-  onClose?: () => void;
-}
+  onClose: () => void;
+  activeTab: 'services' | 'appointments';
+  setActiveTab: (t: 'services' | 'appointments') => void;
+};
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-  const menuItems: MenuItem[] = [
-    { icon: '📊', label: 'Dashboard', href: '/dashboard', active: true },
-    { icon: '🛠️', label: 'My Services', href: '/services' },
-    { icon: '📅', label: 'Appointments', href: '/appointments' },
-    { icon: '👤', label: 'Profile', href: '/profile' },
-  ];
-
+export const Sidebar: React.FC<Props> = ({ isOpen, onClose, activeTab, setActiveTab }) => {
   return (
     <>
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
-          onClick={onClose}
-        />
-      )}
+      {/* Backdrop for mobile */}
+      <div
+        className={clsx(
+          'fixed inset-0 bg-black/30 z-30 transition-opacity md:hidden',
+          { 'opacity-100 pointer-events-auto': isOpen, 'opacity-0 pointer-events-none': !isOpen }
+        )}
+        onClick={onClose}
+      />
 
       <aside
-        className={`fixed md:static inset-y-0 left-0 w-64 bg-white border-r border-gray-200 flex flex-col z-40 transform transition-transform duration-300 md:translate-x-0 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={clsx(
+          'fixed z-40 left-0 top-0 h-full w-72 bg-white border-r border-gray-200 p-4 transform transition-transform',
+          'md:static md:translate-x-0',
+          { '-translate-x-full': !isOpen }
+        )}
       >
-        {/* Header */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-teal-500 flex items-center justify-center text-white font-bold">
-              ▦
-            </div>
-            <h1 className="text-xl font-bold text-gray-900">ServiceApp</h1>
-          </div>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold">Provider Menu</h3>
+          <button className="md:hidden p-2" onClick={onClose}>✕</button>
         </div>
 
-        {/* User Profile */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-orange-300 flex-shrink-0" />
-            <div className="min-w-0">
-              <p className="font-semibold text-gray-900">Elena Voyager</p>
-              <p className="text-sm text-gray-500 truncate">
-                Pro Service Provider
-              </p>
+        <nav className="space-y-2">
+          <button
+            onClick={() => setActiveTab('services')}
+            className={clsx(
+              'w-full text-left px-3 py-2 rounded-lg flex items-center justify-between',
+              activeTab === 'services' ? 'bg-green-50 border border-green-200 text-green-800' : 'hover:bg-gray-50'
+            )}
+          >
+            <div>
+              <div className="text-sm font-medium">My Services</div>
+              <div className="text-xs text-gray-500">Manage offerings</div>
             </div>
-          </div>
-        </div>
+            <div className="text-xs">{/* optional count */}</div>
+          </button>
 
-        {/* Menu */}
-        <nav className="flex-1 p-4 space-y-2">
-          {menuItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition ${
-                item.active
-                  ? 'bg-teal-50 text-teal-600'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <span className="text-lg">{item.icon}</span>
-              {item.label}
-            </Link>
-          ))}
+          <button
+            onClick={() => setActiveTab('appointments')}
+            className={clsx(
+              'w-full text-left px-3 py-2 rounded-lg flex items-center justify-between',
+              activeTab === 'appointments' ? 'bg-green-50 border border-green-200 text-green-800' : 'hover:bg-gray-50'
+            )}
+          >
+            <div>
+              <div className="text-sm font-medium">Appointments</div>
+              <div className="text-xs text-gray-500">View schedule</div>
+            </div>
+            <div className="text-xs">{/* optional badge */}</div>
+          </button>
         </nav>
 
-        {/* Logout */}
-        <div className="p-4 border-t border-gray-200">
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-red-600 font-medium hover:bg-red-50 rounded-lg transition">
-            <span>🚪</span>
-            Logout
-          </button>
+        <div className="mt-6 border-t pt-4 text-sm text-gray-600">
+          <div className="mb-2">Quick actions</div>
+          <div className="flex flex-col gap-2">
+            <button className="px-3 py-2 rounded-lg bg-teal-600 text-white text-sm">+ Add New Service</button>
+            <button className="px-3 py-2 rounded-lg border text-sm">New Booking</button>
+          </div>
         </div>
       </aside>
     </>
