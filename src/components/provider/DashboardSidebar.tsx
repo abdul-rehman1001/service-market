@@ -14,8 +14,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, s
     { key: 'reviews', label: 'Reviews' },
     { key: 'availability', label: 'Availability' },
     { key: 'bookings', label: 'Booking Requests' }
-    , { key: 'booking-status', label: 'Booking Status' }
-    , { key: 'reviews', label: 'Provider Reviews' },
+    , { key: 'booking-status', label: 'Booking Status' },
 { key: 'verify-identity', label: 'Verify Identity' },
 { key: 'documents', label: 'Documents' },
 { key: 'portfolio', label: 'Portfolio' },

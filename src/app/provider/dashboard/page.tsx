@@ -10,7 +10,7 @@ import { ReviewsPanel } from '@/components/provider/ReviewsPanel';
 import { AvailabilityPanel } from '@/components/provider/AvailabilityPanel';
 import { BookingRequestsPanel } from '@/components/provider/BookingRequestsPanel';
 import { BookingStatusPanel } from '@/components/provider/BookingStatusPanel';
-import { ProviderReviewsPanel } from '@/components/provider/ProviderReviewsPanel';
+
 import { VerifyIdentityPanel } from '@/components/provider/VerifyIdentityPanel';
 import { DocumentManagementPanel } from '@/components/provider/DocumentManagementPanel';
 import { PortfolioPanel } from '@/components/provider/PortfolioPanel';
@@ -35,7 +35,7 @@ export default function ProviderDashboardPage() {
         {activeTab === 'availability' && <AvailabilityPanel />}
         {activeTab === 'bookings' && <BookingRequestsPanel />}
         {activeTab === 'booking-status' && <BookingStatusPanel />}
-        {activeTab === 'reviews' && <ProviderReviewsPanel />}
+        
         {activeTab === 'verify-identity' && <VerifyIdentityPanel />}
 {activeTab === 'documents' && <DocumentManagementPanel />}
 {activeTab === 'portfolio' && <PortfolioPanel />}
