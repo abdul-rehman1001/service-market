@@ -1,9 +1,17 @@
-export const AdminHeader = () => (
-  <header className="bg-white border-b px-6 py-4 flex justify-between items-center">
-    <input className="border px-4 py-2 rounded-lg" placeholder="Search..." />
-    <div className="flex items-center gap-4">
-      <button>🔔</button>
-      <div className="w-9 h-9 rounded-full bg-gray-300" />
-    </div>
-  </header>
+"use client";
+
+
+import { Menu } from "lucide-react";
+
+
+export default function AdminHeader({ onMenuClick }: { onMenuClick: () => void }) {
+return (
+<header className="sticky top-0 z-30 bg-white border-b px-4 py-3 flex items-center justify-between">
+<button className="lg:hidden" onClick={onMenuClick}>
+<Menu />
+</button>
+<h1 className="font-semibold">Service Market – Admin</h1>
+<span className="text-sm text-slate-600">admin@servicemarket.com</span>
+</header>
 );
+}

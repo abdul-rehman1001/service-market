@@ -1,19 +1,14 @@
-import { ProvidersTable } from '@/components/admin/tables/ProvidersTable';
-import { Provider } from '@/types/admin';
+import ProvidersTable from "@/components/admin/tables/ProvidersTable";
 
-const providers: Provider[] = [
-  { id: '1', name: 'Emma Wilson', services: 5, status: 'Approved' },
-  { id: '2', name: 'David Miller', services: 2, status: 'Pending' },
-];
-
-export default function ProvidersPage() {
+export default function AdminProvidersPage() {
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Providers</h1>
-
-      <div className="bg-white rounded-lg border p-4">
-        <ProvidersTable providers={providers} />
+    <section className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-semibold">Provider Verification</h2>
+        <p className="text-slate-600">Review and verify service providers</p>
       </div>
-    </div>
+
+      <ProvidersTable />
+    </section>
   );
 }
