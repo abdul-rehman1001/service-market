@@ -2,32 +2,16 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import AuthCard from '@/components/auth/AuthCard';
 import Input from '@/components/auth/Input';
 import PasswordInput from '@/components/auth/PasswordInput';
 
-type Role = 'seeker' | 'provider';
-
-export default function RegisterPage() {
+export default function LoginPage() {
   const router = useRouter();
-  const [role, setRole] = useState<Role>('seeker');
+  const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
-
-  const [form, setForm] = useState<any>({
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirm_password: '',
-    city: '',
-    address: '',
-    service_name: '',
-    years_of_experience: '',
-    location: '',
-    cnic: '',
-  });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -36,99 +20,114 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
-    if (form.password !== form.confirm_password) {
-      setError('Passwords do not match');
+    if (!form.email || !form.password) {
+      setError('Please fill all fields');
+      setLoading(false);
       return;
     }
 
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, role }),
-    });
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
 
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error || 'Registration failed');
-      return;
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Invalid credentials');
+        setLoading(false);
+        return;
+      }
+
+      // Store JWT token if provided
+      if (data.token) localStorage.setItem('token', data.token);
+
+      // Redirect based on role
+      router.push(data.role === 'provider' ? '/provider/dashboard' : '/home');
+    } catch (err) {
+      setError('Something went wrong. Try again.');
+    } finally {
+      setLoading(false);
     }
-
-    router.push(role === 'seeker' ? '/home' : '/provider/dashboard');
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-green-100">
       <AuthCard>
-        <h2 className="text-3xl font-bold text-center text-emerald-700">
-          Create Account
-        </h2>
-        <p className="text-center text-gray-500 mt-1">
-          Join as Service Seeker or Provider
+        <motion.h2
+          className="text-3xl font-bold text-center text-emerald-700"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          Login
+        </motion.h2>
+        <p className="text-center text-gray-500 mt-2">
+          Enter your email and password to continue
         </p>
 
-        {/* Role Switch */}
-        <div className="flex bg-emerald-100 rounded-xl p-1 mt-6">
-          {['seeker', 'provider'].map((r) => (
-            <button
-              key={r}
-              onClick={() => setRole(r as Role)}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
-                role === r
-                  ? 'bg-emerald-600 text-white'
-                  : 'text-emerald-700'
-              }`}
-            >
-              {r === 'seeker' ? 'Service Seeker' : 'Service Provider'}
-            </button>
-          ))}
-        </div>
-
         {error && (
-          <p className="text-red-500 text-center mt-4 text-sm">{error}</p>
+          <motion.p
+            className="text-red-500 text-center mt-4 text-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            {error}
+          </motion.p>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          {/* Common Fields */}
-          <div className="grid grid-cols-2 gap-4">
-            <Input name="first_name" placeholder="First Name" onChange={handleChange} required />
-            <Input name="last_name" placeholder="Last Name" onChange={handleChange} required />
-          </div>
-
-          <Input name="email" type="email" placeholder="Email Address" onChange={handleChange} required />
-          <Input name="phone" placeholder="+92 3XX XXXXXXX" onChange={handleChange} required />
-
-          <PasswordInput name="password" placeholder="Password" onChange={handleChange} required />
-          <PasswordInput name="confirm_password" placeholder="Confirm Password" onChange={handleChange} required />
-
-          <Input name="city" placeholder="City" onChange={handleChange} required />
-          <Input name="address" placeholder="Address" onChange={handleChange} required />
-
-          {/* Provider Fields */}
-          <AnimatePresence>
-            {role === 'provider' && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.4 }}
-                className="space-y-4"
-              >
-                <Input name="service_name" placeholder="Service Name" onChange={handleChange} required />
-                <Input name="years_of_experience" placeholder="Years of Experience" onChange={handleChange} required />
-                <Input name="location" placeholder="Service Location" onChange={handleChange} required />
-                <Input name="cnic" placeholder="CNIC (xxxxx-xxxxxxx-x)" onChange={handleChange} required />
-              </motion.div>
-            )}
-          </AnimatePresence>
+        <form
+          onSubmit={handleSubmit}
+          className="mt-6 space-y-4"
+          autoComplete="off"
+        >
+          <Input
+            name="email"
+            type="email"
+            placeholder="Email Address"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
+          <PasswordInput
+            name="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
 
           <button
             type="submit"
-            className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl transition-all duration-300 hover:scale-[1.02]"
+            disabled={loading}
+            className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl transition-all duration-300 hover:scale-[1.02] disabled:opacity-50"
           >
-            Register
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
+        <p className="text-center mt-4 text-sm text-gray-600">
+          Don’t have an account?{' '}
+          <a
+            href="/register"
+            className="text-emerald-600 font-medium hover:underline"
+          >
+            Sign Up
+          </a>
+        </p>
+
+        <p className="text-center mt-2 text-sm text-gray-500">
+          <a
+            href="/forgot-password"
+            className="text-blue-500 hover:underline"
+          >
+            Forgot password?
+          </a>
+        </p>
       </AuthCard>
     </div>
   );
