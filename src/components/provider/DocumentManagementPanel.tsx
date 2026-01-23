@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const DocumentManagementPanel: React.FC = () => {
   const [documents, setDocuments] = useState<File[]>([]);
@@ -44,34 +44,61 @@ export const DocumentManagementPanel: React.FC = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white p-6 rounded-xl shadow space-y-4"
+      className="bg-white rounded-2xl shadow-md p-6 space-y-4 max-w-lg mx-auto"
     >
-      <h2 className="text-2xl font-bold">Manage Certifications</h2>
-      <p className="text-gray-500">Upload PDF certifications (max 3 files, 2MB each)</p>
+      <h2 className="text-2xl font-semibold text-slate-800">Manage Certifications</h2>
+      <p className="text-sm text-slate-500">Upload PDF certifications (max 3 files, 2MB each)</p>
 
-      <input type="file" accept="application/pdf" onChange={handleFileChange} />
+      {/* File Input */}
+      <label className="block w-full border-2 border-dashed border-slate-300 rounded-xl px-4 py-6 text-center cursor-pointer hover:border-emerald-500 transition-colors">
+        <input
+          type="file"
+          accept="application/pdf"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+        <span className="text-slate-500 text-sm">
+          Click to upload or drag & drop your PDF here
+        </span>
+      </label>
 
-      {documents.length > 0 && (
-        <ul className="mt-2 space-y-1">
+      {/* Uploaded Documents List */}
+      <ul className="space-y-2">
+        <AnimatePresence>
           {documents.map((doc, idx) => (
-            <li key={idx} className="flex justify-between items-center bg-gray-100 p-2 rounded">
-              <span>{doc.name}</span>
-              <button className="text-red-500" onClick={() => handleRemove(idx)}>Remove</button>
-            </li>
+            <motion.li
+              key={idx}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="flex justify-between items-center bg-slate-100 rounded-lg p-2 px-4 shadow-sm"
+            >
+              <span className="text-slate-700 text-sm">{doc.name}</span>
+              <button
+                className="text-red-500 font-medium hover:text-red-600 transition-colors"
+                onClick={() => handleRemove(idx)}
+              >
+                Remove
+              </button>
+            </motion.li>
           ))}
-        </ul>
-      )}
+        </AnimatePresence>
+      </ul>
 
-      {error && <p className="text-red-500">{error}</p>}
+      {/* Error Message */}
+      {error && <p className="text-red-500 text-sm">{error}</p>}
 
-      <button
+      {/* Upload Button */}
+      <motion.button
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
         onClick={handleUpload}
-        className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 hover:scale-105 transition-transform"
+        className="w-full py-2 rounded-xl bg-emerald-600 text-white font-medium shadow hover:bg-emerald-700 transition-all"
       >
         Upload Documents
-      </button>
+      </motion.button>
     </motion.div>
   );
 };

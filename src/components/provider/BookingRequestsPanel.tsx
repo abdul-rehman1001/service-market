@@ -19,19 +19,19 @@ export const BookingRequestsPanel: React.FC = () => {
       id: 'b1',
       customerName: 'Sarah Jenkins',
       service: 'AC Repair',
-      requestedTime: new Date(new Date().getTime() + 10 * 60000).toISOString(), // 10 min from now
+      requestedTime: new Date(new Date().getTime() + 10 * 60000).toISOString(),
       status: 'Pending',
     },
     {
       id: 'b2',
       customerName: 'Michael Chen',
       service: 'Washing Machine Repair',
-      requestedTime: new Date(new Date().getTime() + 20 * 60000).toISOString(), // 20 min from now
+      requestedTime: new Date(new Date().getTime() + 20 * 60000).toISOString(),
       status: 'Pending',
     },
   ]);
 
-  // Auto-cancel logic for pending requests >30 minutes
+  // Auto-cancel pending requests >30 minutes
   useEffect(() => {
     const interval = setInterval(() => {
       setRequests((prev) =>
@@ -42,7 +42,7 @@ export const BookingRequestsPanel: React.FC = () => {
           return r;
         })
       );
-    }, 60000); // check every 1 min
+    }, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -52,58 +52,122 @@ export const BookingRequestsPanel: React.FC = () => {
     );
   };
 
+  // Status badge colors
+  const statusColor = (status: string) => {
+    switch (status) {
+      case 'Pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Accepted':
+        return 'bg-emerald-100 text-emerald-800';
+      case 'Rejected':
+        return 'bg-rose-100 text-rose-800';
+      case 'Auto-Cancelled':
+        return 'bg-gray-100 text-gray-700';
+      default:
+        return '';
+    }
+  };
+
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">Booking Requests</h2>
+    <section className="space-y-6">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-semibold text-slate-800 tracking-tight">
+          Booking Requests
+        </h2>
+        <p className="text-sm text-slate-500 mt-1">
+          Review and respond to new booking requests
+        </p>
+      </div>
 
-      {requests.length === 0 && <p>No new booking requests.</p>}
-
-      <ul className="space-y-4">
-        {requests.map((r) => (
-          <li key={r.id} className="bg-white p-4 rounded-lg border shadow-sm">
-            <div className="flex justify-between items-center">
-              <div>
-                <p>
-                  <strong>{r.customerName}</strong> requested <strong>{r.service}</strong>
-                </p>
-                <p className="text-sm text-gray-500">
-                  Requested Time: {format(new Date(r.requestedTime), 'PPPpp')}
-                </p>
-                <p className="text-sm text-gray-500">Status: {r.status}</p>
-                {r.reason && <p className="text-sm text-red-500">Reason: {r.reason}</p>}
-                {r.alternateTime && <p className="text-sm text-blue-500">Suggested Time: {r.alternateTime}</p>}
-              </div>
-
-              {r.status === 'Pending' && (
-                <div className="flex gap-2">
-                  <button
-                    className="px-3 py-1 bg-emerald-600 text-white rounded"
-                    onClick={() => respond(r.id, 'Accepted')}
+      {/* Booking List */}
+      {requests.length === 0 ? (
+        <p className="text-slate-500">No new booking requests.</p>
+      ) : (
+        <ul className="space-y-4">
+          {requests.map((r) => (
+            <li
+              key={r.id}
+              className="
+                bg-white border border-slate-200 rounded-2xl p-5 shadow-md
+                hover:shadow-lg transition-all duration-300 ease-out
+              "
+            >
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                {/* Info */}
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-slate-800">
+                    {r.customerName}{' '}
+                    <span className="font-normal text-slate-600">requested {r.service}</span>
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    Requested Time: {format(new Date(r.requestedTime), 'PPPpp')}
+                  </p>
+                  <span
+                    className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(
+                      r.status
+                    )}`}
                   >
-                    Accept
-                  </button>
-                  <button
-                    className="px-3 py-1 bg-red-500 text-white rounded"
-                    onClick={() =>
-                      respond(r.id, 'Rejected', prompt('Enter rejection reason:') || 'No reason provided')
-                    }
-                  >
-                    Reject
-                  </button>
-                  <button
-                    className="px-3 py-1 bg-blue-600 text-white rounded"
-                    onClick={() =>
-                      respond(r.id, 'Rejected', undefined, prompt('Suggest alternate time (YYYY-MM-DD HH:MM):') || '')
-                    }
-                  >
-                    Suggest Alternate
-                  </button>
+                    {r.status}
+                  </span>
+                  {r.reason && (
+                    <p className="text-sm text-rose-600 font-medium">Reason: {r.reason}</p>
+                  )}
+                  {r.alternateTime && (
+                    <p className="text-sm text-blue-600 font-medium">
+                      Suggested Time: {r.alternateTime}
+                    </p>
+                  )}
                 </div>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
+
+                {/* Actions */}
+                {r.status === 'Pending' && (
+                  <div className="flex flex-wrap gap-2 mt-3 sm:mt-0">
+                    <button
+                      className="
+                        px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium
+                        transition-all duration-200 hover:bg-emerald-700 active:scale-95 shadow
+                      "
+                      onClick={() => respond(r.id, 'Accepted')}
+                    >
+                      Accept
+                    </button>
+
+                    <button
+                      className="
+                        px-4 py-2 rounded-xl bg-rose-600 text-white text-sm font-medium
+                        transition-all duration-200 hover:bg-rose-700 active:scale-95 shadow
+                      "
+                      onClick={() =>
+                        respond(r.id, 'Rejected', prompt('Enter rejection reason:') || 'No reason provided')
+                      }
+                    >
+                      Reject
+                    </button>
+
+                    <button
+                      className="
+                        px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium
+                        transition-all duration-200 hover:bg-blue-700 active:scale-95 shadow
+                      "
+                      onClick={() =>
+                        respond(
+                          r.id,
+                          'Rejected',
+                          undefined,
+                          prompt('Suggest alternate time (YYYY-MM-DD HH:MM):') || ''
+                        )
+                      }
+                    >
+                      Suggest Alternate
+                    </button>
+                  </div>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 };

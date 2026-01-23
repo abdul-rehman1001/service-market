@@ -40,26 +40,50 @@ export const CNICUpload: React.FC<CNICUploadProps> = ({ onUploadSuccess }) => {
   };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">CNIC Front</label>
-        <input type="file" accept="image/png, image/jpeg"
+    <div className="bg-white rounded-2xl shadow-md p-6 space-y-6 max-w-md mx-auto">
+      <h2 className="text-xl font-semibold text-slate-800">Upload CNIC</h2>
+      <p className="text-sm text-slate-500">Please upload front and back images of your CNIC.</p>
+
+      {/* Front CNIC */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-slate-700">CNIC Front</label>
+        <input
+          type="file"
+          accept="image/png, image/jpeg"
           onChange={(e) => handleFileChange(e, setFrontFile)}
-          className="mt-1 block w-full text-sm text-gray-600"
+          className="block w-full text-sm text-slate-600 border border-slate-300 rounded-lg px-3 py-2
+                     file:mr-4 file:py-2 file:px-4
+                     file:rounded-lg file:border-0
+                     file:bg-emerald-100 file:text-emerald-700
+                     file:font-medium hover:file:bg-emerald-200
+                     transition-all duration-200"
         />
+        {frontFile && <p className="text-sm text-slate-600 mt-1">Selected: {frontFile.name}</p>}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">CNIC Back</label>
-        <input type="file" accept="image/png, image/jpeg"
+      {/* Back CNIC */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-slate-700">CNIC Back</label>
+        <input
+          type="file"
+          accept="image/png, image/jpeg"
           onChange={(e) => handleFileChange(e, setBackFile)}
-          className="mt-1 block w-full text-sm text-gray-600"
+          className="block w-full text-sm text-slate-600 border border-slate-300 rounded-lg px-3 py-2
+                     file:mr-4 file:py-2 file:px-4
+                     file:rounded-lg file:border-0
+                     file:bg-emerald-100 file:text-emerald-700
+                     file:font-medium hover:file:bg-emerald-200
+                     transition-all duration-200"
         />
+        {backFile && <p className="text-sm text-slate-600 mt-1">Selected: {backFile.name}</p>}
       </div>
 
       <button
         onClick={handleUpload}
-        className="mt-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg transition-all duration-300 hover:scale-[1.02]"
+        className="
+          w-full py-2 rounded-xl bg-emerald-600 text-white font-medium
+          hover:bg-emerald-700 active:scale-95 transition-transform duration-150 shadow
+        "
       >
         Upload CNIC
       </button>

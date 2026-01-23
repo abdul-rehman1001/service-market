@@ -8,7 +8,14 @@ interface Job {
   customerName: string;
   service: string;
   scheduledTime: string; // ISO string
-  status: 'Pending' | 'Confirmed' | 'En Route' | 'In Progress' | 'Completed' | 'Cancelled by User' | 'Cancelled by Provider';
+  status:
+    | 'Pending'
+    | 'Confirmed'
+    | 'En Route'
+    | 'In Progress'
+    | 'Completed'
+    | 'Cancelled by User'
+    | 'Cancelled by Provider';
 }
 
 export const BookingStatusPanel: React.FC = () => {
@@ -30,73 +37,128 @@ export const BookingStatusPanel: React.FC = () => {
   ]);
 
   const updateStatus = (id: string, newStatus: Job['status']) => {
-    setJobs((prev) =>
-      prev.map((j) => (j.id === id ? { ...j, status: newStatus } : j))
-    );
+    setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, status: newStatus } : j)));
+  };
+
+  const statusColor = (status: Job['status']) => {
+    switch (status) {
+      case 'Pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Confirmed':
+        return 'bg-emerald-100 text-emerald-800';
+      case 'En Route':
+        return 'bg-blue-100 text-blue-800';
+      case 'In Progress':
+        return 'bg-orange-100 text-orange-800';
+      case 'Completed':
+        return 'bg-green-100 text-green-800';
+      case 'Cancelled by User':
+      case 'Cancelled by Provider':
+        return 'bg-red-100 text-red-800';
+      default:
+        return '';
+    }
   };
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">Job Status</h2>
+    <section className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-semibold text-slate-800 tracking-tight">Job Status</h2>
+        <p className="text-sm text-slate-500 mt-1">Track and manage your ongoing jobs</p>
+      </div>
+
       <ul className="space-y-4">
         {jobs.map((job) => (
-          <li key={job.id} className="bg-white p-4 rounded-lg border shadow-sm">
-            <p>
-              <strong>{job.customerName}</strong> - {job.service}
-            </p>
-            <p className="text-sm text-gray-500">
-              Scheduled: {format(new Date(job.scheduledTime), 'PPPpp')}
-            </p>
-            <p className="text-sm text-gray-500">Status: {job.status}</p>
-
-            {['Pending', 'Confirmed', 'En Route', 'In Progress'].includes(job.status) && (
-              <div className="flex gap-2 mt-2 flex-wrap">
-                {job.status !== 'Confirmed' && (
-                  <button
-                    className="px-3 py-1 bg-emerald-600 text-white rounded"
-                    onClick={() => updateStatus(job.id, 'Confirmed')}
-                  >
-                    Confirm
-                  </button>
-                )}
-                {job.status !== 'En Route' && job.status === 'Confirmed' && (
-                  <button
-                    className="px-3 py-1 bg-blue-600 text-white rounded"
-                    onClick={() => updateStatus(job.id, 'En Route')}
-                  >
-                    En Route
-                  </button>
-                )}
-                {job.status !== 'In Progress' && job.status === 'En Route' && (
-                  <button
-                    className="px-3 py-1 bg-yellow-500 text-white rounded"
-                    onClick={() => updateStatus(job.id, 'In Progress')}
-                  >
-                    Start Job
-                  </button>
-                )}
-                {job.status !== 'Completed' && job.status === 'In Progress' && (
-                  <button
-                    className="px-3 py-1 bg-green-600 text-white rounded"
-                    onClick={() => updateStatus(job.id, 'Completed')}
-                  >
-                    Complete
-                  </button>
-                )}
-                <button
-                  className="px-3 py-1 bg-red-500 text-white rounded"
-                  onClick={() => {
-                    const reason = prompt('Cancel reason (User/Provider)?', 'Cancelled by Provider');
-                    if (reason) updateStatus(job.id, reason as Job['status']);
-                  }}
+          <li
+            key={job.id}
+            className="
+              bg-white border border-slate-200 rounded-2xl p-5 shadow-md
+              hover:shadow-lg transition-all duration-300 ease-out
+            "
+          >
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-slate-800">
+                  {job.customerName}{' '}
+                  <span className="font-normal text-slate-600">- {job.service}</span>
+                </p>
+                <p className="text-sm text-slate-500">
+                  Scheduled: {format(new Date(job.scheduledTime), 'PPPpp')}
+                </p>
+                <span
+                  className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(
+                    job.status
+                  )}`}
                 >
-                  Cancel
-                </button>
+                  {job.status}
+                </span>
               </div>
-            )}
+
+              {/* Action Buttons */}
+              {['Pending', 'Confirmed', 'En Route', 'In Progress'].includes(job.status) && (
+                <div className="flex flex-wrap gap-2 mt-3 sm:mt-0">
+                  {job.status !== 'Confirmed' && (
+                    <button
+                      className="
+                        px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium
+                        shadow transition hover:bg-emerald-700 active:scale-95
+                      "
+                      onClick={() => updateStatus(job.id, 'Confirmed')}
+                    >
+                      Confirm
+                    </button>
+                  )}
+                  {job.status === 'Confirmed' && (
+                    <button
+                      className="
+                        px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium
+                        shadow transition hover:bg-blue-700 active:scale-95
+                      "
+                      onClick={() => updateStatus(job.id, 'En Route')}
+                    >
+                      En Route
+                    </button>
+                  )}
+                  {job.status === 'En Route' && (
+                    <button
+                      className="
+                        px-4 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium
+                        shadow transition hover:bg-orange-600 active:scale-95
+                      "
+                      onClick={() => updateStatus(job.id, 'In Progress')}
+                    >
+                      Start Job
+                    </button>
+                  )}
+                  {job.status === 'In Progress' && (
+                    <button
+                      className="
+                        px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-medium
+                        shadow transition hover:bg-green-700 active:scale-95
+                      "
+                      onClick={() => updateStatus(job.id, 'Completed')}
+                    >
+                      Complete
+                    </button>
+                  )}
+                  <button
+                    className="
+                      px-4 py-2 rounded-xl bg-rose-600 text-white text-sm font-medium
+                      shadow transition hover:bg-rose-700 active:scale-95
+                    "
+                    onClick={() => {
+                      const reason = prompt('Cancel reason (User/Provider)?', 'Cancelled by Provider');
+                      if (reason) updateStatus(job.id, reason as Job['status']);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
           </li>
         ))}
       </ul>
-    </div>
+    </section>
   );
 };

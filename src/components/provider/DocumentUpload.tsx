@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
+import { motion } from 'framer-motion';
 
 interface DocumentUploadProps {
   onUploadSuccess?: (docName: string) => void;
@@ -46,14 +47,37 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({ onUploadSuccess,
   };
 
   return (
-    <div className="space-y-2">
-      <input type="file" accept="application/pdf" onChange={handleFileChange} className="block w-full text-gray-600" />
+    <motion.div
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.02 }}
+      className="bg-white p-4 rounded-xl shadow-sm space-y-3"
+    >
+      <h3 className="text-lg font-semibold text-slate-800">Upload Document</h3>
+      <p className="text-sm text-slate-500">
+        Accepted format: PDF | Max size: 2MB | Maximum 3 documents
+      </p>
+
+      <input
+        type="file"
+        accept="application/pdf"
+        onChange={handleFileChange}
+        className="block w-full text-sm text-gray-600 border border-slate-200 rounded px-2 py-1"
+      />
+
+      {file && (
+        <div className="flex justify-between items-center bg-green-50 text-green-700 px-3 py-1 rounded-md text-sm font-medium">
+          <span>{file.name}</span>
+          <button onClick={() => setFile(null)} className="font-bold hover:text-green-900">×</button>
+        </div>
+      )}
+
       <button
         onClick={handleUpload}
-        className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg transition-all duration-300 hover:scale-[1.02]"
+        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg transition-all duration-300 font-medium"
       >
-        Upload Document
+        Upload
       </button>
-    </div>
+    </motion.div>
   );
 };

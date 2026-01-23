@@ -5,7 +5,10 @@ interface DashboardSidebarProps {
   setActiveTab: (tab: any) => void;
 }
 
-export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, setActiveTab }) => {
+export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
+  activeTab,
+  setActiveTab,
+}) => {
   const tabs = [
     { key: 'services', label: 'My Services' },
     { key: 'appointments', label: 'Appointments' },
@@ -13,29 +16,58 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, s
     { key: 'work-history', label: 'Work History' },
     { key: 'reviews', label: 'Reviews' },
     { key: 'availability', label: 'Availability' },
-    { key: 'bookings', label: 'Booking Requests' }
-    , { key: 'booking-status', label: 'Booking Status' },
-{ key: 'verify-identity', label: 'Verify Identity' },
-{ key: 'documents', label: 'Documents' },
-{ key: 'portfolio', label: 'Portfolio' },
-
+    { key: 'bookings', label: 'Booking Requests' },
+    { key: 'booking-status', label: 'Booking Status' },
+    { key: 'verify-identity', label: 'Verify Identity' },
+    { key: 'documents', label: 'Documents' },
+    { key: 'portfolio', label: 'Portfolio' },
   ];
 
   return (
-    <aside className="w-60 bg-white border-r p-4">
-      <h2 className="text-xl font-bold mb-6 text-emerald-700">Dashboard</h2>
-      <nav className="flex flex-col gap-2">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            className={`text-left px-3 py-2 rounded-lg hover:bg-emerald-100 transition ${
-              activeTab === tab.key ? 'bg-emerald-600 text-white' : 'text-gray-700'
-            }`}
-            onClick={() => setActiveTab(tab.key)}
-          >
-            {tab.label}
-          </button>
-        ))}
+    <aside className="w-64 bg-white border-r border-slate-200 px-4 py-6">
+      {/* Header */}
+      <h2 className="text-xl font-semibold mb-8 text-emerald-700 tracking-tight">
+        Provider Dashboard
+      </h2>
+
+      {/* Navigation */}
+      <nav className="flex flex-col gap-1">
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.key;
+
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`
+                group relative w-full text-left px-4 py-2.5 rounded-lg
+                text-sm font-medium
+                transition-all duration-200 ease-out
+                ${
+                  isActive
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
+                }
+              `}
+            >
+              {/* Active indicator */}
+              {isActive && (
+                <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-emerald-400" />
+              )}
+
+              {/* Label */}
+              <span
+                className={`
+                  inline-block transition-transform duration-200
+                  group-hover:translate-x-1
+                  ${isActive ? 'translate-x-1' : ''}
+                `}
+              >
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
       </nav>
     </aside>
   );
