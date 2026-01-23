@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { BarChart3, Users, ShieldCheck, Layers, Calendar, Star, FileText, HelpCircle, Menu } from "lucide-react";
+import { label } from "framer-motion/client";
 
 
 const nav = [
@@ -10,7 +11,7 @@ const nav = [
 { label: "Users", href: "/admin/users", icon: Users },
 { label: "Provider Verification", href: "/admin/providers", icon: ShieldCheck },
 { label: "Categories", href: "/admin/categories", icon: Layers },
-{ title: "Services", href: "/admin/services", icon: Layers },
+{ label: "Services", href: "/admin/services", icon: Layers },
 { label: "Bookings", href: "/admin/bookings", icon: Calendar },
 { label: "Reviews", href: "/admin/reviews", icon: Star },
 { label: "Content", href: "/admin/content", icon: FileText },
