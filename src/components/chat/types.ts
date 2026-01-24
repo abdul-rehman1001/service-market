@@ -1,14 +1,14 @@
 export interface ChatUser {
   id: string;
   name: string;
-  avatar?: string;
+  avatar?: string; // optional avatar image
 }
 
 export interface Message {
   id: string;
   senderId: string;
   content: string;
-  timestamp: string;
+  timestamp: string; // ISO string
 }
 
 export interface Conversation {

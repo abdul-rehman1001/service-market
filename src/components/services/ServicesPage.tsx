@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { usePagination } from "./hooks/usePagination";
 import SearchHeader from "./SearchHeader";
@@ -33,7 +33,7 @@ export default function ServicesPage({
   } = usePagination(providers, 3);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f5f7f8]">
       {/* Header */}
       <Header />
 
@@ -45,16 +45,17 @@ export default function ServicesPage({
       />
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 flex gap-6">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col lg:flex-row gap-8 py-8">
+        
         {/* Left Column */}
-        <main className="flex-1 py-8">
-          <SearchFilters
-            searchQuery={searchQuery}
-            location={location}
-          />
+        <main className="flex-1 space-y-6">
+          {/* Filters */}
+          <SearchFilters searchQuery={searchQuery} location={location} />
 
+          {/* Providers List */}
           <ProvidersList providers={paginatedItems} />
 
+          {/* Pagination */}
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -65,7 +66,7 @@ export default function ServicesPage({
         </main>
 
         {/* Right Column / Map */}
-        <aside className="w-2/5 h-screen sticky top-0 border-l">
+        <aside className="w-full lg:w-2/5 h-[600px] lg:h-[calc(100vh-100px)] sticky top-24 rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
           <SearchMap location={location} />
         </aside>
       </div>

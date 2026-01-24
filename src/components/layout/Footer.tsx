@@ -11,7 +11,7 @@ import {
 
 export default function Footer() {
   return (
-    <footer className="bg-[#1f2937] text-gray-300 py-16 mt-16">
+    <footer className="bg-gray-900 text-gray-300 py-16 mt-16">
       <div className="max-w-7xl mx-auto px-6">
         
         {/* Top Sections */}
@@ -25,19 +25,16 @@ export default function Footer() {
             </p>
 
             {/* Social Icons */}
-            <div className="flex items-center mt-4 gap-4">
-              <a href="#" className="bg-[#009966] text-white p-2 rounded-full hover:opacity-80 transition">
-                <FaFacebookF className="w-4 h-4" />
-              </a>
-              <a href="#" className="bg-[#009966] text-white p-2 rounded-full hover:opacity-80 transition">
-                <FaTwitter className="w-4 h-4" />
-              </a>
-              <a href="#" className="bg-[#009966] text-white p-2 rounded-full hover:opacity-80 transition">
-                <FaInstagram className="w-4 h-4" />
-              </a>
-              <a href="#" className="bg-[#009966] text-white p-2 rounded-full hover:opacity-80 transition">
-                <FaLinkedinIn className="w-4 h-4" />
-              </a>
+            <div className="flex items-center mt-4 gap-3">
+              {[FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn].map((Icon, idx) => (
+                <a
+                  key={idx}
+                  href="#"
+                  className="bg-emerald-600 text-white p-2 rounded-full hover:bg-emerald-500 hover:scale-110 transition transform"
+                >
+                  <Icon className="w-4 h-4" />
+                </a>
+              ))}
             </div>
           </div>
 
@@ -45,11 +42,10 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-3">Categories</h3>
             <ul className="space-y-2 text-sm">
-              <li>Home Cleaning</li>
-              <li>Plumbing</li>
-              <li>Shifting Service</li>
-              <li>Electrician</li>
-             
+              <li className="hover:text-emerald-500 cursor-pointer transition">Home Cleaning</li>
+              <li className="hover:text-emerald-500 cursor-pointer transition">Plumbing</li>
+              <li className="hover:text-emerald-500 cursor-pointer transition">Shifting Service</li>
+              <li className="hover:text-emerald-500 cursor-pointer transition">Electrician</li>
             </ul>
           </div>
 
@@ -57,10 +53,10 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-3">Company</h3>
             <ul className="space-y-2 text-sm">
-              <li>About Us</li>
-              <li>Contact</li>
-              <li>Privacy Policy</li>
-              <li>Terms & Conditions</li>
+              <li className="hover:text-emerald-500 cursor-pointer transition">About Us</li>
+              <li className="hover:text-emerald-500 cursor-pointer transition">Contact</li>
+              <li className="hover:text-emerald-500 cursor-pointer transition">Privacy Policy</li>
+              <li className="hover:text-emerald-500 cursor-pointer transition">Terms & Conditions</li>
             </ul>
           </div>
 
@@ -68,17 +64,17 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-3">Support</h3>
             <ul className="space-y-2 text-sm">
-              <li>Help Center</li>
-              <li>FAQs</li>
-              <li>Report a Problem</li>
+              <li className="hover:text-emerald-500 cursor-pointer transition">Help Center</li>
+              <li className="hover:text-emerald-500 cursor-pointer transition">FAQs</li>
+              <li className="hover:text-emerald-500 cursor-pointer transition">Report a Problem</li>
             </ul>
 
             {/* Contact Info */}
             <div className="mt-4 space-y-1 text-sm text-gray-400">
-              <p className="flex items-center gap-2">
+              <p className="flex items-center gap-2 hover:text-emerald-400 transition">
                 <FaEnvelope className="w-4 h-4" /> support@servizo.com
               </p>
-              <p className="flex items-center gap-2">
+              <p className="flex items-center gap-2 hover:text-emerald-400 transition">
                 <FaPhoneAlt className="w-4 h-4" /> +1 234 567 890
               </p>
             </div>
@@ -86,7 +82,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Section */}
-        <div className="border-t border-gray-700 mt-10 pt-5 text-center text-sm text-gray-500">
+        <div className="border-t border-gray-800 mt-10 pt-5 text-center text-sm text-gray-500">
           © {new Date().getFullYear()} Servizo — All rights reserved.
         </div>
       </div>
