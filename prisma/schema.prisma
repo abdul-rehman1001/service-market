@@ -1,4 +1,4 @@
-generator client {
+generator client { 
   provider = "prisma-client-js"
 }
 
@@ -7,64 +7,443 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Example models for a service marketplace
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  password  String           // hashed password for login
-  role      Role     @default(SEEKER)
-  services  Service[]
-  bookings  Booking[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+//////////////////////////////////////////////////////
+// ENUMS
+//////////////////////////////////////////////////////
 
-  @@index([email])
-}
-
-model Service {
-  id          String   @id @default(cuid())
-  title       String
-  description String   @db.Text
-  price       Decimal  @db.Decimal(10, 2)
-  category    String
-  providerId  String
-  provider    User     @relation(fields: [providerId], references: [id], onDelete: Cascade)
-  bookings    Booking[]
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([providerId])
-  @@index([category])
-}
-
-model Booking {
-  id          String        @id @default(cuid())
-  serviceId   String
-  service     Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  customerId  String
-  customer    User          @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  status      BookingStatus @default(PENDING)
-  scheduledAt DateTime
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  @@index([serviceId])
-  @@index([customerId])
-  @@index([status])
-}
-
-enum Role {
+enum UserRole {
   SEEKER
   PROVIDER
   ADMIN
 }
 
+enum UserStatus {
+  UNVERIFIED
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
 
 enum BookingStatus {
   PENDING
   CONFIRMED
+  EN_ROUTE
+  IN_PROGRESS
   COMPLETED
   CANCELLED
+  AUTO_CANCELLED
+}
+
+enum CancelledBy {
+  SEEKER
+  PROVIDER
+  ADMIN
+}
+
+enum ResponseType {
+  ACCEPTED
+  REJECTED
+  SUGGESTED_ALTERNATE
+}
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NotificationType {
+  BOOKING_REQUEST
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  BOOKING_RESCHEDULED
+  REMINDER_24H
+  REMINDER_2H
+  EN_ROUTE
+  IN_PROGRESS
+  COMPLETED
+  REVIEW_RECEIVED
+  VERIFICATION_STATUS_CHANGED
+  SYSTEM_UPDATE
+}
+
+//////////////////////////////////////////////////////
+// AUTH & USER
+//////////////////////////////////////////////////////
+
+model User {
+  id           String     @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String     @unique
+  phone        String     @unique
+  password     String
+  role         UserRole
+  status       UserStatus @default(UNVERIFIED)
+  city         String?
+  address      String?
+  profileImage String?
+  bio          String?
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  providerProfile ServiceProvider?
+  bookingsAsSeeker Booking[] @relation("SeekerBookings")
+  reviewsGiven     Review[]  @relation("ReviewsGiven")
+  reviewsReceived  Review[]  @relation("ReviewsReceived")
+  messagesSent     Message[] @relation("SentMessages")
+  messagesReceived Message[] @relation("ReceivedMessages")
+  notifications    Notification[]
+  searchHistory    SearchHistory[]
+  problemQueries   ProblemQuery[]
+  bookmarks        Bookmark[]
+  userQueries      UserQuery[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+model OTPVerification {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  otp       String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+//////////////////////////////////////////////////////
+// PROVIDER EXTENSION
+//////////////////////////////////////////////////////
+
+model ServiceProvider {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  businessName       String?
+  yearsOfExperience  Int
+  cnic               String             @unique
+  verificationStatus VerificationStatus @default(PENDING)
+  averageRating      Decimal            @default(0) @db.Decimal(2,1)
+  totalReviews       Int                @default(0)
+  totalJobsCompleted Int                @default(0)
+  isAvailable        Boolean            @default(true)
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relations
+  services        Service[]
+  availability    Availability[]
+  unavailableDates UnavailableDate[]
+  bookingsAsProvider Booking[]
+  documents       ProviderDocument[]
+  portfolios      PortfolioItem[]
+  bookmarks       Bookmark[]
+}
+
+//////////////////////////////////////////////////////
+// CATEGORY
+//////////////////////////////////////////////////////
+
+model ServiceCategory {
+  id           String            @id @default(cuid())
+  name         String
+  description  String?
+  icon         String?
+  parentId     String?
+  parent       ServiceCategory?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children     ServiceCategory[] @relation("CategoryTree")
+
+  isActive     Boolean @default(true)
+  displayOrder Int     @default(0)
+
+  services     Service[]
+  portfolios   PortfolioItem[]
+  problemQueries ProblemQuery[]
+}
+
+//////////////////////////////////////////////////////
+// SERVICE
+//////////////////////////////////////////////////////
+
+model Service {
+  id            String           @id @default(cuid())
+  providerId    String
+  provider      ServiceProvider  @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  categoryId    String
+  category      ServiceCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  name          String
+  description   String
+  minPrice      Decimal          @db.Decimal(10,2)
+  maxPrice      Decimal          @db.Decimal(10,2)
+  defaultDurationMinutes Int
+
+  isActive      Boolean @default(true)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  bookings      Booking[]
+  availability  Availability[]
+}
+
+//////////////////////////////////////////////////////
+// AVAILABILITY
+//////////////////////////////////////////////////////
+
+model Availability {
+  id         String          @id @default(cuid())
+  providerId String
+  provider   ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  serviceId  String
+  service    Service         @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  dayOfWeek  Int
+  startTime  DateTime
+  endTime    DateTime
+
+  @@unique([providerId, serviceId, dayOfWeek])
+}
+
+model UnavailableDate {
+  id         String          @id @default(cuid())
+  providerId String
+  provider   ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  date       DateTime
+  reason     String?
+
+  @@unique([providerId, date])
+}
+
+//////////////////////////////////////////////////////
+// BOOKING
+//////////////////////////////////////////////////////
+
+model Booking {
+  id              String          @id @default(cuid())
+  bookingNumber   String          @unique
+
+  serviceId       String
+  service         Service         @relation(fields: [serviceId], references: [id])
+
+  seekerId        String
+  seeker          User            @relation("SeekerBookings", fields: [seekerId], references: [id])
+
+  providerId      String
+  provider        ServiceProvider @relation(fields: [providerId], references: [id])
+
+  status          BookingStatus   @default(PENDING)
+
+  scheduledStart  DateTime
+  scheduledEnd    DateTime
+
+  location        String
+  problemDescription String
+  responseDeadline DateTime
+
+  cancelledBy     CancelledBy?
+  cancellationReason String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  messages        Message[]
+  review          Review?
+  providerResponse ProviderResponse?
+  notifications   Notification[]
+}
+
+model ProviderResponse {
+  id        String       @id @default(cuid())
+  bookingId String       @unique
+  booking   Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  type      ResponseType
+  createdAt DateTime     @default(now())
+}
+
+//////////////////////////////////////////////////////
+// CHAT (BOOKING REQUIRED)
+//////////////////////////////////////////////////////
+
+model Message {
+  id         String   @id @default(cuid())
+
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+
+  receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  content    String
+  status     String   @default("SENT")
+
+  createdAt  DateTime @default(now())
+}
+
+//////////////////////////////////////////////////////
+// REVIEW
+//////////////////////////////////////////////////////
+
+model Review {
+  id         String   @id @default(cuid())
+
+  bookingId  String   @unique
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  reviewerId String
+  reviewer   User     @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+
+  revieweeId String
+  reviewee   User     @relation("ReviewsReceived", fields: [revieweeId], references: [id])
+
+  rating     Int
+  comment    String?
+
+  professionalism Int?
+  punctuality     Int?
+  qualityOfWork   Int?
+  communication   Int?
+  valueForMoney   Int?
+
+  createdAt DateTime @default(now())
+}
+
+//////////////////////////////////////////////////////
+// AI PROBLEM QUERY (SBERT TRACEABILITY)
+//////////////////////////////////////////////////////
+
+model ProblemQuery {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  rawText     String
+  detectedCategoryId String?
+  detectedCategory   ServiceCategory? @relation(fields: [detectedCategoryId], references: [id], onDelete: SetNull)
+  confidenceScore Float?
+
+  createdAt   DateTime @default(now())
+}
+
+//////////////////////////////////////////////////////
+// SEARCH & BOOKMARK
+//////////////////////////////////////////////////////
+
+model SearchHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  query     String
+  filters   Json?
+  createdAt DateTime @default(now())
+}
+
+model Bookmark {
+  id          String          @id @default(cuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  providerId  String
+  provider    ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, providerId])
+}
+
+//////////////////////////////////////////////////////
+// NOTIFICATIONS
+//////////////////////////////////////////////////////
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bookingId String?
+  booking   Booking? @relation(fields: [bookingId], references: [id])
+
+  type      NotificationType
+  isRead    Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+//////////////////////////////////////////////////////
+// DOCUMENTS & PORTFOLIO
+//////////////////////////////////////////////////////
+
+model ProviderDocument {
+  id         String          @id @default(cuid())
+  providerId String
+  provider   ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  fileUrl    String
+  status     DocumentStatus  @default(PENDING)
+
+  createdAt  DateTime @default(now())
+}
+
+model PortfolioItem {
+  id         String          @id @default(cuid())
+  providerId String
+  provider   ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  categoryId String
+  category   ServiceCategory @relation(fields: [categoryId], references: [id])
+
+  images     String[]
+  description String?
+
+  @@unique([providerId, categoryId])
+}
+
+//////////////////////////////////////////////////////
+// ADMIN & CMS
+//////////////////////////////////////////////////////
+
+model UserQuery {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  message   String
+  status    String   @default("OPEN")
+
+  createdAt DateTime @default(now())
+}
+
+model FAQ {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  order     Int      @default(0)
+}
+
+model Content {
+  id      String @id @default(cuid())
+  page    String @unique
+  body    String
 }
