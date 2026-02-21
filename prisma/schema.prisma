@@ -91,6 +91,11 @@ model User {
   profileImage String?
   bio          String?
 
+  emailVerified    Boolean   @default(false)
+emailVerifiedAt  DateTime?
+phoneVerified    Boolean   @default(false)
+phoneVerifiedAt  DateTime?
+
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
@@ -107,18 +112,23 @@ model User {
   bookmarks        Bookmark[]
   userQueries      UserQuery[]
   passwordResetTokens PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
 }
 
-model OTPVerification {
+
+
+model PasswordResetToken {
   id        String   @id @default(cuid())
-  phone     String   @unique
-  otp       String
-  attempts  Int      @default(0)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
 
-model PasswordResetToken {
+
+
+model EmailVerificationToken {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
