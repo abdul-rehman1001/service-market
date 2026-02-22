@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import AuthCard from '@/components/auth/AuthCard';
 import Input from '@/components/auth/Input';
 import PasswordInput from '@/components/auth/PasswordInput';
+import ImageUploader from '@/components/auth/ImageUploader';
 
 export default function RegisterSeeker() {
   const router = useRouter();
@@ -12,11 +13,16 @@ export default function RegisterSeeker() {
     name: '',
     email: '',
     password: '',
+    profileImage: '',
   });
   const [error, setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleImageUpload = (imageUrl: string) => {
+    setForm({ ...form, profileImage: imageUrl });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,6 +36,7 @@ export default function RegisterSeeker() {
         name: form.name,
         email: form.email,
         password: form.password,
+        profileImage: form.profileImage,
         role: 'SEEKER', // fixed role for seekers
       }),
     });
@@ -52,6 +59,8 @@ export default function RegisterSeeker() {
         {error && <p className="text-red-500 text-center mt-2">{error}</p>}
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          <ImageUploader onImageUpload={handleImageUpload} imageUrl={form.profileImage} />
+          
           <Input
             placeholder="Full Name"
             name="name"

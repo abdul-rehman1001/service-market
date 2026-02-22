@@ -5,7 +5,7 @@ import { signToken } from '@/lib/jwt';
 import { setTokenCookie } from '@/lib/cookies';
 
 export async function POST(req: NextRequest) {
-  const { name, email, password, role } = await req.json();
+  const { name, email, password, role, profileImage } = await req.json();
 
   if (!name || !email || !password || !role) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
@@ -18,14 +18,27 @@ export async function POST(req: NextRequest) {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
+  // Split name into firstName and lastName
+  const nameParts = name.trim().split(/\s+/);
+  const firstName = nameParts[0];
+  const lastName = nameParts.slice(1).join(' ') || '';
+
   const user = await prisma.user.create({
-    data: { name, email, password: hashedPassword, role },
+    data: {
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      role,
+      profileImage: profileImage || null,
+      phone: '', // Temporary placeholder, will be set during phone verification
+    },
   });
 
   const token = signToken({ userId: user.id, role: user.role });
 
   const res = NextResponse.json({
-    user: { id: user.id, email: user.email, name: user.name, role: user.role },
+    user: { id: user.id, email: user.email, name: `${user.firstName} ${user.lastName}`, role: user.role },
   });
 
   setTokenCookie(res, token);
