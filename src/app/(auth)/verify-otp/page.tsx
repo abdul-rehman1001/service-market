@@ -1,66 +1,128 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import AuthCard from '@/components/auth/AuthCard';
-import OtpInputGroup from '@/components/auth/otp/OtpInputGroup';
-import OtpTimer from '@/components/auth/otp/OtpTimer';
+import { useState } from "react";
+import { auth, getRecaptcha, signInWithPhoneNumber } from "@/lib/firebase";
+import { useSearchParams } from "next/navigation";
 
 export default function VerifyOtpPage() {
-  const router = useRouter();
-  const [otp, setOtp] = useState('');
-  const [error, setError] = useState('');
+  const searchParams = useSearchParams();
+  const userId = searchParams.get("userId");
 
-  const handleVerify = async () => {
-    if (otp.length !== 6) {
-      setError('Please enter complete OTP');
-      return;
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const sendOtp = async () => {
+    try {
+      if (!phone.startsWith("+")) {
+        setMessage("Phone must include country code (e.g. +92300...)");
+        return;
+      }
+
+      setLoading(true);
+      setMessage("");
+
+      const recaptcha = getRecaptcha("recaptcha-container");
+      if (!recaptcha) {
+        setMessage("Recaptcha not ready");
+        return;
+      }
+
+      await recaptcha.render();
+
+      const result = await signInWithPhoneNumber(auth, phone, recaptcha);
+
+      setConfirmationResult(result);
+      setMessage("OTP sent successfully");
+    } catch (error: any) {
+      console.error(error);
+      setMessage(error.message || "Failed to send OTP");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const res = await fetch('/api/auth/verify-otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ otp }),
-    });
+  const verifyOtp = async () => {
+    try {
+      if (!confirmationResult) {
+        setMessage("Send OTP first");
+        return;
+      }
 
-    const data = await res.json();
+      if (!otp) {
+        setMessage("Enter OTP");
+        return;
+      }
 
-    if (!res.ok) {
-      setError(data.error || 'Invalid OTP');
-      return;
+      setLoading(true);
+      setMessage("");
+
+      const result = await confirmationResult.confirm(otp);
+
+      if (!userId) {
+        setMessage("User ID missing");
+        return;
+      }
+
+      const res = await fetch("/api/auth/verify-phone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          firebaseUid: result.user.uid,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Verification failed");
+      }
+
+      setMessage("Phone verified successfully ✅");
+    } catch (error: any) {
+      console.error(error);
+      setMessage(error.message || "Invalid OTP");
+    } finally {
+      setLoading(false);
     }
-
-    router.push(data.role === 'provider' ? '/provider/dashboard' : '/home');
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-green-100">
-      <AuthCard>
-        <h2 className="text-3xl font-bold text-center text-emerald-700">
-          Verify OTP
-        </h2>
+    <div style={{ padding: "40px" }}>
+      <h2>Phone Verification</h2>
 
-        <p className="text-center text-gray-500 mt-2">
-          Enter the 6-digit code sent to your phone
-        </p>
+      <input
+        type="text"
+        placeholder="+923001234567"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+      />
+      <br /><br />
 
-        {error && (
-          <p className="text-red-500 text-center mt-3 text-sm">{error}</p>
-        )}
+      <button onClick={sendOtp} disabled={loading}>
+        {loading ? "Sending..." : "Send OTP"}
+      </button>
 
-        <div className="mt-6">
-          <OtpInputGroup value={otp} onChange={setOtp} />
-        </div>
+      <div id="recaptcha-container"></div>
 
-        <OtpTimer />
+      <br /><br />
 
-        <button
-          onClick={handleVerify}
-          className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl transition-all hover:scale-[1.02]"
-        >
-          Verify & Continue
-        </button>
-      </AuthCard>
+      <input
+        type="text"
+        placeholder="Enter OTP"
+        value={otp}
+        onChange={(e) => setOtp(e.target.value)}
+      />
+      <br /><br />
+
+      <button onClick={verifyOtp} disabled={loading}>
+        {loading ? "Verifying..." : "Verify OTP"}
+      </button>
+
+      <p>{message}</p>
     </div>
   );
 }
