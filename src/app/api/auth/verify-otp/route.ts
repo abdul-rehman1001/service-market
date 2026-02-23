@@ -1,17 +1,11 @@
 import { NextResponse } from 'next/server';
 
+// This endpoint is deprecated and should not be used.
+// OTP verification is handled through Firebase Authentication
+// and the /api/auth/verify-phone endpoint.
 export async function POST(req: Request) {
-  const { otp } = await req.json();
-
-  if (otp !== '123456') {
-    return NextResponse.json(
-      { error: 'Invalid OTP' },
-      { status: 400 }
-    );
-  }
-
-  return NextResponse.json({
-    success: true,
-    role: 'seeker', // or provider
-  });
+  return NextResponse.json(
+    { error: 'This endpoint is deprecated. Use Firebase OTP verification instead.' },
+    { status: 410 } // 410 Gone
+  );
 }

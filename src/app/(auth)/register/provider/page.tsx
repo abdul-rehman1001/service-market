@@ -13,9 +13,11 @@ export default function RegisterProvider() {
     name: '',
     email: '',
     password: '',
+    phone: '',
     profileImage: '',
   });
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -28,27 +30,44 @@ export default function RegisterProvider() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
-    // Send registration request
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        profileImage: form.profileImage,
-        role: 'PROVIDER', // fixed role
-      }),
-    });
+    try {
+      // Send registration request
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          phone: form.phone,
+          profileImage: form.profileImage,
+          role: 'PROVIDER', // fixed role
+        }),
+      });
 
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error || 'Something went wrong');
-      return;
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Something went wrong');
+        return;
+      }
+
+      // Ensure we have userId before redirecting
+      if (!data.user?.id) {
+        setError('Registration failed: User ID not received');
+        return;
+      }
+
+      console.log('Registration successful, redirecting with userId:', data.user.id);
+
+      // Redirect to email verification page with userId only
+      router.push(`/verify-email-registration?userId=${data.user.id}`);
+    } catch (err) {
+      setError('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-
-    router.push('/dashboard'); // redirect after successful registration
   };
 
   return (
@@ -77,6 +96,14 @@ export default function RegisterProvider() {
             onChange={handleChange}
             required
           />
+          <Input
+            placeholder="Phone Number (e.g., +92300123456)"
+            name="phone"
+            type="tel"
+            value={form.phone}
+            onChange={handleChange}
+            required
+          />
           <PasswordInput
             placeholder="Password"
             name="password"
@@ -87,9 +114,10 @@ export default function RegisterProvider() {
 
           <button
             type="submit"
-            className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl transition"
+            disabled={isLoading}
+            className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Account
+            {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
       </AuthCard>

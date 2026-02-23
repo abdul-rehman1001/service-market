@@ -19,6 +19,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    if (user.emailVerified) {
+      return NextResponse.json({ error: "Email already verified" }, { status: 400 });
+    }
+
+    await prisma.emailVerificationToken.deleteMany({
+      where: { userId: user.id },
+    });
+
     const token = crypto.randomBytes(32).toString("hex");
 
     await prisma.emailVerificationToken.create({
@@ -29,13 +37,26 @@ export async function POST(req: Request) {
       },
     });
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL(req.url).origin;
-const verificationUrl = `${appUrl}/verify-email?token=${token}`;
-await sendEmail(
-  user.email,
-  "Verify your email",
-  `<p>Click below to verify your email:</p><a href="${verificationUrl}">Verify Email</a>`
-);
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const verificationUrl = `${appUrl}/verify-email-registration?userId=${user.id}&emailToken=${token}`;
+
+    await sendEmail(
+      user.email,
+      "Verify your email - Service Market",
+      `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Email Verification</h2>
+          <p>Please verify your email address to activate your account.</p>
+          <p>
+            <a href="${verificationUrl}" style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+              Verify Email
+            </a>
+          </p>
+          <p style="color: #666; font-size: 12px;">This link expires in 24 hours.</p>
+          <p style="color: #666; font-size: 12px;">If you didn't create an account, please ignore this email.</p>
+        </div>
+      `
+    );
 
     return NextResponse.json({ message: "Verification email sent" });
 

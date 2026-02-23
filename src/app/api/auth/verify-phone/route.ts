@@ -7,21 +7,39 @@ export async function POST(req: Request) {
 
     if (!userId || !firebaseUid) {
       return NextResponse.json(
-        { error: "Missing parameters" },
+        { error: "Missing required parameters" },
         { status: 400 }
       );
     }
 
-    await prisma.user.update({
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Mark phone as verified
+    const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
         phoneVerified: true,
         phoneVerifiedAt: new Date(),
+        // Set status to ACTIVE only if email is also verified
+        status: user.emailVerified ? "ACTIVE" : "UNVERIFIED",
       },
     });
 
     return NextResponse.json({
       message: "Phone verified successfully",
+      user: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        emailVerified: updatedUser.emailVerified,
+        phoneVerified: updatedUser.phoneVerified,
+        status: updatedUser.status,
+      },
     });
   } catch (error) {
     console.error(error);

@@ -17,12 +17,22 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Invalid or expired token" }, { status: 400 });
   }
 
-  await prisma.user.update({
+  const user = await prisma.user.findUnique({
+    where: { id: existingToken.userId },
+  });
+
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  // Mark email as verified
+  const updatedUser = await prisma.user.update({
     where: { id: existingToken.userId },
     data: {
       emailVerified: true,
       emailVerifiedAt: new Date(),
-      status: "ACTIVE",
+      // Set status to ACTIVE only if phone is also verified
+      status: user.phoneVerified ? "ACTIVE" : "UNVERIFIED",
     },
   });
 
@@ -30,5 +40,14 @@ export async function GET(req: Request) {
     where: { token },
   });
 
-  return NextResponse.json({ message: "Email verified successfully" });
+  return NextResponse.json({
+    message: "Email verified successfully",
+    user: {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      emailVerified: updatedUser.emailVerified,
+      phoneVerified: updatedUser.phoneVerified,
+      status: updatedUser.status,
+    },
+  });
 }
