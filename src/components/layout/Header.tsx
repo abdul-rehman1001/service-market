@@ -1,11 +1,52 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Menu, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
+
+interface UserData {
+  id: string;
+  firstName: string;
+  lastName: string;
+  profileImage?: string;
+}
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<UserData | null>(null);
+
+  useEffect(() => {
+    // Fetch current user profile for avatar
+    fetch('/api/profile')
+      .then((res) => {
+        if (res.ok) return res.json();
+        return null;
+      })
+      .then((data) => {
+        if (data?.user) {
+          setUser({
+            id: data.user.id,
+            firstName: data.user.firstName,
+            lastName: data.user.lastName,
+            profileImage: data.user.profileImage,
+          });
+        }
+      })
+      .catch(() => {
+        // Silent fail - user might not be logged in
+      });
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   const navItems = [
     { label: "Home", href: "/home" },
@@ -44,13 +85,34 @@ export default function Header() {
 
         {/* Right Icons / Buttons */}
         <div className="flex items-center gap-4">
-          {/* User Avatar */}
-          <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-semibold shadow-inner ring-1 ring-gray-200">
-            U
-          </div>
+          {/* User Avatar - Clickable to Profile */}
+          <Link
+            href="/profile"
+            className="group relative"
+            title="Go to Profile"
+          >
+            {user?.profileImage ? (
+              <img
+                src={user.profileImage}
+                alt={`${user.firstName} ${user.lastName}`}
+                className="w-10 h-10 rounded-full object-cover shadow-md ring-2 ring-gray-200 group-hover:ring-emerald-500 transition-all cursor-pointer"
+              />
+            ) : user ? (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-semibold shadow-md ring-2 ring-gray-200 group-hover:ring-emerald-500 transition-all cursor-pointer">
+                {user.firstName[0]}{user.lastName[0]}
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-semibold shadow-inner ring-1 ring-gray-200 group-hover:ring-emerald-500 transition-all cursor-pointer">
+                U
+              </div>
+            )}
+          </Link>
 
           {/* Logout Button */}
-          <button className="flex items-center gap-2 text-white bg-emerald-600 px-3 py-2 rounded-md hover:bg-emerald-700 transition-all duration-200 shadow-sm">
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-white bg-emerald-600 px-3 py-2 rounded-md hover:bg-emerald-700 transition-all duration-200 shadow-sm"
+          >
             <LogOut className="w-4 h-4" />
             Logout
           </button>
