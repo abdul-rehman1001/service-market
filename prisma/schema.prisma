@@ -58,6 +58,13 @@ enum DocumentStatus {
   REJECTED
 }
 
+enum DocumentType {
+  CNIC_FRONT
+  CNIC_BACK
+  CERTIFICATE
+  OTHER
+}
+
 enum NotificationType {
   BOOKING_REQUEST
   BOOKING_CONFIRMED
@@ -148,7 +155,7 @@ model ServiceProvider {
 
   businessName       String?
   yearsOfExperience  Int
-  cnic               String             @unique
+  cnic               String?            @unique
   verificationStatus VerificationStatus @default(PENDING)
   averageRating      Decimal            @default(0) @db.Decimal(2,1)
   totalReviews       Int                @default(0)
@@ -406,14 +413,21 @@ model Notification {
 //////////////////////////////////////////////////////
 
 model ProviderDocument {
-  id         String          @id @default(cuid())
-  providerId String
-  provider   ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  id              String          @id @default(cuid())
+  providerId      String
+  provider        ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
-  fileUrl    String
-  status     DocumentStatus  @default(PENDING)
+  documentType    DocumentType
+  fileName        String
+  fileUrl         String
+  fileSize        Int
+  mimeType        String
+  status          DocumentStatus  @default(PENDING)
+  rejectionReason String?
 
-  createdAt  DateTime @default(now())
+  uploadedAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model PortfolioItem {

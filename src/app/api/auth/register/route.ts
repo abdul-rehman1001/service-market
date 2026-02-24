@@ -52,6 +52,23 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // If registering as PROVIDER, create ServiceProvider profile
+  if (role === 'PROVIDER') {
+    try {
+      await prisma.serviceProvider.create({
+        data: {
+          userId: user.id,
+          yearsOfExperience: 0,
+          cnic: null,
+          verificationStatus: 'PENDING',
+        } as any,
+      });
+    } catch (providerError) {
+      console.error('Error creating provider profile:', providerError);
+      // Continue anyway - provider profile can be updated later
+    }
+  }
+
   try {
     // Create and send email verification token
     const emailToken = crypto.randomBytes(32).toString('hex');
