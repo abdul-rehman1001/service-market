@@ -9,7 +9,7 @@ import { label } from "framer-motion/client";
 const nav = [
 { label: "Dashboard", href: "/admin", icon: BarChart3 },
 { label: "Users", href: "/admin/users", icon: Users },
-{ label: "Provider Verification", href: "/admin/providers", icon: ShieldCheck },
+{ label: "Provider Verification", href: "/admin/verification", icon: ShieldCheck },
 { label: "Categories", href: "/admin/categories", icon: Layers },
 { label: "Services", href: "/admin/services", icon: Layers },
 { label: "Bookings", href: "/admin/bookings", icon: Calendar },
