@@ -1,11 +1,20 @@
+export interface Service {
+  id: string;
+  name: string;
+  description: string;
+}
+
 export interface Provider {
-  id: number;
+  id: string;
+  userId: string;
   name: string;
   role: string;
   rating: number;
   reviews: number;
   description: string;
   avatar: string;
-  category: string;
-  subcategory: string;
+  mainService?: Service;
+  allServices?: Service[];
+  category?: string;
+  subcategory?: string;
 }

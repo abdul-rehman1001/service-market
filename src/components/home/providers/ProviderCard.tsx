@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Star } from "lucide-react";
+import Link from "next/link";
 import { Provider } from "./types";
 
 interface Props {
@@ -31,7 +32,7 @@ export default function ProviderCard({ provider }: Props) {
             </h3>
 
             <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-full text-sm font-medium text-yellow-700">
-              <Star className="w-4 h-4" />
+              <Star className="w-4 h-4 fill-yellow-400" />
               {provider.rating.toFixed(1)}
             </div>
           </div>
@@ -50,12 +51,14 @@ export default function ProviderCard({ provider }: Props) {
       {/* Bottom section: Reviews + Button */}
       <div className="mt-4 flex items-center justify-between">
         <span className="text-xs text-gray-400">
-          ({provider.reviews} reviews)
+          ({provider.reviews} {provider.reviews === 1 ? "review" : "reviews"})
         </span>
 
-        <button className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-medium shadow-sm hover:bg-emerald-700 hover:shadow-md transition-all duration-200">
-          View Profile
-        </button>
+        <Link href={`/provider/${provider.userId}`}>
+          <button className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-medium shadow-sm hover:bg-emerald-700 hover:shadow-md transition-all duration-200">
+            View Profile
+          </button>
+        </Link>
       </div>
     </div>
   );

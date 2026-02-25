@@ -8,6 +8,11 @@ export function useProviderFilter(allProviders: Provider[]) {
     subcategory: null,
   });
 
+  // Update filtered when allProviders changes
+  useEffect(() => {
+    setFiltered(allProviders);
+  }, [allProviders]);
+
   useEffect(() => {
     const handler = (event: any) => {
       const { category, subcategory } = event.detail;
