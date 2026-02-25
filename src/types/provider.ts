@@ -1,42 +1,84 @@
 // src/types/provider.ts
 
-import { ReactNode } from "react";
+import { Decimal } from '@prisma/client/runtime/library';
 
-export interface Service {
+export interface ServiceCategoryType {
+  id: string;
+  name: string;
+  description?: string | null;
+  icon?: string | null;
+}
+
+export interface ServiceType {
+  id: string;
   name: string;
   description: string;
-  price: string;
-}
-
-export interface Review {
-  id: number;
-  name: string;
-  avatar: string;
-  rating: number;
-  comment: string;
-  date: string;
-}
-
-export interface Provider {
-  avgResponseTime: string;
-  jobsCompleted: number;
-  yearsOfExperience: number;
-  price: ReactNode;
-  id: number;
-  name: string;
-  role: string;
-  rating: number;
-  reviews: Review[];
-  detailedDescription: string;
-  avatar: string;
-  category: string;
-  subcategory: string;
-  services: Service[];
+  minPrice: Decimal;
+  maxPrice: Decimal;
+  defaultDurationMinutes: number;
   images: string[];
-  timeSlots: string[];
-  phone?: string;
-  email?: string;
-  location?: string;
-  availability?: string[];
-  averageRating?: number;
+  isActive: boolean;
+  category: ServiceCategoryType;
+}
+
+export interface PortfolioItemType {
+  id: string;
+  images: string[];
+  description?: string | null;
+  category: ServiceCategoryType;
+}
+
+export interface ProviderDocumentType {
+  id: string;
+  documentType: string;
+  fileName: string;
+  fileUrl: string;
+  status: string;
+  uploadedAt: Date;
+}
+
+export interface ReviewType {
+  id: string;
+  rating: number;
+  comment?: string | null;
+  professionalism?: number | null;
+  punctuality?: number | null;
+  qualityOfWork?: number | null;
+  communication?: number | null;
+  valueForMoney?: number | null;
+  createdAt: Date;
+  reviewer: {
+    firstName: string;
+    lastName: string;
+    profileImage?: string | null;
+  };
+}
+
+export interface UserType {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  city?: string | null;
+  profileImage?: string | null;
+  bio?: string | null;
+}
+
+export interface ProviderProfileType {
+  id: string;
+  userId: string;
+  businessName?: string | null;
+  yearsOfExperience: number;
+  verificationStatus: string;
+  averageRating: Decimal;
+  totalReviews: number;
+  totalJobsCompleted: number;
+  isAvailable: boolean;
+  user: UserType;
+  services: ServiceType[];
+  portfolios: PortfolioItemType[];
+  documents: ProviderDocumentType[];
+  completedBookingsCount: number;
+  reviews: ReviewType[];
 }

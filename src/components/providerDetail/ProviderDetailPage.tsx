@@ -10,14 +10,17 @@ import ProviderServices from './ProviderServices';
 import ProviderGallery from './ProviderGallery';
 import ProviderReviews from './ProviderReviews';
 import BookingCard from './BookingCard';
-import { Provider } from '@/types/provider';
+import { ProviderProfileType } from '@/types/provider';
 
 interface Props {
-  provider: Provider;
+  provider: ProviderProfileType;
 }
 
 export default function ProviderDetailPage({ provider }: Props) {
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Get all portfolio images
+  const portfolioImages = provider.portfolios.flatMap(p => p.images);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -34,23 +37,26 @@ export default function ProviderDetailPage({ provider }: Props) {
         <div className="flex flex-col lg:flex-row gap-8 mt-6">
           <main className="flex-1 space-y-8">
             {activeTab === 'overview' && <ProviderOverview provider={provider} />}
-            {activeTab === 'services' && <ProviderServices services={provider.services} />}
-            {activeTab === 'gallery' && <ProviderGallery images={provider.images} providerName={provider.name} />}
+            {activeTab === 'services' && <ProviderServices provider={provider} />}
+            {activeTab === 'gallery' && (
+              <ProviderGallery 
+                portfolios={provider.portfolios}
+                providerName={`${provider.user.firstName} ${provider.user.lastName}`}
+              />
+            )}
             {activeTab === 'reviews' && (
               <ProviderReviews
                 reviews={provider.reviews}
-                totalReviews={provider.reviews.length}
-                averageRating={provider.averageRating ?? 0}
+                totalReviews={provider.totalReviews}
+                averageRating={Number(provider.averageRating)}
               />
             )}
           </main>
 
           {/* Right Sidebar */}
-          {provider.location && (
-            <aside className="w-full lg:w-2/5 sticky top-8">
-              <BookingCard provider={provider} />
-            </aside>
-          )}
+          <aside className="w-full lg:w-2/5">
+            <BookingCard provider={provider} />
+          </aside>
         </div>
       </div>
 
