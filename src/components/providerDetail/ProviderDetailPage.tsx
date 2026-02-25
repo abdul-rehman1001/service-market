@@ -7,7 +7,7 @@ import ProviderHeader from './ProviderHeader';
 import ProviderTabs from './ProviderTabs';
 import ProviderOverview from './ProviderOverview';
 import ProviderServices from './ProviderServices';
-import ProviderGallery from './ProviderGallery';
+import ProviderCertificates from './ProviderCertificates';
 import ProviderReviews from './ProviderReviews';
 import BookingCard from './BookingCard';
 import { ProviderProfileType } from '@/types/provider';
@@ -19,8 +19,10 @@ interface Props {
 export default function ProviderDetailPage({ provider }: Props) {
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Get all portfolio images
-  const portfolioImages = provider.portfolios.flatMap(p => p.images);
+  // Get only CERTIFICATE documents that are APPROVED
+  const certificates = provider.documents.filter(
+    doc => doc.documentType === 'CERTIFICATE' && doc.status === 'APPROVED'
+  );
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -38,9 +40,9 @@ export default function ProviderDetailPage({ provider }: Props) {
           <main className="flex-1 space-y-8">
             {activeTab === 'overview' && <ProviderOverview provider={provider} />}
             {activeTab === 'services' && <ProviderServices provider={provider} />}
-            {activeTab === 'gallery' && (
-              <ProviderGallery 
-                portfolios={provider.portfolios}
+            {activeTab === 'certificates' && (
+              <ProviderCertificates 
+                certificates={certificates}
                 providerName={`${provider.user.firstName} ${provider.user.lastName}`}
               />
             )}

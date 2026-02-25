@@ -8,7 +8,7 @@ interface Props {
 const tabs = [
   { id: 'overview', label: 'Overview' },
   { id: 'services', label: 'Services' },
-  { id: 'gallery', label: 'Gallery' },
+  { id: 'certificates', label: 'Certificates' },
   { id: 'reviews', label: 'Reviews' },
 ];
 
