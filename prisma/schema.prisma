@@ -240,8 +240,6 @@ model Availability {
   dayOfWeek  Int
   startTime  DateTime
   endTime    DateTime
-
-  @@unique([providerId, serviceId, dayOfWeek])
 }
 
 model UnavailableDate {

@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
     endDateTime.setHours(endHour, endMin, 0, 0);
 
     // 7. Check for overlap with existing availability on same day
-    const existing = await prisma.availability.findFirst({
+    const existingSlots = await prisma.availability.findMany({
       where: {
         providerId: provider.id,
         serviceId: serviceId,
@@ -155,36 +155,39 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    let availability;
+    const hasOverlap = existingSlots.some((slot) => {
+      const slotStart = new Date(slot.startTime);
+      const slotEnd = new Date(slot.endTime);
+      const slotStartMinutes = slotStart.getHours() * 60 + slotStart.getMinutes();
+      const slotEndMinutes = slotEnd.getHours() * 60 + slotEnd.getMinutes();
 
-    if (existing) {
-      // Update existing
-      availability = await prisma.availability.update({
-        where: { id: existing.id },
-        data: {
-          startTime: startDateTime,
-          endTime: endDateTime,
-        },
-      });
-    } else {
-      // Create new
-      availability = await prisma.availability.create({
-        data: {
-          providerId: provider.id,
-          serviceId: serviceId,
-          dayOfWeek: dayOfWeek,
-          startTime: startDateTime,
-          endTime: endDateTime,
-        },
-      });
+      return startMinutes < slotEndMinutes && endMinutes > slotStartMinutes;
+    });
+
+    if (hasOverlap) {
+      return NextResponse.json(
+        { error: 'Time slot overlaps with existing availability' },
+        { status: 400 }
+      );
     }
+
+    // 8. Create new slot
+    const availability = await prisma.availability.create({
+      data: {
+        providerId: provider.id,
+        serviceId: serviceId,
+        dayOfWeek: dayOfWeek,
+        startTime: startDateTime,
+        endTime: endDateTime,
+      },
+    });
 
     return NextResponse.json(
       {
-        message: existing ? 'Availability updated' : 'Availability created',
+        message: 'Availability created',
         availability,
       },
-      { status: existing ? 200 : 201 }
+      { status: 201 }
     );
   } catch (error) {
     console.error('Availability POST error:', error);

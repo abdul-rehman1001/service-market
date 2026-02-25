@@ -119,6 +119,28 @@ export const AvailabilityPanel: React.FC = () => {
     return true;
   };
 
+  const hasOverlap = () => {
+    const [startHour, startMin] = startTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
+    const startMinutes = startHour * 60 + startMin;
+    const endMinutes = endHour * 60 + endMin;
+
+    return availability
+      .filter(
+        (slot) =>
+          slot.dayOfWeek === selectedDay &&
+          slot.serviceId === selectedService
+      )
+      .some((slot) => {
+        const slotStart = new Date(slot.startTime);
+        const slotEnd = new Date(slot.endTime);
+        const slotStartMinutes = slotStart.getHours() * 60 + slotStart.getMinutes();
+        const slotEndMinutes = slotEnd.getHours() * 60 + slotEnd.getMinutes();
+
+        return startMinutes < slotEndMinutes && endMinutes > slotStartMinutes;
+      });
+  };
+
   const handleAddAvailability = async () => {
     if (!selectedService || !startTime || !endTime) {
       showAlert('error', 'Please fill all fields');
@@ -126,6 +148,11 @@ export const AvailabilityPanel: React.FC = () => {
     }
 
     if (!validateTimes()) return;
+
+    if (hasOverlap()) {
+      showAlert('error', 'Time slot overlaps with existing availability');
+      return;
+    }
 
     try {
       setSaving(true);
@@ -238,7 +265,9 @@ export const AvailabilityPanel: React.FC = () => {
 
   const groupedAvailability = DAYS_OF_WEEK.map(day => ({
     ...day,
-    slots: availability.filter(a => a.dayOfWeek === day.index),
+    slots: availability
+      .filter(a => a.dayOfWeek === day.index)
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()),
   }));
 
   const minUnavailableDate = format(new Date(), 'yyyy-MM-dd');
