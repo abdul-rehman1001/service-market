@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Upload, Trash2 } from 'lucide-react';
 
 interface Category {
   id: string;
@@ -20,6 +20,7 @@ interface Service {
   maxPrice: number;
   defaultDurationMinutes: number;
   isActive: boolean;
+  images: string[];
 }
 
 interface ServiceFormModalProps {
@@ -31,6 +32,7 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   const [formData, setFormData] = useState({
     name: service?.name || '',
@@ -40,6 +42,7 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
     maxPrice: service?.maxPrice?.toString() || '',
     defaultDurationMinutes: service?.defaultDurationMinutes?.toString() || '',
     isActive: service?.isActive ?? true,
+    images: service?.images || [],
   });
 
   useEffect(() => {
@@ -64,6 +67,66 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    try {
+      setUploadingImages(true);
+
+      for (const file of files) {
+        // Validate file type
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+          alert(`Invalid file type: ${file.name}. Only JPEG, PNG, and WebP are allowed.`);
+          continue;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          alert(`File too large: ${file.name}. Max size is 5MB.`);
+          continue;
+        }
+
+        // Upload to Cloudinary
+        const formDataForUpload = new FormData();
+        formDataForUpload.append('file', file);
+        formDataForUpload.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'service_market_upload');
+        formDataForUpload.append('folder', 'service-market/services');
+
+        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+          method: 'POST',
+          body: formDataForUpload,
+        });
+
+        const uploadData = await uploadRes.json();
+
+        if (uploadRes.ok && uploadData.secure_url) {
+          setFormData((prev) => ({
+            ...prev,
+            images: [...prev.images, uploadData.secure_url],
+          }));
+        } else {
+          alert(`Failed to upload ${file.name}`);
+        }
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Failed to upload images');
+    } finally {
+      setUploadingImages(false);
+      // Reset input
+      e.target.value = '';
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -129,6 +192,7 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
           maxPrice,
           defaultDurationMinutes: duration,
           isActive: formData.isActive,
+          images: formData.images,
         }),
       });
 
@@ -277,6 +341,76 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
               <p className="text-xs text-gray-500 mt-1">Standard time needed to complete this service</p>
             </div>
 
+            {/* Images Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Service Images
+              </label>
+              <div className="space-y-3">
+                {/* Upload Input */}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-emerald-400 hover:bg-emerald-50 transition">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleFileUpload}
+                    disabled={uploadingImages}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label
+                    htmlFor="image-upload"
+                    className="cursor-pointer flex flex-col items-center gap-2"
+                  >
+                    {uploadingImages ? (
+                      <>
+                        <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+                        <span className="text-sm text-gray-600">Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-6 h-6 text-emerald-600" />
+                        <span className="text-sm font-medium text-gray-700">
+                          Click to upload or drag images here
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          JPEG, PNG, WebP up to 5MB each
+                        </span>
+                      </>
+                    )}
+                  </label>
+                </div>
+
+                {/* Uploaded Images Preview */}
+                {formData.images.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {formData.images.map((image, index) => (
+                      <div
+                        key={index}
+                        className="relative group bg-gray-100 rounded-lg overflow-hidden aspect-square"
+                      >
+                        <img
+                          src={image}
+                          alt={`Service image ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                        >
+                          <Trash2 className="w-5 h-5 text-white" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-gray-500">
+                  {formData.images.length} image{formData.images.length !== 1 ? 's' : ''} uploaded
+                </p>
+              </div>
+            </div>
+
             {/* Active Status */}
             <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
               <input
@@ -295,7 +429,7 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
             <div className="flex gap-3 pt-4">
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || uploadingImages}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting && <Loader2 className="w-4 h-4 animate-spin" />}

@@ -213,6 +213,8 @@ model Service {
   minPrice      Decimal          @db.Decimal(10,2)
   maxPrice      Decimal          @db.Decimal(10,2)
   defaultDurationMinutes Int
+  
+  images        String[]         @default([])
 
   isActive      Boolean @default(true)
 

@@ -14,6 +14,7 @@ interface Service {
   maxPrice: number;
   defaultDurationMinutes: number;
   isActive: boolean;
+  images: string[];
   createdAt: string;
   category: {
     id: string;
@@ -165,22 +166,44 @@ export const ServicesPanel: React.FC = () => {
             <motion.div
               key={service.id}
               whileHover={{ scale: 1.02 }}
-              className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm transition hover:shadow-md"
+              className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm transition hover:shadow-md"
             >
-              {/* Category Badge */}
-              <div className="flex items-center gap-2 mb-3">
-                {service.category.icon && (
-                  <span className="text-xl">{service.category.icon}</span>
-                )}
-                <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                  {service.category.name}
-                </span>
-              </div>
+              {/* Image Gallery */}
+              {service.images.length > 0 ? (
+                <div className="relative h-40 bg-gray-100 overflow-hidden">
+                  <img
+                    src={service.images[0]}
+                    alt={service.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {service.images.length > 1 && (
+                    <div className="absolute top-2 right-2 bg-black/60 text-white text-xs font-medium px-2 py-1 rounded">
+                      +{service.images.length - 1}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="h-40 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+                  <span className="text-slate-400 text-sm">No images</span>
+                </div>
+              )}
 
-              {/* Service Name */}
-              <h3 className="font-semibold text-slate-800 text-lg mb-2">
-                {service.name}
-              </h3>
+              {/* Card Content */}
+              <div className="p-5">
+                {/* Category Badge */}
+                <div className="flex items-center gap-2 mb-3">
+                  {service.category.icon && (
+                    <span className="text-xl">{service.category.icon}</span>
+                  )}
+                  <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                    {service.category.name}
+                  </span>
+                </div>
+
+                {/* Service Name */}
+                <h3 className="font-semibold text-slate-800 text-lg mb-2">
+                  {service.name}
+                </h3>
 
               {/* Description */}
               <p className="text-sm text-slate-600 mb-3 line-clamp-2">
@@ -240,6 +263,7 @@ export const ServicesPanel: React.FC = () => {
                   )}
                   Delete
                 </button>
+              </div>
               </div>
             </motion.div>
           ))}

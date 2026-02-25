@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
     // 4. Parse & validate body
     const body = await req.json();
-    const { name, description, categoryId, minPrice, maxPrice, defaultDurationMinutes, isActive } = body;
+    const { name, description, categoryId, minPrice, maxPrice, defaultDurationMinutes, isActive, images } = body;
 
     if (!name || typeof name !== 'string' || name.trim() === '') {
       return NextResponse.json({ error: 'Service name is required' }, { status: 400 });
@@ -58,6 +58,17 @@ export async function POST(req: NextRequest) {
 
     if (!categoryId || typeof categoryId !== 'string') {
       return NextResponse.json({ error: 'Category is required' }, { status: 400 });
+    }
+
+    // Validate images if provided
+    if (images !== undefined) {
+      if (!Array.isArray(images)) {
+        return NextResponse.json({ error: 'Images must be an array of URLs' }, { status: 400 });
+      }
+      // Validate each image is a valid URL string
+      if (!images.every((img: any) => typeof img === 'string' && img.trim().length > 0)) {
+        return NextResponse.json({ error: 'All images must be valid URLs' }, { status: 400 });
+      }
     }
 
     const min = parseFloat(minPrice);
@@ -94,17 +105,22 @@ export async function POST(req: NextRequest) {
     }
 
     // 6. Create service
+    const createData = {
+      providerId: provider.id,
+      categoryId,
+      name: name.trim(),
+      description: description.trim(),
+      minPrice: min,
+      maxPrice: max,
+      defaultDurationMinutes: duration,
+      isActive: typeof isActive === 'boolean' ? isActive : true,
+      images: Array.isArray(images) ? images.map((img: string) => img.trim()) : [],
+    };
+
+    console.log('Creating service with data:', JSON.stringify(createData, null, 2));
+
     const service = await prisma.service.create({
-      data: {
-        providerId: provider.id,
-        categoryId,
-        name: name.trim(),
-        description: description.trim(),
-        minPrice: min,
-        maxPrice: max,
-        defaultDurationMinutes: duration,
-        isActive: typeof isActive === 'boolean' ? isActive : true,
-      },
+      data: createData,
       include: {
         category: { select: { id: true, name: true, icon: true } },
         provider: {
@@ -117,14 +133,26 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    console.log('Service created successfully:', service.id);
+
     return NextResponse.json(
       { message: 'Service created successfully', service },
       { status: 201 }
     );
   } catch (error: any) {
     console.error('Error creating service:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack,
+    });
     return NextResponse.json(
-      { error: 'Failed to create service', details: error.message },
+      { 
+        error: 'Failed to create service', 
+        details: error.message,
+        code: error.code 
+      },
       { status: 500 }
     );
   }

@@ -67,7 +67,7 @@ export async function PATCH(
 
     // 5. Parse & validate body
     const body = await req.json();
-    const { name, description, categoryId, minPrice, maxPrice, defaultDurationMinutes, isActive } = body;
+    const { name, description, categoryId, minPrice, maxPrice, defaultDurationMinutes, isActive, images } = body;
 
     const updateData: any = {};
 
@@ -83,6 +83,18 @@ export async function PATCH(
         return NextResponse.json({ error: 'Service description cannot be empty' }, { status: 400 });
       }
       updateData.description = description.trim();
+    }
+
+    // If images are being updated, validate them
+    if (images !== undefined) {
+      if (!Array.isArray(images)) {
+        return NextResponse.json({ error: 'Images must be an array of URLs' }, { status: 400 });
+      }
+      // Validate each image is a valid URL string
+      if (!images.every((img: any) => typeof img === 'string' && img.trim().length > 0)) {
+        return NextResponse.json({ error: 'All images must be valid URLs' }, { status: 400 });
+      }
+      updateData.images = images.map((img: string) => img.trim());
     }
 
     // If categoryId is being changed, verify it exists
@@ -125,8 +137,8 @@ export async function PATCH(
     }
 
     // Cross-validate min/max if both or one is being changed
-    const finalMin = updateData.minPrice ?? Number(existingService.minPrice);
-    const finalMax = updateData.maxPrice ?? Number(existingService.maxPrice);
+    const finalMin = updateData.minPrice ? Number(updateData.minPrice) : Number(existingService.minPrice);
+    const finalMax = updateData.maxPrice ? Number(updateData.maxPrice) : Number(existingService.maxPrice);
     if (finalMin > finalMax) {
       return NextResponse.json({ error: 'Minimum price cannot exceed maximum price' }, { status: 400 });
     }
