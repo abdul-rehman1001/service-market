@@ -25,8 +25,23 @@ export async function GET(
     const booking = await prisma.booking.findUnique({
       where: { id },
       include: {
-        service: { select: { id: true, name: true } },
-        provider: { select: { id: true, userId: true } },
+        service: { select: { id: true, name: true, minPrice: true, maxPrice: true } },
+        provider: { 
+          select: { 
+            id: true, 
+            userId: true,
+            businessName: true,
+            averageRating: true,
+            totalReviews: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+                profileImage: true,
+              }
+            }
+          } 
+        },
         seeker: { select: { id: true, firstName: true, lastName: true } },
       },
     });
@@ -36,7 +51,19 @@ export async function GET(
     }
 
     if (decoded.role === 'ADMIN') {
-      return NextResponse.json({ booking }, { status: 200 });
+      const convertedBooking = {
+        ...booking,
+        service: {
+          ...booking.service,
+          minPrice: Number(booking.service.minPrice),
+          maxPrice: Number(booking.service.maxPrice),
+        },
+        provider: {
+          ...booking.provider,
+          averageRating: Number(booking.provider.averageRating),
+        },
+      };
+      return NextResponse.json({ booking: convertedBooking }, { status: 200 });
     }
 
     if (decoded.role === 'SEEKER' && booking.seekerId !== decoded.userId) {
@@ -54,7 +81,19 @@ export async function GET(
       }
     }
 
-    return NextResponse.json({ booking }, { status: 200 });
+    const convertedBooking = {
+      ...booking,
+      service: {
+        ...booking.service,
+        minPrice: Number(booking.service.minPrice),
+        maxPrice: Number(booking.service.maxPrice),
+      },
+      provider: {
+        ...booking.provider,
+        averageRating: Number(booking.provider.averageRating),
+      },
+    };
+    return NextResponse.json({ booking: convertedBooking }, { status: 200 });
   } catch (error) {
     console.error('Booking GET error:', error);
     return NextResponse.json(
