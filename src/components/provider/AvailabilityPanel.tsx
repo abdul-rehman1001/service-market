@@ -14,18 +14,11 @@ const DAYS_OF_WEEK = [
   { index: 6, name: 'Saturday', abbr: 'Sat' },
 ];
 
-interface Service {
-  id: string;
-  name: string;
-}
-
 interface AvailabilitySlot {
   id: string;
   dayOfWeek: number;
   startTime: string;
   endTime: string;
-  serviceId: string;
-  service: { name: string };
 }
 
 interface UnavailableDate {
@@ -38,7 +31,6 @@ type AlertType = 'success' | 'error' | 'info';
 
 export const AvailabilityPanel: React.FC = () => {
   // State
-  const [services, setServices] = useState<Service[]>([]);
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
   const [unavailableDates, setUnavailableDates] = useState<UnavailableDate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +38,6 @@ export const AvailabilityPanel: React.FC = () => {
   const [alert, setAlert] = useState<{ type: AlertType; message: string } | null>(null);
 
   // Form state
-  const [selectedService, setSelectedService] = useState<string>('');
   const [selectedDay, setSelectedDay] = useState<number>(1);
   const [startTime, setStartTime] = useState<string>('09:00');
   const [endTime, setEndTime] = useState<string>('17:00');
@@ -61,27 +52,20 @@ export const AvailabilityPanel: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [servicesRes, availRes, unavailRes] = await Promise.all([
-        fetch('/api/providers/services'),
+      const [availRes, unavailRes] = await Promise.all([
         fetch('/api/providers/availability'),
         fetch('/api/providers/unavailability'),
       ]);
 
-      if (!servicesRes.ok || !availRes.ok || !unavailRes.ok) {
+      if (!availRes.ok || !unavailRes.ok) {
         throw new Error('Failed to fetch data');
       }
 
-      const servicesData = await servicesRes.json();
       const availData = await availRes.json();
       const unavailData = await unavailRes.json();
 
-      setServices(servicesData.services || []);
       setAvailability(availData.availability || []);
       setUnavailableDates(unavailData.unavailableDates || []);
-
-      if (servicesData.services?.length > 0) {
-        setSelectedService(servicesData.services[0].id);
-      }
     } catch (error) {
       showAlert('error', 'Failed to load data. Please refresh the page.');
       console.error(error);
@@ -95,15 +79,26 @@ export const AvailabilityPanel: React.FC = () => {
     setTimeout(() => setAlert(null), 5000);
   };
 
-  const formatSlotRange = (slot: AvailabilitySlot) => {
-    const start = new Date(slot.startTime);
-    const end = new Date(slot.endTime);
-
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-      return 'Invalid date';
+  const timeValueToMinutes = (value: string) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return null;
     }
+    return date.getUTCHours() * 60 + date.getUTCMinutes();
+  };
 
-    return `${format(start, 'EEEE, d MMMM yyyy')} | ${format(start, 'hh:mm a')} – ${format(end, 'hh:mm a')}`;
+  const formatTime = (value: string) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return 'Invalid time';
+    }
+    const hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes();
+    return format(new Date(0, 0, 0, hours, minutes), 'hh:mm a');
+  };
+
+  const formatSlotRange = (slot: AvailabilitySlot) => {
+    return `${formatTime(slot.startTime)} – ${formatTime(slot.endTime)}`;
   };
 
   const validateTimes = (): boolean => {
@@ -126,23 +121,21 @@ export const AvailabilityPanel: React.FC = () => {
     const endMinutes = endHour * 60 + endMin;
 
     return availability
-      .filter(
-        (slot) =>
-          slot.dayOfWeek === selectedDay &&
-          slot.serviceId === selectedService
-      )
+      .filter((slot) => slot.dayOfWeek === selectedDay)
       .some((slot) => {
-        const slotStart = new Date(slot.startTime);
-        const slotEnd = new Date(slot.endTime);
-        const slotStartMinutes = slotStart.getHours() * 60 + slotStart.getMinutes();
-        const slotEndMinutes = slotEnd.getHours() * 60 + slotEnd.getMinutes();
+        const slotStartMinutes = timeValueToMinutes(slot.startTime);
+        const slotEndMinutes = timeValueToMinutes(slot.endTime);
+
+        if (slotStartMinutes === null || slotEndMinutes === null) {
+          return false;
+        }
 
         return startMinutes < slotEndMinutes && endMinutes > slotStartMinutes;
       });
   };
 
   const handleAddAvailability = async () => {
-    if (!selectedService || !startTime || !endTime) {
+    if (!startTime || !endTime) {
       showAlert('error', 'Please fill all fields');
       return;
     }
@@ -160,7 +153,6 @@ export const AvailabilityPanel: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          serviceId: selectedService,
           dayOfWeek: selectedDay,
           startTime,
           endTime,
@@ -320,24 +312,7 @@ export const AvailabilityPanel: React.FC = () => {
           {/* Add Availability Form */}
           <div className="bg-green-50 border-2 border-dashed border-green-200 rounded-lg p-4">
             <h4 className="font-medium text-slate-900 mb-3">Add Working Hours</h4>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  Service
-                </label>
-                <select
-                  value={selectedService}
-                  onChange={(e) => setSelectedService(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-                >
-                  {services.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
                   Day
@@ -433,7 +408,6 @@ export const AvailabilityPanel: React.FC = () => {
                               <p className="text-sm font-medium text-slate-900">
                                 {formatSlotRange(slot)}
                               </p>
-                              <p className="text-xs text-slate-500">{slot.service.name}</p>
                             </div>
                           </div>
                           <button

@@ -31,6 +31,7 @@ enum VerificationStatus {
 }
 
 enum BookingStatus {
+  HOLD
   PENDING
   CONFIRMED
   EN_ROUTE
@@ -222,7 +223,6 @@ model Service {
   updatedAt     DateTime @updatedAt
 
   bookings      Booking[]
-  availability  Availability[]
 }
 
 //////////////////////////////////////////////////////
@@ -234,12 +234,14 @@ model Availability {
   providerId String
   provider   ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
-  serviceId  String
-  service    Service         @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-
   dayOfWeek  Int
-  startTime  DateTime
-  endTime    DateTime
+  startTime  DateTime @db.Time(0)
+  endTime    DateTime @db.Time(0)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([providerId, dayOfWeek])
 }
 
 model UnavailableDate {
@@ -271,6 +273,9 @@ model Booking {
   provider        ServiceProvider @relation(fields: [providerId], references: [id])
 
   status          BookingStatus   @default(PENDING)
+
+  holdExpiresAt   DateTime?
+  providerResponseDeadline DateTime?
 
   scheduledStart  DateTime
   scheduledEnd    DateTime

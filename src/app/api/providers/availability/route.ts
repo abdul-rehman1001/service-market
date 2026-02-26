@@ -4,24 +4,10 @@ import { verifyToken } from '@/lib/jwt';
 
 /**
  * POST /api/providers/availability → Save weekly availability
- * GET  /api/providers/availability → Get availability for all services
+ * GET  /api/providers/availability → Get availability
  */
 
-const getNextOccurrenceDate = (dayOfWeek: number, hour: number, minute: number) => {
-  const now = new Date();
-  const candidate = new Date(now);
-  candidate.setHours(hour, minute, 0, 0);
-
-  const todayDow = candidate.getDay();
-  let delta = (dayOfWeek - todayDow + 7) % 7;
-  candidate.setDate(candidate.getDate() + delta);
-
-  if (delta === 0 && candidate <= now) {
-    candidate.setDate(candidate.getDate() + 7);
-  }
-
-  return candidate;
-};
+const timeStringToDate = (time: string) => new Date(`1970-01-01T${time}:00Z`);
 
 export async function POST(req: NextRequest) {
   try {
@@ -62,7 +48,7 @@ export async function POST(req: NextRequest) {
 
     // 4. Parse & validate body
     const body = await req.json();
-    const { serviceId, dayOfWeek, startTime, endTime } = body;
+    const { dayOfWeek, startTime, endTime } = body;
 
     // Validate dayOfWeek
     if (dayOfWeek === undefined || typeof dayOfWeek !== 'number') {
@@ -117,40 +103,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 5. Verify service exists and belongs to provider
-    if (serviceId) {
-      const service = await prisma.service.findFirst({
-        where: {
-          id: serviceId,
-          providerId: provider.id,
-        },
-      });
-
-      if (!service) {
-        return NextResponse.json(
-          { error: 'Service not found or does not belong to you' },
-          { status: 404 }
-        );
-      }
-    } else {
-      // If no serviceId provided, return error
-      return NextResponse.json(
-        { error: 'serviceId is required' },
-        { status: 400 }
-      );
-    }
-
-    // 6. Create DateTime objects using next upcoming occurrence of the day
-    const occurrenceDate = getNextOccurrenceDate(dayOfWeek, startHour, startMin);
-    const startDateTime = new Date(occurrenceDate);
-    const endDateTime = new Date(occurrenceDate);
-    endDateTime.setHours(endHour, endMin, 0, 0);
+    // 5. Create time-only Date objects
+    const startDateTime = timeStringToDate(startTime);
+    const endDateTime = timeStringToDate(endTime);
 
     // 7. Check for overlap with existing availability on same day
     const existingSlots = await prisma.availability.findMany({
       where: {
         providerId: provider.id,
-        serviceId: serviceId,
         dayOfWeek: dayOfWeek,
       },
     });
@@ -158,8 +118,8 @@ export async function POST(req: NextRequest) {
     const hasOverlap = existingSlots.some((slot) => {
       const slotStart = new Date(slot.startTime);
       const slotEnd = new Date(slot.endTime);
-      const slotStartMinutes = slotStart.getHours() * 60 + slotStart.getMinutes();
-      const slotEndMinutes = slotEnd.getHours() * 60 + slotEnd.getMinutes();
+      const slotStartMinutes = slotStart.getUTCHours() * 60 + slotStart.getUTCMinutes();
+      const slotEndMinutes = slotEnd.getUTCHours() * 60 + slotEnd.getUTCMinutes();
 
       return startMinutes < slotEndMinutes && endMinutes > slotStartMinutes;
     });
@@ -175,7 +135,6 @@ export async function POST(req: NextRequest) {
     const availability = await prisma.availability.create({
       data: {
         providerId: provider.id,
-        serviceId: serviceId,
         dayOfWeek: dayOfWeek,
         startTime: startDateTime,
         endTime: endDateTime,
@@ -227,18 +186,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // 3. Get availability for services
+    // 3. Get availability for provider
     const availability = await prisma.availability.findMany({
       where: {
         providerId: provider.id,
-      },
-      include: {
-        service: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
       },
       orderBy: [
         { dayOfWeek: 'asc' },
@@ -246,46 +197,7 @@ export async function GET(req: NextRequest) {
       ],
     });
 
-    const now = new Date();
-    const updatedAvailability = [];
-
-    for (const slot of availability) {
-      const endTime = new Date(slot.endTime);
-
-      if (endTime <= now) {
-        const startHour = new Date(slot.startTime).getHours();
-        const startMin = new Date(slot.startTime).getMinutes();
-        const endHour = new Date(slot.endTime).getHours();
-        const endMin = new Date(slot.endTime).getMinutes();
-
-        const nextDate = getNextOccurrenceDate(slot.dayOfWeek, startHour, startMin);
-        const nextStart = new Date(nextDate);
-        const nextEnd = new Date(nextDate);
-        nextEnd.setHours(endHour, endMin, 0, 0);
-
-        const updatedSlot = await prisma.availability.update({
-          where: { id: slot.id },
-          data: {
-            startTime: nextStart,
-            endTime: nextEnd,
-          },
-          include: {
-            service: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        });
-
-        updatedAvailability.push(updatedSlot);
-      } else {
-        updatedAvailability.push(slot);
-      }
-    }
-
-    return NextResponse.json({ availability: updatedAvailability }, { status: 200 });
+    return NextResponse.json({ availability }, { status: 200 });
   } catch (error) {
     console.error('Availability GET error:', error);
     return NextResponse.json(
