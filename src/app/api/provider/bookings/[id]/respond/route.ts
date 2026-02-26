@@ -88,6 +88,21 @@ export async function POST(
         return tx.booking.update({
           where: { id },
           data: { status: 'CONFIRMED' },
+          include: {
+            seeker: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+            service: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
         });
       }
 
@@ -97,6 +112,21 @@ export async function POST(
           status: 'CANCELLED',
           cancellationReason: 'Rejected by provider',
           cancelledBy: 'PROVIDER',
+        },
+        include: {
+          seeker: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+          service: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       });
     });

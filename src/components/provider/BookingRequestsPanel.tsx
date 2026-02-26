@@ -14,13 +14,13 @@ interface BookingItem {
   holdExpiresAt?: string | null;
   providerResponseDeadline?: string | null;
   cancellationReason?: string | null;
-  seeker: {
+  seeker?: {
     firstName: string;
     lastName: string;
-  };
-  service: {
+  } | null;
+  service?: {
     name: string;
-  };
+  } | null;
 }
 
 const TABS = [
@@ -163,9 +163,9 @@ export const BookingRequestsPanel: React.FC = () => {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-slate-800">
-                      {booking.seeker.firstName} {booking.seeker.lastName}
+                      {booking.seeker?.firstName || 'Unknown'} {booking.seeker?.lastName || 'User'}
                     </p>
-                    <p className="text-xs text-slate-500">{booking.service.name}</p>
+                    <p className="text-xs text-slate-500">{booking.service?.name || 'Service'}</p>
                   </div>
                   <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${statusBadge(booking.status)}`}>
                     {booking.status.replace('_', ' ')}
