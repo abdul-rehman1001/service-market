@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { CountdownTimer } from '@/components/bookings/CountdownTimer';
+import { AlertCircle, CheckCircle, XCircle, Loader } from 'lucide-react';
 
 interface BookingItem {
   id: string;
@@ -61,6 +62,12 @@ export const BookingRequestsPanel: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [cancelModal, setCancelModal] = useState<{ bookingId: string; isOpen: boolean }>({
+    bookingId: '',
+    isOpen: false,
+  });
+  const [cancelReason, setCancelReason] = useState('');
+  const [statusUpdateError, setStatusUpdateError] = useState<string | null>(null);
 
   const fetchBookings = async () => {
     try {
@@ -109,6 +116,59 @@ export const BookingRequestsPanel: React.FC = () => {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const updateStatus = async (bookingId: string, newStatus: string, cancellationReason?: string) => {
+    try {
+      setActionLoading(bookingId);
+      setStatusUpdateError(null);
+
+      const response = await fetch(`/api/bookings/${bookingId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: newStatus,
+          ...(cancellationReason && { cancellationReason }),
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update booking status');
+      }
+
+      setBookings((prev) => prev.map((b) => (b.id === bookingId ? data.booking : b)));
+      setCancelModal({ bookingId: '', isOpen: false });
+      setCancelReason('');
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to update booking status';
+      setStatusUpdateError(errorMsg);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const getNextStatusTransitions = (status: string) => {
+    const transitions: Record<string, Array<{ label: string; value: string; color: string }>> = {
+      PENDING: [],
+      CONFIRMED: [
+        { label: 'Start Route', value: 'EN_ROUTE', color: 'bg-blue-600 hover:bg-blue-700' },
+        { label: 'Cancel', value: 'CANCELLED', color: 'bg-rose-600 hover:bg-rose-700' },
+      ],
+      EN_ROUTE: [
+        { label: 'Start Job', value: 'IN_PROGRESS', color: 'bg-sky-600 hover:bg-sky-700' },
+        { label: 'Cancel', value: 'CANCELLED', color: 'bg-rose-600 hover:bg-rose-700' },
+      ],
+      IN_PROGRESS: [
+        { label: 'Complete Job', value: 'COMPLETED', color: 'bg-purple-600 hover:bg-purple-700' },
+        { label: 'Cancel', value: 'CANCELLED', color: 'bg-rose-600 hover:bg-rose-700' },
+      ],
+      COMPLETED: [],
+      CANCELLED: [],
+      AUTO_CANCELLED: [],
+      HOLD: [],
+    };
+    return transitions[status] || [];
   };
 
   return (
@@ -213,24 +273,115 @@ export const BookingRequestsPanel: React.FC = () => {
                 {isPending && (
                   <div className="flex gap-2">
                     <button
-                      className="flex-1 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition"
+                      className="flex-1 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition flex items-center justify-center gap-2"
                       onClick={() => respond(booking.id, 'ACCEPT')}
                       disabled={actionLoading === booking.id}
                     >
+                      {actionLoading === booking.id ? (
+                        <Loader className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <CheckCircle className="w-4 h-4" />
+                      )}
                       Accept
                     </button>
                     <button
-                      className="flex-1 px-4 py-2 rounded-xl bg-rose-600 text-white text-sm font-medium hover:bg-rose-700 transition"
+                      className="flex-1 px-4 py-2 rounded-xl bg-rose-600 text-white text-sm font-medium hover:bg-rose-700 transition flex items-center justify-center gap-2"
                       onClick={() => respond(booking.id, 'REJECT')}
                       disabled={actionLoading === booking.id}
                     >
+                      {actionLoading === booking.id ? (
+                        <Loader className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <XCircle className="w-4 h-4" />
+                      )}
                       Reject
                     </button>
+                  </div>
+                )}
+
+                {!isPending && !['COMPLETED', 'CANCELLED', 'AUTO_CANCELLED'].includes(booking.status) && (
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {getNextStatusTransitions(booking.status).map((transition) => (
+                      <button
+                        key={transition.value}
+                        className={`px-3 py-2 rounded-lg text-white text-xs font-medium transition ${transition.color} flex-1 flex items-center justify-center gap-1.5`}
+                        onClick={() => {
+                          if (transition.value === 'CANCELLED') {
+                            setCancelModal({ bookingId: booking.id, isOpen: true });
+                          } else {
+                            updateStatus(booking.id, transition.value);
+                          }
+                        }}
+                        disabled={actionLoading === booking.id}
+                      >
+                        {actionLoading === booking.id ? (
+                          <Loader className="w-3 h-3 animate-spin" />
+                        ) : transition.value === 'CANCELLED' ? (
+                          <XCircle className="w-3 h-3" />
+                        ) : (
+                          <CheckCircle className="w-3 h-3" />
+                        )}
+                        {transition.label}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
             );
           })}
+        </div>
+      )}
+
+      {cancelModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-6 h-6 text-rose-600" />
+              <h3 className="text-lg font-semibold text-slate-800">Cancel Booking</h3>
+            </div>
+
+            <p className="text-sm text-slate-600">
+              Are you sure you want to cancel this booking? Please provide a reason for cancellation.
+            </p>
+
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Enter cancellation reason..."
+              className="w-full px-4 py-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
+              rows={3}
+            />
+
+            {statusUpdateError && (
+              <p className="text-xs text-rose-600 bg-rose-50 p-2 rounded-lg">{statusUpdateError}</p>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setCancelModal({ bookingId: '', isOpen: false });
+                  setCancelReason('');
+                  setStatusUpdateError(null);
+                }}
+                className="flex-1 px-4 py-2 rounded-lg border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-50 transition"
+                disabled={actionLoading === cancelModal.bookingId}
+              >
+                Keep Booking
+              </button>
+              <button
+                onClick={() => updateStatus(cancelModal.bookingId, 'CANCELLED', cancelReason)}
+                className="flex-1 px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-medium hover:bg-rose-700 transition flex items-center justify-center gap-2"
+                disabled={!cancelReason.trim() || actionLoading === cancelModal.bookingId}
+              >
+                {actionLoading === cancelModal.bookingId ? (
+                  <Loader className="w-4 h-4 animate-spin" />
+                ) : (
+                  <XCircle className="w-4 h-4" />
+                )}
+                Cancel Booking
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </section>
