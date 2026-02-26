@@ -1,16 +1,106 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import ReviewCard from './ReviewCard';
 import { ReviewType } from '@/types/provider';
-import { Star, MessageSquare } from 'lucide-react';
+import { Star, MessageSquare, Loader } from 'lucide-react';
 
 interface Props {
-  reviews: ReviewType[];
-  totalReviews: number;
-  averageRating: number;
+  providerId: string;
+  initialReviews?: ReviewType[];
+  initialTotalReviews?: number;
+  initialAverageRating?: number;
 }
 
-export default function ProviderReviews({ reviews, totalReviews, averageRating }: Props) {
-  if (totalReviews === 0) {
+interface ReviewResponse {
+  reviews: ReviewType[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
+  summary: {
+    averageRating: number;
+    totalReviews: number;
+  };
+}
+
+export default function ProviderReviews({ 
+  providerId,
+  initialReviews = [],
+  initialTotalReviews = 0,
+  initialAverageRating = 0
+}: Props) {
+  const [reviews, setReviews] = useState<ReviewType[]>(initialReviews);
+  const [totalReviews, setTotalReviews] = useState(initialTotalReviews);
+  const [averageRating, setAverageRating] = useState(initialAverageRating);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+
+  useEffect(() => {
+    fetchReviews(1);
+  }, [providerId]);
+
+  const fetchReviews = async (pageNum: number) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`/api/providers/${providerId}/reviews?page=${pageNum}&limit=10`);
+      const data: ReviewResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch reviews');
+      }
+
+      if (pageNum === 1) {
+        setReviews(data.reviews);
+      } else {
+        setReviews((prev) => [...prev, ...data.reviews]);
+      }
+
+      setTotalReviews(data.summary.totalReviews);
+      setAverageRating(data.summary.averageRating);
+      setHasMore(data.pagination.hasMore);
+      setPage(pageNum);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load reviews');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadMore = () => {
+    if (!loading && hasMore) {
+      fetchReviews(page + 1);
+    }
+  };
+
+  if (error && reviews.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow p-12 text-center">
+        <div className="max-w-md mx-auto">
+          <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <MessageSquare className="w-8 h-8 text-rose-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">Failed to Load Reviews</h3>
+          <p className="text-gray-500 text-sm">{error}</p>
+          <button
+            onClick={() => fetchReviews(1)}
+            className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (totalReviews === 0 && !loading) {
     return (
       <div className="bg-white rounded-lg shadow p-12 text-center">
         <div className="max-w-md mx-auto">
@@ -55,16 +145,47 @@ export default function ProviderReviews({ reviews, totalReviews, averageRating }
       </div>
 
       {/* Individual Reviews */}
-      <div className="space-y-3">
-        {reviews.map((review) => (
-          <ReviewCard key={review.id} review={review} />
-        ))}
-      </div>
+      {loading && reviews.length === 0 ? (
+        <div className="flex justify-center py-12">
+          <div className="flex flex-col items-center gap-3">
+            <Loader className="w-8 h-8 text-emerald-600 animate-spin" />
+            <p className="text-slate-500 text-sm">Loading reviews...</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="space-y-3">
+            {reviews.map((review) => (
+              <ReviewCard key={review.id} review={review} />
+            ))}
+          </div>
 
-      {reviews.length === 0 && totalReviews > 0 && (
-        <p className="text-center text-gray-500 text-sm py-4">
-          No detailed reviews available to display.
-        </p>
+          {/* Load More Button */}
+          {hasMore && (
+            <div className="flex justify-center pt-4">
+              <button
+                onClick={loadMore}
+                disabled={loading}
+                className="px-6 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader className="w-4 h-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  'Load More Reviews'
+                )}
+              </button>
+            </div>
+          )}
+
+          {reviews.length === 0 && totalReviews > 0 && !loading && (
+            <p className="text-center text-gray-500 text-sm py-4">
+              No detailed reviews available to display.
+            </p>
+          )}
+        </>
       )}
     </div>
   );

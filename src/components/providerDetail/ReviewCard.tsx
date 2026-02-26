@@ -3,17 +3,25 @@ import Image from 'next/image';
 import { ReviewType } from '@/types/provider';
 import StarRating from './StarRating';
 import { Award } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
 interface Props {
   review: ReviewType;
 }
 
 export default function ReviewCard({ review }: Props) {
-  const formatDate = (date: Date) => new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  const formatDate = (dateString: string | Date) => {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    try {
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch {
+      return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+  };
 
   const fullName = `${review.reviewer.firstName} ${review.reviewer.lastName}`;
   const hasSubRatings = review.professionalism || review.punctuality || 
@@ -23,13 +31,20 @@ export default function ReviewCard({ review }: Props) {
   return (
     <div className="bg-white p-5 rounded-lg shadow hover:shadow-md transition-shadow">
       <div className="flex items-start gap-4">
-        <Image
-          src={review.reviewer.profileImage || '/images/avatar-placeholder.png'}
-          alt={fullName}
-          width={48}
-          height={48}
-          className="w-12 h-12 rounded-full object-cover flex-shrink-0 ring-2 ring-gray-100"
-        />
+        {review.reviewer.profileImage ? (
+          <Image
+            src={review.reviewer.profileImage}
+            alt={fullName}
+            width={48}
+            height={48}
+            className="w-12 h-12 rounded-full object-cover flex-shrink-0 ring-2 ring-gray-100"
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold text-base ring-2 ring-gray-100 flex-shrink-0">
+            {review.reviewer.firstName.charAt(0)}
+            {review.reviewer.lastName.charAt(0)}
+          </div>
+        )}
         <div className="flex-1">
           <div className="flex items-start justify-between mb-2">
             <div>

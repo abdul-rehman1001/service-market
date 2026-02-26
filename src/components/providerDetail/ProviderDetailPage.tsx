@@ -48,9 +48,10 @@ export default function ProviderDetailPage({ provider }: Props) {
             )}
             {activeTab === 'reviews' && (
               <ProviderReviews
-                reviews={provider.reviews}
-                totalReviews={provider.totalReviews}
-                averageRating={Number(provider.averageRating)}
+                providerId={provider.id}
+                initialReviews={provider.reviews}
+                initialTotalReviews={provider.totalReviews}
+                initialAverageRating={Number(provider.averageRating)}
               />
             )}
           </main>

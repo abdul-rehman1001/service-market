@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { Star, MapPin, Clock, User, MessageSquare, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
+import { ReviewModal } from '@/components/bookings/ReviewModal';
 
 interface Provider {
   id: string;
@@ -103,6 +104,17 @@ export default function MyBookingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('ALL');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [reviewModal, setReviewModal] = useState<{
+    isOpen: boolean;
+    bookingId: string;
+    providerName: string;
+    serviceName: string;
+  }>({
+    isOpen: false,
+    bookingId: '',
+    providerName: '',
+    serviceName: '',
+  });
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -366,12 +378,22 @@ export default function MyBookingsPage() {
                       </Link>
 
                       {isCompleted && !hasReview && (
-                        <Link href={`/bookings/${booking.id}/review`} className="flex-1">
-                          <button className="w-full px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition flex items-center justify-center gap-2">
-                            <Star className="w-4 h-4" />
-                            Leave Review
-                          </button>
-                        </Link>
+                        <button
+                          onClick={() =>
+                            setReviewModal({
+                              isOpen: true,
+                              bookingId: booking.id,
+                              providerName:
+                                booking.provider.businessName ||
+                                `${booking.provider.user.firstName} ${booking.provider.user.lastName}`,
+                              serviceName: booking.service.name,
+                            })
+                          }
+                          className="flex-1 px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition flex items-center justify-center gap-2"
+                        >
+                          <Star className="w-4 h-4" />
+                          Leave Review
+                        </button>
                       )}
 
                       {hasReview && (
@@ -388,6 +410,28 @@ export default function MyBookingsPage() {
           </div>
         )}
       </div>
+
+      {/* Review Modal */}
+      <ReviewModal
+        isOpen={reviewModal.isOpen}
+        onClose={() =>
+          setReviewModal({ isOpen: false, bookingId: '', providerName: '', serviceName: '' })
+        }
+        bookingId={reviewModal.bookingId}
+        providerName={reviewModal.providerName}
+        serviceName={reviewModal.serviceName}
+        onSuccess={() => {
+          // Refresh bookings to show updated review status
+          fetch('/api/bookings')
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.bookings) {
+                setBookings(data.bookings);
+              }
+            })
+            .catch((err) => console.error('Failed to refresh bookings:', err));
+        }}
+      />
     </div>
   );
 }
