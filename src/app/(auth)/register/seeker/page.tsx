@@ -6,6 +6,7 @@ import AuthCard from '@/components/auth/AuthCard';
 import Input from '@/components/auth/Input';
 import PasswordInput from '@/components/auth/PasswordInput';
 import ImageUploader from '@/components/auth/ImageUploader';
+import AddressAutofillInput from '@/components/auth/AddressAutofill';
 
 export default function RegisterSeeker() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function RegisterSeeker() {
     password: '',
     phone: '',
     profileImage: '',
+    address: '',
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -42,6 +44,7 @@ export default function RegisterSeeker() {
           password: form.password,
           phone: form.phone,
           profileImage: form.profileImage,
+          address: form.address,
           role: 'SEEKER', // fixed role for seekers
         }),
       });
@@ -103,6 +106,15 @@ export default function RegisterSeeker() {
             onChange={handleChange}
             required
           />
+          <div className="relative z-10">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+            <AddressAutofillInput
+              value={form.address}
+              onChange={(value) => setForm({ ...form, address: value })}
+              placeholder="Start typing your address..."
+              required
+            />
+          </div>
           <PasswordInput
             placeholder="Password"
             name="password"

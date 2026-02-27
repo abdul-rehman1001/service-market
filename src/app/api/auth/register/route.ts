@@ -5,11 +5,13 @@ import { signToken } from '@/lib/jwt';
 import { setTokenCookie } from '@/lib/cookies';
 import { sendEmail } from '@/lib/email';
 import crypto from 'crypto';
+import { geocodeAddress } from '@/lib/geocoding';
+import { Prisma } from '@prisma/client';
 
 export async function POST(req: NextRequest) {
-  const { name, email, password, role, profileImage, phone } = await req.json();
+  const { name, email, password, role, profileImage, phone, address } = await req.json();
 
-  if (!name || !email || !password || !role || !phone) {
+  if (!name || !email || !password || !role || !phone || !address) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
@@ -38,6 +40,19 @@ export async function POST(req: NextRequest) {
   const firstName = nameParts[0];
   const lastName = nameParts.slice(1).join(' ') || '';
 
+  // Geocode address (required for all users)
+  let geocodeData;
+  try {
+    geocodeData = await geocodeAddress(address);
+    console.log('Address geocoded successfully:', geocodeData);
+  } catch (geocodeError) {
+    console.error('Error geocoding address:', geocodeError);
+    return NextResponse.json(
+      { error: 'Invalid address. Please provide a valid address that can be located on the map.' },
+      { status: 400 }
+    );
+  }
+
   // Create user with UNVERIFIED status (stays UNVERIFIED until all verifications done)
   const user = await prisma.user.create({
     data: {
@@ -48,6 +63,9 @@ export async function POST(req: NextRequest) {
       role,
       profileImage: profileImage || null,
       phone,
+      address: geocodeData.formatted_address,
+      longitude: new Prisma.Decimal(geocodeData.longitude),
+      latitude: new Prisma.Decimal(geocodeData.latitude),
       status: 'UNVERIFIED', // Will be set to ACTIVE after email + phone verification
     },
   });
@@ -55,13 +73,18 @@ export async function POST(req: NextRequest) {
   // If registering as PROVIDER, create ServiceProvider profile
   if (role === 'PROVIDER') {
     try {
+      const providerData: Prisma.ServiceProviderCreateInput = {
+        user: { connect: { id: user.id } },
+        yearsOfExperience: 0,
+        cnic: null,
+        verificationStatus: 'PENDING',
+        baseAddress: geocodeData.formatted_address,
+        longitude: new Prisma.Decimal(geocodeData.longitude),
+        latitude: new Prisma.Decimal(geocodeData.latitude),
+      };
+
       await prisma.serviceProvider.create({
-        data: {
-          userId: user.id,
-          yearsOfExperience: 0,
-          cnic: null,
-          verificationStatus: 'PENDING',
-        } as any,
+        data: providerData,
       });
     } catch (providerError) {
       console.error('Error creating provider profile:', providerError);
