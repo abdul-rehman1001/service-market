@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Loader2, Sparkles, ArrowRight } from "lucide-react";
+import { Search, Loader2, Sparkles, ArrowRight, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ClassificationResult {
@@ -17,11 +17,33 @@ interface ClassificationResult {
   }>;
 }
 
-export default function SearchSection() {
+interface SearchSectionProps {
+  onClearSearch?: () => void;
+}
+
+export default function SearchSection({ onClearSearch }: SearchSectionProps) {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ClassificationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const handleClear = () => {
+    setQuery("");
+    setResult(null);
+    setError(null);
+    
+    // Clear AI search results on home page
+    if (onClearSearch) {
+      onClearSearch();
+    }
+    
+    // Trigger event to clear any filtered providers
+    window.dispatchEvent(
+      new CustomEvent("aiSearchProviders", {
+        detail: { category: null, subcategory: null },
+      })
+    );
+  };
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -41,11 +63,7 @@ export default function SearchSection() {
       const data = await response.json();
       setResult(data);
 
-      window.dispatchEvent(
-        new CustomEvent("filterProviders", {
-          detail: { category: data.category ?? null, subcategory: data.subcategory ?? null },
-        })
-      );
+      // Don't trigger search yet - wait for user to click button
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -53,8 +71,18 @@ export default function SearchSection() {
     }
   };
 
+  const handleFindProviders = (category: string, subcategory: string) => {
+    // Trigger AI search on home page
+    window.dispatchEvent(
+      new CustomEvent("aiSearchProviders", {
+        detail: { category, subcategory },
+      })
+    );
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") handleSearch();
+    if (e.key === "Escape") handleClear();
   };
 
   const formatCategoryName = (name: string) => name.charAt(0).toUpperCase() + name.slice(1);
@@ -69,47 +97,75 @@ export default function SearchSection() {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="w-full bg-white pt-10 pb-16"
+      className="w-full bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/30 pt-10 pb-16"
     >
       <div className="max-w-5xl mx-auto px-6 text-center">
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight">
-          Find the perfect service, <span className="text-emerald-600">your way.</span>
-        </h1>
-        <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
-          Describe the problem and our AI will suggest the best professional — or search manually.
-        </p>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight">
+            Find the perfect service, <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">your way.</span>
+          </h1>
+          <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+            Describe the problem and our AI will suggest the best professional — or search manually.
+          </p>
+        </motion.div>
 
         {/* Search Box */}
         <motion.div
           layout
-          className="mt-10 bg-white shadow-xl rounded-2xl p-6"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+          className="mt-10 bg-white shadow-2xl rounded-2xl p-6 border border-emerald-100"
         >
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full border rounded-xl px-4 py-3 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-100 transition-all">
             <div className="flex items-center gap-3 w-full">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-50">
-                <Search className="w-5 h-5 text-emerald-600" />
-              </div>
+              <motion.div 
+                className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600"
+                animate={{ rotate: loading ? 360 : 0 }}
+                transition={{ duration: 2, repeat: loading ? Infinity : 0, ease: "linear" }}
+              >
+                <Search className="w-5 h-5 text-white" />
+              </motion.div>
 
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyPress}
                 placeholder="Describe your service needs (e.g. 'sink clogged', 'AC not cooling')"
                 className="flex-1 text-gray-700 bg-transparent outline-none placeholder:text-gray-400 text-sm sm:text-base"
                 disabled={loading}
                 aria-label="Search services"
               />
+
+              {query && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  onClick={handleClear}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition"
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4 text-gray-400" />
+                </motion.button>
+              )}
             </div>
 
             <div className="flex items-center gap-3 w-full sm:w-auto">
-              <button
+              <motion.button
                 onClick={handleSearch}
                 disabled={loading || !query.trim()}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-sm"
                 aria-disabled={loading || !query.trim()}
               >
-                <AnimatePresence mode="popLayout" initial={false}>
+                <AnimatePresence mode="wait" initial={false}>
                   {loading ? (
                     <motion.span
                       key="loading"
@@ -118,8 +174,8 @@ export default function SearchSection() {
                       exit={{ opacity: 0, y: 3 }}
                       className="inline-flex items-center gap-2"
                     >
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="text-sm">Analyzing…</span>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Analyzing…</span>
                     </motion.span>
                   ) : (
                     <motion.span
@@ -129,12 +185,12 @@ export default function SearchSection() {
                       exit={{ opacity: 0, y: 3 }}
                       className="inline-flex items-center gap-2"
                     >
-                      <span>Search</span>
-                      <Sparkles className="w-4 h-4" />
+                      <span>AI Search</span>
+                      <Sparkles className="w-5 h-5" />
                     </motion.span>
                   )}
                 </AnimatePresence>
-              </button>
+              </motion.button>
             </div>
           </div>
 
@@ -142,13 +198,13 @@ export default function SearchSection() {
           <AnimatePresence>
             {error && (
               <motion.div
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
-                role="status"
+                initial={{ opacity: 0, y: -6, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                className="mt-4 p-4 bg-red-50 border-2 border-red-200 rounded-xl text-red-700 text-sm font-medium"
+                role="alert"
               >
-                {error}
+                ⚠️ {error}
               </motion.div>
             )}
           </AnimatePresence>
@@ -157,70 +213,113 @@ export default function SearchSection() {
           <AnimatePresence>
             {result && (
               <motion.div
-                initial={{ opacity: 0, y: 6 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 6 }}
-                transition={{ duration: 0.28 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
                 className="mt-6 text-left"
               >
                 <motion.div
                   layout
-                  className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl p-6 mb-4 shadow-sm"
+                  className="bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 border-2 border-emerald-300 rounded-2xl p-6 mb-4 shadow-lg relative overflow-hidden"
                 >
-                  <div className="flex items-start gap-6">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="p-2 rounded-md bg-emerald-100">
-                          <Sparkles className="w-5 h-5 text-emerald-600" />
-                        </div>
-                        <h3 className="text-lg font-bold text-gray-900">AI Match Found</h3>
+                  {/* Animated Background */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-emerald-400/10 to-teal-400/10"
+                    animate={{
+                      backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                    }}
+                    transition={{
+                      duration: 5,
+                      repeat: Infinity,
+                      ease: "linear"
+                    }}
+                    style={{ backgroundSize: '200% 200%' }}
+                  />
+
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <motion.div 
+                          className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg"
+                          animate={{ rotate: [0, 360] }}
+                          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Sparkles className="w-6 h-6 text-white" />
+                        </motion.div>
+                        <h3 className="text-xl font-bold text-gray-900">AI Match Found!</h3>
                       </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm text-gray-600">Category</span>
-                          <span className="px-3 py-1 bg-emerald-600 text-white text-sm font-semibold rounded-full">
-                            {formatCategoryName(result.category)}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm text-gray-600">Service Type</span>
-                          <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-medium rounded-full">
-                            {formatSubcategoryName(result.subcategory)}
-                          </span>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                          <span className="text-sm text-gray-600">Confidence</span>
-                          <div className="flex items-center gap-3">
-                            <div className="w-full max-w-[160px] h-2 bg-gray-200 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-emerald-600 rounded-full transition-all ease-out"
-                                style={{ width: `${result.confidence * 100}%` }}
-                              />
-                            </div>
-                            <span className="text-sm font-semibold text-emerald-700">
-                              {(result.confidence * 100).toFixed(1)}%
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
                       <button
-                        onClick={() => {
-                          window.dispatchEvent(
-                            new CustomEvent("filterProviders", {
-                              detail: { category: result.category ?? null, subcategory: result.subcategory ?? null },
-                            })
-                          );
-                        }}
-                        className="w-full px-4 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition flex items-center justify-center gap-2"
+                        onClick={handleClear}
+                        className="p-2 hover:bg-white/50 rounded-lg transition"
+                        aria-label="Clear results"
                       >
-                        Find {formatCategoryName(result.category)}s Near You
-                        <ArrowRight className="w-4 h-4" />
+                        <X className="w-5 h-5 text-gray-600" />
                       </button>
                     </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                      <motion.div 
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="flex flex-col gap-2 p-3 bg-white/80 backdrop-blur rounded-xl"
+                      >
+                        <span className="text-xs text-gray-600 font-medium">Category</span>
+                        <span className="px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-bold rounded-lg shadow-md">
+                          {formatCategoryName(result.category)}
+                        </span>
+                      </motion.div>
+
+                      <motion.div 
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="flex flex-col gap-2 p-3 bg-white/80 backdrop-blur rounded-xl"
+                      >
+                        <span className="text-xs text-gray-600 font-medium">Service Type</span>
+                        <span className="px-3 py-2 bg-emerald-100 text-emerald-800 text-sm font-bold rounded-lg">
+                          {formatSubcategoryName(result.subcategory)}
+                        </span>
+                      </motion.div>
+
+                      <motion.div 
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="flex flex-col gap-2 p-3 bg-white/80 backdrop-blur rounded-xl"
+                      >
+                        <span className="text-xs text-gray-600 font-medium">Confidence</span>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
+                            <motion.div
+                              className="h-full bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${result.confidence * 100}%` }}
+                              transition={{ duration: 1, ease: "easeOut" }}
+                            />
+                          </div>
+                          <motion.span 
+                            className="text-sm font-bold text-emerald-700"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.5 }}
+                          >
+                            {(result.confidence * 100).toFixed(1)}%
+                          </motion.span>
+                        </div>
+                      </motion.div>
+                    </div>
+
+                    <motion.button
+                      onClick={() => handleFindProviders(result.category, result.subcategory)}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 text-base"
+                    >
+                      Find {formatCategoryName(result.category)} Providers Near You
+                      <ArrowRight className="w-5 h-5" />
+                    </motion.button>
                   </div>
                 </motion.div>
 
@@ -228,39 +327,43 @@ export default function SearchSection() {
                 {result.allMatches && result.allMatches.length > 1 && (
                   <motion.div
                     layout
-                    initial={{ opacity: 0, y: 6 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-gray-50 rounded-xl p-4 border border-gray-200"
+                    transition={{ delay: 0.2 }}
+                    className="bg-white rounded-2xl p-5 border-2 border-gray-200 shadow-md"
                   >
-                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Other Possible Matches</h4>
+                    <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+                      Other Possible Matches
+                    </h4>
                     <div className="space-y-2">
                       {result.allMatches.slice(1, 4).map((match, idx) => (
                         <motion.div
                           key={idx}
-                          whileHover={{ scale: 1.01 }}
-                          onClick={() =>
-                            window.dispatchEvent(
-                              new CustomEvent("filterProviders", {
-                                detail: { category: match.category ?? null, subcategory: match.subcategory ?? null },
-                              })
-                            )
-                          }
-                          className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-emerald-300 transition cursor-pointer"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.3 + idx * 0.1 }}
+                          whileHover={{ scale: 1.02, x: 4 }}
+                          onClick={() => handleFindProviders(match.category, match.subcategory)}
+                          className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border-2 border-gray-200 hover:border-emerald-400 hover:from-emerald-50 hover:to-teal-50 transition-all cursor-pointer group"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-semibold text-gray-600">
+                            <div className="w-8 h-8 bg-gradient-to-br from-gray-200 to-gray-300 group-hover:from-emerald-500 group-hover:to-teal-600 rounded-full flex items-center justify-center text-sm font-bold text-gray-600 group-hover:text-white transition-all">
                               {idx + 2}
                             </div>
                             <div>
-                              <div className="text-sm font-medium text-gray-900">
+                              <div className="text-sm font-bold text-gray-900 group-hover:text-emerald-700 transition">
                                 {formatCategoryName(match.category)} → {formatSubcategoryName(match.subcategory)}
                               </div>
-                              <div className="text-xs text-gray-500">Tap to filter providers</div>
+                              <div className="text-xs text-gray-500">Click to search providers</div>
                             </div>
                           </div>
-                          <span className="text-sm font-semibold text-gray-600">
-                            {(match.similarity * 100).toFixed(0)}%
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-gray-600 group-hover:text-emerald-600 transition">
+                              {(match.similarity * 100).toFixed(0)}%
+                            </span>
+                            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-600 transition" />
+                          </div>
                         </motion.div>
                       ))}
                     </div>
@@ -272,10 +375,25 @@ export default function SearchSection() {
 
           {/* Helper Text */}
           {!result && !loading && (
-            <div className="mt-4 text-sm text-gray-500">
-              💡 Try examples: <span className="font-medium text-gray-700">"sink is clogged"</span>,{" "}
-              <span className="font-medium text-gray-700">"install ceiling fan"</span>, or <span className="font-medium text-gray-700">"ac not cooling"</span>.
-            </div>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-5 text-sm text-gray-600 bg-gray-50 rounded-xl p-4 border border-gray-200"
+            >
+              <p className="font-semibold text-gray-700 mb-2">💡 Try these examples:</p>
+              <div className="flex flex-wrap gap-2">
+                {["sink is clogged", "install ceiling fan", "ac not cooling", "fix leaking tap"].map((example) => (
+                  <button
+                    key={example}
+                    onClick={() => setQuery(example)}
+                    className="px-3 py-1 bg-white border border-gray-300 hover:border-emerald-500 hover:bg-emerald-50 rounded-lg text-gray-700 hover:text-emerald-700 transition font-medium"
+                  >
+                    "{example}"
+                  </button>
+                ))}
+              </div>
+            </motion.div>
           )}
         </motion.div>
       </div>
