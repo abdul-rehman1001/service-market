@@ -14,7 +14,7 @@ const nav = [
 { label: "Services", href: "/admin/services", icon: Layers },
 { label: "Booking Management", href: "/admin/bookings", icon: Calendar },
 { label: "Review Management", href: "/admin/reviews", icon: Star },
-{ label: "Content", href: "/admin/content", icon: FileText },
+{ label: "Content Management", href: "/admin/content", icon: FileText },
 { label: "Queries", href: "/admin/queries", icon: HelpCircle }
 ];
 
