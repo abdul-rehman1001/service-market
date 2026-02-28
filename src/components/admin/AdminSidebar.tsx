@@ -13,7 +13,7 @@ const nav = [
 { label: "Categories", href: "/admin/categories", icon: Layers },
 { label: "Services", href: "/admin/services", icon: Layers },
 { label: "Booking Management", href: "/admin/bookings", icon: Calendar },
-{ label: "Reviews", href: "/admin/reviews", icon: Star },
+{ label: "Review Management", href: "/admin/reviews", icon: Star },
 { label: "Content", href: "/admin/content", icon: FileText },
 { label: "Queries", href: "/admin/queries", icon: HelpCircle }
 ];
