@@ -1,32 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import Button from "../../ui/Button"; // adjust the path to your Button component
+import Button from "../../ui/Button";
+import { HiSparkles } from "react-icons/hi2";
 
 export default function LandingHeader() {
   return (
-    <header className="w-full bg-white shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto flex justify-between items-center py-4 px-6">
+    <header className="w-full bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto flex justify-between items-center py-3.5 px-6">
         {/* Logo */}
-        <div className="text-2xl font-extrabold text-emerald-600 hover:text-emerald-600 transition-colors cursor-pointer">
-          Servizo
-        </div>
+        <Link href="/landing" className="flex items-center gap-2 group">
+          <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md shadow-emerald-200 transition-transform group-hover:scale-105">
+            <HiSparkles className="text-white text-lg" />
+          </div>
+          <span className="text-2xl font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+            Servizo
+          </span>
+        </Link>
 
         {/* Navigation Links */}
-        <nav className="flex items-center gap-4">
-
-          {/* Login Button */}
+        <nav className="flex items-center gap-3">
           <Button
             href="/login"
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition"
+            className="px-5 py-2 text-gray-600 hover:text-emerald-700 font-medium rounded-xl hover:bg-emerald-50 transition-all"
           >
             Login
           </Button>
 
-          {/* Sign Up Button (white text ensured) */}
           <Button
             href="/register"
-            className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm  focus:outline-none focus:ring-2  transition !text-white"
+            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-200 hover:shadow-lg hover:shadow-emerald-200 transition-all !text-white font-medium"
           >
             Sign Up
           </Button>
