@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Format providers
-    const formattedProviders = providers.map((provider) => ({
+    const formattedProviders = providers.map((provider: { id: any; userId: any; businessName: any; user: { firstName: any; lastName: any; profileImage: any; bio: any; phone: any; }; averageRating: { toString: () => string; }; totalReviews: any; totalJobsCompleted: any; yearsOfExperience: any; baseAddress: any; latitude: { toString: () => string; }; longitude: { toString: () => string; }; services: any[]; verificationStatus: any; }) => ({
       id: provider.id,
       userId: provider.userId,
       name: provider.businessName || `${provider.user.firstName} ${provider.user.lastName}`,
