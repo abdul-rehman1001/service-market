@@ -12,7 +12,7 @@ const nav = [
 { label: "Provider Verification", href: "/admin/verification", icon: ShieldCheck },
 { label: "Categories", href: "/admin/categories", icon: Layers },
 { label: "Services", href: "/admin/services", icon: Layers },
-{ label: "Bookings", href: "/admin/bookings", icon: Calendar },
+{ label: "Booking Management", href: "/admin/bookings", icon: Calendar },
 { label: "Reviews", href: "/admin/reviews", icon: Star },
 { label: "Content", href: "/admin/content", icon: FileText },
 { label: "Queries", href: "/admin/queries", icon: HelpCircle }
