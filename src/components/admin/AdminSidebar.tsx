@@ -2,13 +2,13 @@
 
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BarChart3, Users, ShieldCheck, Layers, Calendar, Star, FileText, HelpCircle, Menu } from "lucide-react";
-import { label } from "framer-motion/client";
 
 
 const nav = [
 { label: "Dashboard", href: "/admin", icon: BarChart3 },
-{ label: "Users", href: "/admin/users", icon: Users },
+{ label: "User Management", href: "/admin/users", icon: Users },
 { label: "Provider Verification", href: "/admin/verification", icon: ShieldCheck },
 { label: "Categories", href: "/admin/categories", icon: Layers },
 { label: "Services", href: "/admin/services", icon: Layers },
@@ -20,6 +20,8 @@ const nav = [
 
 
 export default function AdminSidebar({ open, setOpen }: { open: boolean; setOpen: (v: boolean) => void }) {
+const pathname = usePathname();
+
 return (
 <aside
 className={`fixed inset-y-0 left-0 z-40 w-64 bg-emerald-700 text-white transform transition-transform lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
@@ -33,16 +35,24 @@ className={`fixed inset-y-0 left-0 z-40 w-64 bg-emerald-700 text-white transform
 
 
 <nav className="px-4 py-4 space-y-1 text-sm">
-{nav.map((item) => (
-<Link
+{nav.map((item) => {
+  const isActive = item.href === "/admin"
+    ? pathname === "/admin"
+    : pathname.startsWith(item.href);
+
+  return (
+  <Link
 key={item.href}
 href={item.href}
-className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-emerald-600 transition"
+className={`flex items-center gap-3 px-3 py-2 rounded-md transition ${
+  isActive ? "bg-emerald-800 font-medium" : "hover:bg-emerald-600"
+}`}
 >
 <item.icon size={18} />
 {item.label}
 </Link>
-))}
+  );
+})}
 </nav>
 </aside>
 );
