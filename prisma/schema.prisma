@@ -461,14 +461,24 @@ model PortfolioItem {
 //////////////////////////////////////////////////////
 
 model UserQuery {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  queryNumber  String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  message   String
-  status    String   @default("OPEN")
+  subject      String
+  message      String
+  queryType    String   @default("GENERAL")   // GENERAL | SERVICE_ISSUE | PAYMENT | BOOKING | ACCOUNT | OTHER
+  status       String   @default("OPEN")      // OPEN | IN_PROGRESS | RESOLVED | CLOSED
 
-  createdAt DateTime @default(now())
+  bookingId    String?
+
+  adminReply   String?
+  repliedAt    DateTime?
+  resolvedAt   DateTime?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model FAQ {
