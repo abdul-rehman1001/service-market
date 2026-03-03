@@ -1,12 +1,14 @@
 "use client";
 
+import { use } from "react";
 import ServiceDetails from "@/components/admin/services/ServiceDetails";
 
-export default function ServiceReviewPage() {
+export default function ServiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+
   return (
-    <div className="p-6 max-w-4xl">
-      <h1 className="text-2xl font-semibold mb-4">Service Review</h1>
-      <ServiceDetails />
+    <div className="max-w-6xl">
+      <ServiceDetails serviceId={id} />
     </div>
   );
 }

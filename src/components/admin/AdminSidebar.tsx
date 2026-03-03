@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Users, ShieldCheck, Layers, Calendar, Star, FileText, HelpCircle, Menu } from "lucide-react";
+import { BarChart3, Users, ShieldCheck, Layers, Wrench, Calendar, Star, FileText, HelpCircle, Menu } from "lucide-react";
 
 
 const nav = [
@@ -11,7 +11,7 @@ const nav = [
 { label: "User Management", href: "/admin/users", icon: Users },
 { label: "Provider Verification", href: "/admin/verification", icon: ShieldCheck },
 { label: "Categories", href: "/admin/categories", icon: Layers },
-{ label: "Services", href: "/admin/services", icon: Layers },
+{ label: "Services", href: "/admin/services", icon: Wrench },
 { label: "Booking Management", href: "/admin/bookings", icon: Calendar },
 { label: "Review Management", href: "/admin/reviews", icon: Star },
 { label: "Content Management", href: "/admin/content", icon: FileText },
