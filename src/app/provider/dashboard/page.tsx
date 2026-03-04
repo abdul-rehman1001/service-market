@@ -10,14 +10,14 @@ import { ReviewsPanel } from '@/components/provider/ReviewsPanel';
 import { AvailabilityPanel } from '@/components/provider/AvailabilityPanel';
 import { BookingRequestsPanel } from '@/components/provider/BookingRequestsPanel';
 import { BookingStatusPanel } from '@/components/provider/BookingStatusPanel';
-
+import { ChatPanel } from '@/components/provider/ChatPanel';
 import { VerifyIdentityPanel } from '@/components/provider/VerifyIdentityPanel';
 import { DocumentManagementPanel } from '@/components/provider/DocumentManagementPanel';
 import { PortfolioPanel } from '@/components/provider/PortfolioPanel';
 
 export default function ProviderDashboardPage() {
   const [activeTab, setActiveTab] = useState<
-    'services' | 'appointments' | 'analytics' | 'work-history' | 'reviews' | 'availability' | 'bookings'|'booking-status'|'reviews'|'verify-identity'|'documents'|'portfolio'
+    'services' | 'appointments' | 'analytics' | 'work-history' | 'reviews' | 'availability' | 'bookings'|'booking-status'|'chat'|'verify-identity'|'documents'|'portfolio'
   >('services');
 
   
@@ -35,14 +35,10 @@ export default function ProviderDashboardPage() {
         {activeTab === 'availability' && <AvailabilityPanel />}
         {activeTab === 'bookings' && <BookingRequestsPanel />}
         {activeTab === 'booking-status' && <BookingStatusPanel />}
-        
+        {activeTab === 'chat' && <ChatPanel />}
         {activeTab === 'verify-identity' && <VerifyIdentityPanel />}
-{activeTab === 'documents' && <DocumentManagementPanel />}
-{activeTab === 'portfolio' && <PortfolioPanel />}
-
-
-
-
+        {activeTab === 'documents' && <DocumentManagementPanel />}
+        {activeTab === 'portfolio' && <PortfolioPanel />}
       </main>
     </div>
   );
