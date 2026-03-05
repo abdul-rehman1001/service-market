@@ -4,6 +4,9 @@ import { verifyToken } from '@/lib/jwt';
 import { adminDb } from '@/lib/firebaseAdmin';
 import admin from '@/lib/firebaseAdmin';
 
+const buildConversationId = (seekerId: string, providerId: string) =>
+  `conversation_${seekerId}_${providerId}`;
+
 // POST /api/chat/messages — send a message
 export async function POST(req: NextRequest) {
   try {
@@ -31,7 +34,27 @@ export async function POST(req: NextRequest) {
       where: { id: bookingId },
       include: {
         provider: {
-          select: { userId: true },
+          select: {
+            userId: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+                profileImage: true,
+              },
+            },
+          },
+        },
+        seeker: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profileImage: true,
+          },
+        },
+        service: {
+          select: { name: true },
         },
       },
     });
@@ -59,32 +82,48 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const conversationId = `booking_${bookingId}`;
+    const conversationId = buildConversationId(booking.seekerId, booking.provider.userId);
+    const conversationRef = adminDb.collection('conversations').doc(conversationId);
     const receiverId = isSeeker ? booking.provider.userId : booking.seekerId;
 
-    // Add message to Firestore
-    const messageRef = await adminDb
-      .collection('conversations')
-      .doc(conversationId)
-      .collection('messages')
-      .add({
-        senderId: decoded.userId,
-        receiverId,
-        content: content.trim(),
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        read: false,
-      });
+    const seekerName = `${booking.seeker.firstName} ${booking.seeker.lastName}`;
+    const providerName = `${booking.provider.user.firstName} ${booking.provider.user.lastName}`;
+    const seekerAvatar = booking.seeker.profileImage || '';
+    const providerAvatar = booking.provider.user.profileImage || '';
 
-    // Update conversation's last message
-   await adminDb.collection('conversations').doc(conversationId).set(
-  {
-    bookingId,
-    participants: [booking.seekerId, booking.provider.userId],
-    lastMessage: content.trim(),
-    lastMessageAt: admin.firestore.FieldValue.serverTimestamp(),
-  },
-  { merge: true }
-);
+    const conversationSnapshot = await conversationRef.get();
+    if (!conversationSnapshot.exists) {
+      await conversationRef.set({
+        seekerId: booking.seekerId,
+        providerId: booking.provider.userId,
+        seekerName,
+        providerName,
+        seekerAvatar,
+        providerAvatar,
+        participants: [booking.seekerId, booking.provider.userId],
+        serviceName: booking.service.name,
+        lastMessage: '',
+        lastMessageAt: null,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    const trimmedContent = content.trim();
+
+    const messageRef = await conversationRef.collection('messages').add({
+      senderId: decoded.userId,
+      receiverId,
+      content: trimmedContent,
+      bookingId,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      read: false,
+    });
+
+    await conversationRef.update({
+      lastMessage: trimmedContent,
+      lastMessageAt: new Date().toISOString(),
+      serviceName: booking.service.name,
+    });
 
     return NextResponse.json(
       {
@@ -92,9 +131,10 @@ export async function POST(req: NextRequest) {
           id: messageRef.id,
           senderId: decoded.userId,
           receiverId,
-          content: content.trim(),
+          content: trimmedContent,
           timestamp: new Date().toISOString(),
           read: false,
+          bookingId,
         },
       },
       { status: 201 }

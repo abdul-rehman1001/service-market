@@ -2,7 +2,6 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 import { verifyToken } from "@/lib/jwt";
 import { adminDb } from "@/lib/firebaseAdmin";
 
@@ -20,33 +19,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    const { bookingId } = await req.json();
-    if (!bookingId) {
-      return NextResponse.json({ error: "bookingId is required" }, { status: 400 });
+    const { conversationId } = await req.json();
+    if (!conversationId) {
+      return NextResponse.json({ error: "conversationId is required" }, { status: 400 });
     }
 
-    // Verify booking and participant
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: { provider: { select: { userId: true } } },
-    });
-
-    if (!booking) {
-      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    const conversationRef = adminDb.collection("conversations").doc(conversationId);
+    const conversationSnapshot = await conversationRef.get();
+    if (!conversationSnapshot.exists) {
+      return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
     }
 
+    const conversation = conversationSnapshot.data();
     const isParticipant =
-      booking.seekerId === decoded.userId || booking.provider.userId === decoded.userId;
+      conversation?.seekerId === decoded.userId || conversation?.providerId === decoded.userId;
     if (!isParticipant) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const conversationId = `booking_${bookingId}`;
-
     // Query unread messages for this user
-    const unreadSnapshot = await adminDb
-      .collection("conversations")
-      .doc(conversationId)
+    const unreadSnapshot = await conversationRef
       .collection("messages")
       .where("receiverId", "==", decoded.userId)
       .where("read", "==", false)

@@ -11,15 +11,25 @@ export interface Message {
   content: string;
   timestamp: string; // ISO string
   read: boolean;
+  bookingId: string;
+}
+
+export interface ConversationBooking {
+  id: string;
+  serviceName: string;
+  status: string;
+  updatedAt: string;
 }
 
 export interface Conversation {
-  id: string;           // Firestore doc id: booking_{bookingId}
-  bookingId: string;
+  id: string;
+  seekerId: string;
+  providerId: string;
   otherUser: ChatUser;
-  serviceName: string;
+  serviceName?: string;
   lastMessage: string;
   lastMessageAt: string | null;
   unreadCount: number;
-  bookingStatus: string;
+  bookingStatus?: string;
+  bookings: ConversationBooking[];
 }

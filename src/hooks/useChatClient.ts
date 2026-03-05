@@ -19,7 +19,7 @@ interface UseChatClientResult {
   sending: boolean;
   error: string | null;
   selectConversation: (conversationId: string) => void;
-  sendMessage: (content: string) => Promise<void>;
+  sendMessage: (content: string, bookingId: string) => Promise<void>;
   refreshConversations: (force?: boolean) => Promise<void>;
 }
 
@@ -91,8 +91,16 @@ const writeString = (storage: StorageLike | null, key: string, value: string | n
   }
 };
 
+const normalizeConversation = (conversation: Conversation): Conversation => ({
+  ...conversation,
+  bookings: Array.isArray(conversation.bookings) ? conversation.bookings : [],
+});
+
+const normalizeConversations = (items: Conversation[]): Conversation[] =>
+  items.map(normalizeConversation);
+
 export function useChatClient(options: UseChatClientOptions = {}): UseChatClientResult {
-  const namespace = options.cacheNamespace ?? 'chat';
+  const namespace = options.cacheNamespace ?? 'chat_v2';
   const storage = getStorage();
 
   const conversationsKey = `${namespace}:conversations`;
@@ -102,7 +110,7 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
   const lastFetchedKey = `${namespace}:lastFetched`;
 
   const initialConversations = isBrowser()
-    ? readJSON<Conversation[]>(storage, conversationsKey, [])
+    ? normalizeConversations(readJSON<Conversation[]>(storage, conversationsKey, []))
     : [];
   const initialActiveId = isBrowser() ? readString(storage, activeKey) : null;
   const initialMessages =
@@ -156,7 +164,8 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
           throw new Error('Failed to fetch conversations');
         }
         const data = await res.json();
-        setConversations(data.conversations || []);
+        const normalizedConversations = normalizeConversations(data.conversations || []);
+        setConversations(normalizedConversations);
         setError(null);
         lastFetchedRef.current = Date.now();
         writeString(storage, lastFetchedKey, String(lastFetchedRef.current));
@@ -202,6 +211,19 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
     writeString(storage, activeKey, activeConversationId);
   }, [activeConversationId, activeKey, storage]);
 
+  useEffect(() => {
+    if (conversations.length === 0) {
+      setActiveConversationId(null);
+      return;
+    }
+    setActiveConversationId((prev) => {
+      if (prev && conversations.some((conversation) => conversation.id === prev)) {
+        return prev;
+      }
+      return conversations[0].id;
+    });
+  }, [conversations]);
+
   // Ensure current user id is populated
   useEffect(() => {
     if (currentUserId) return;
@@ -233,9 +255,17 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
   useEffect(() => {
     if (!options.initialBookingId) return;
     if (initialBookingHandledRef.current === options.initialBookingId) return;
-    initialBookingHandledRef.current = options.initialBookingId;
-    selectConversation(`booking_${options.initialBookingId}`);
-  }, [options.initialBookingId, selectConversation]);
+    if (!conversations.length) return;
+    const target = conversations.find((conversation) =>
+      (conversation.bookings ?? []).some(
+        (booking) => booking.id === options.initialBookingId
+      )
+    );
+    if (target) {
+      initialBookingHandledRef.current = options.initialBookingId;
+      selectConversation(target.id);
+    }
+  }, [conversations, options.initialBookingId, selectConversation]);
 
   // Watch active conversation for realtime messages
   useEffect(() => {
@@ -243,6 +273,9 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
       setMessages([]);
       return;
     }
+
+    const activeConversation = conversations.find((conversation) => conversation.id === activeConversationId);
+    const fallbackBookingId = activeConversation?.bookings[0]?.id || '';
 
     const cached = readJSON<Message[]>(storage, messagesKey(activeConversationId), []);
     if (cached.length) {
@@ -273,6 +306,7 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
           content: data.content,
           timestamp,
           read: data.read || false,
+          bookingId: data.bookingId || fallbackBookingId,
         };
       });
 
@@ -281,7 +315,7 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
     });
 
     return () => unsubscribe();
-  }, [activeConversationId, storage]);
+  }, [activeConversationId, conversations, storage]);
 
   // Mark conversation as read when opened
   useEffect(() => {
@@ -294,7 +328,7 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
         await fetch('/api/chat/messages/read', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ bookingId: conversation.bookingId }),
+          body: JSON.stringify({ conversationId: conversation.id }),
         });
         setConversations((prev) =>
           prev.map((c) => (c.id === activeConversationId ? { ...c, unreadCount: 0 } : c))
@@ -308,11 +342,16 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
   }, [activeConversationId, conversations]);
 
   const sendMessage = useCallback(
-    async (content: string) => {
+    async (content: string, bookingId: string) => {
       if (!activeConversationId || !content.trim() || sending) return;
+      if (!bookingId) {
+        alert('Select a booking before sending a message');
+        return;
+      }
       const trimmed = content.trim();
       const conversation = conversations.find((c) => c.id === activeConversationId);
       if (!conversation) return;
+      const bookingMeta = (conversation.bookings ?? []).find((b) => b.id === bookingId);
 
       setSending(true);
       try {
@@ -320,7 +359,7 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            bookingId: conversation.bookingId,
+            bookingId,
             content: trimmed,
           }),
         });
@@ -335,7 +374,13 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
         setConversations((prev) =>
           prev.map((c) =>
             c.id === activeConversationId
-              ? { ...c, lastMessage: trimmed, lastMessageAt: nowISO }
+              ? {
+                  ...c,
+                  lastMessage: trimmed,
+                  lastMessageAt: nowISO,
+                  serviceName: bookingMeta?.serviceName ?? c.serviceName,
+                  bookingStatus: bookingMeta?.status ?? c.bookingStatus,
+                }
               : c
           )
         );

@@ -3,6 +3,9 @@ import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
 import { adminDb } from '@/lib/firebaseAdmin';
 
+const buildConversationId = (seekerId: string, providerId: string) =>
+  `conversation_${seekerId}_${providerId}`;
+
 // GET /api/chat/conversations — list all chat conversations for the logged-in user
 export async function GET(req: NextRequest) {
   try {
@@ -62,92 +65,107 @@ export async function GET(req: NextRequest) {
       orderBy: { updatedAt: 'desc' },
     });
 
-    // For each booking, check if a Firestore conversation exists; if not, create one
+    type Participant = { id: string; name: string; avatar: string };
+    type ConversationGroup = {
+      id: string;
+      seeker: Participant;
+      provider: Participant;
+      bookings: { id: string; serviceName: string; status: string; updatedAt: string }[];
+    };
+
+    const conversationGroups = new Map<string, ConversationGroup>();
+
+    bookings.forEach((booking) => {
+      const seeker: Participant = {
+        id: booking.seeker.id,
+        name: `${booking.seeker.firstName} ${booking.seeker.lastName}`,
+        avatar: booking.seeker.profileImage || '',
+      };
+      const provider: Participant = {
+        id: booking.provider.userId,
+        name: `${booking.provider.user.firstName} ${booking.provider.user.lastName}`,
+        avatar: booking.provider.user.profileImage || '',
+      };
+      const conversationId = buildConversationId(booking.seekerId, booking.provider.userId);
+      const bookingSummary = {
+        id: booking.id,
+        serviceName: booking.service.name,
+        status: booking.status,
+        updatedAt: booking.updatedAt.toISOString(),
+      };
+
+      const existing = conversationGroups.get(conversationId);
+      if (existing) {
+        existing.bookings.push(bookingSummary);
+      } else {
+        conversationGroups.set(conversationId, {
+          id: conversationId,
+          seeker,
+          provider,
+          bookings: [bookingSummary],
+        });
+      }
+    });
+
     const conversations = await Promise.all(
-      bookings.map(async (booking) => {
-        const conversationId = `booking_${booking.id}`;
-        const conversationRef = adminDb.collection('conversations').doc(conversationId);
-        const doc = await conversationRef.get();
+      Array.from(conversationGroups.values()).map(async (group) => {
+        const sortedBookings = [...group.bookings].sort(
+          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+        const latestBooking = sortedBookings[0];
 
-        const seekerName = `${booking.seeker.firstName} ${booking.seeker.lastName}`;
-        const providerName = `${booking.provider.user.firstName} ${booking.provider.user.lastName}`;
+        const conversationRef = adminDb.collection('conversations').doc(group.id);
+        const snapshot = await conversationRef.get();
+        const baseData = {
+          seekerId: group.seeker.id,
+          providerId: group.provider.id,
+          seekerName: group.seeker.name,
+          providerName: group.provider.name,
+          seekerAvatar: group.seeker.avatar,
+          providerAvatar: group.provider.avatar,
+          participants: [group.seeker.id, group.provider.id],
+          serviceName: latestBooking?.serviceName || '',
+          lastMessage: '',
+          lastMessageAt: null,
+          createdAt: new Date().toISOString(),
+        };
 
-        // Determine the "other" user for display
-        const isSeeker = booking.seekerId === userId;
-        const otherUser = isSeeker
-          ? {
-              id: booking.provider.userId,
-              name: providerName,
-              avatar: booking.provider.user.profileImage || '',
-            }
-          : {
-              id: booking.seeker.id,
-              name: seekerName,
-              avatar: booking.seeker.profileImage || '',
-            };
-
-        if (!doc.exists) {
-          // Create the conversation in Firestore
-          await conversationRef.set({
-            bookingId: booking.id,
-            seekerId: booking.seekerId,
-            providerId: booking.provider.userId,
-            seekerName,
-            providerName,
-            seekerAvatar: booking.seeker.profileImage || '',
-            providerAvatar: booking.provider.user.profileImage || '',
-            serviceName: booking.service.name,
-            lastMessage: '',
-            lastMessageAt: null,
-            createdAt: new Date().toISOString(),
-          });
-
-          return {
-            id: conversationId,
-            bookingId: booking.id,
-            otherUser,
-            serviceName: booking.service.name,
-            lastMessage: '',
-            lastMessageAt: null,
-            unreadCount: 0,
-            bookingStatus: booking.status,
-          };
+        let data = snapshot.data() || null;
+        if (!snapshot.exists) {
+          await conversationRef.set(baseData);
+          data = baseData;
         }
 
-        const data = doc.data()!;
-
-        // Count unread messages
-        const unreadSnapshot = await adminDb
-          .collection('conversations')
-          .doc(conversationId)
+        const unreadSnapshot = await conversationRef
           .collection('messages')
+          .where('receiverId', '==', userId)
           .where('read', '==', false)
           .get();
 
-        // Filter in memory to exclude messages from current user
-        const unreadMessages = unreadSnapshot.docs.filter(
-          (doc) => doc.data().senderId !== userId
-        );
+        const otherUser = group.seeker.id === userId ? group.provider : group.seeker;
 
         return {
-          id: conversationId,
-          bookingId: booking.id,
+          id: group.id,
+          seekerId: group.seeker.id,
+          providerId: group.provider.id,
           otherUser,
-          serviceName: data.serviceName || booking.service.name,
-          lastMessage: data.lastMessage || '',
-          lastMessageAt: data.lastMessageAt || null,
-          unreadCount: unreadMessages.length,
-          bookingStatus: booking.status,
+          serviceName: latestBooking?.serviceName || data?.serviceName || '',
+          lastMessage: data?.lastMessage || '',
+          lastMessageAt: data?.lastMessageAt || null,
+          unreadCount: unreadSnapshot.size,
+          bookingStatus: latestBooking?.status,
+          bookings: sortedBookings,
         };
       })
     );
 
-    // Sort by lastMessageAt (most recent first)
     conversations.sort((a, b) => {
-      if (!a.lastMessageAt && !b.lastMessageAt) return 0;
-      if (!a.lastMessageAt) return 1;
-      if (!b.lastMessageAt) return -1;
-      return new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime();
+      const aTime = a.lastMessageAt || a.bookings[0]?.updatedAt || '';
+      const bTime = b.lastMessageAt || b.bookings[0]?.updatedAt || '';
+      if (!aTime && !bTime) return 0;
+      if (!aTime) return 1;
+      if (!bTime) return -1;
+      return new Date(bTime).getTime() - new Date(aTime).getTime();
     });
 
     return NextResponse.json({ conversations }, { status: 200 });

@@ -1,10 +1,12 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ChatSidebar from './ChatSidebar';
 import ChatHeader from './ChatHeader';
 import ChatMessages from './ChatMessages';
 import ChatInput from './ChatInput';
+import BookingFilterBar from './BookingFilterBar';
 import { useChatClient } from '@/hooks/useChatClient';
 
 export default function ChatLayout() {
@@ -23,13 +25,71 @@ export default function ChatLayout() {
     sendMessage,
   } = useChatClient({ initialBookingId: bookingIdParam });
 
+  const [hydrated, setHydrated] = useState(false);
+  const [bookingFilter, setBookingFilter] = useState<string>('');
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
   const activeConversation = conversations.find((c) => c.id === activeConversationId);
   const hasConversations = conversations.length > 0;
   const showLoader = loading && !hasConversations;
 
+  const bookingIdsKey = activeConversation?.bookings?.map((b) => b.id).join('|') ?? '';
+
+  useEffect(() => {
+    if (!activeConversation) {
+      setBookingFilter('');
+      return;
+    }
+
+    const currentBookings = activeConversation.bookings ?? [];
+    if (currentBookings.length === 0) {
+      setBookingFilter('');
+      return;
+    }
+
+    setBookingFilter((prev) => {
+      if (prev && currentBookings.some((booking) => booking.id === prev)) {
+        return prev;
+      }
+      return currentBookings[0].id;
+    });
+  }, [activeConversationId, bookingIdsKey]);
+
+  const availableBookings = activeConversation?.bookings ?? [];
+  const effectiveFilter = bookingFilter || (availableBookings[0]?.id ?? '');
+  const filteredMessages = useMemo(() => {
+    if (!effectiveFilter) {
+      return messages;
+    }
+    return messages.filter((message) => message.bookingId === effectiveFilter);
+  }, [messages, effectiveFilter]);
+
+  const bookingIdForSend = effectiveFilter || null;
+  const selectedBooking = bookingIdForSend
+    ? availableBookings.find((booking) => booking.id === bookingIdForSend) ?? null
+    : null;
+
   const handleSend = (content: string) => {
-    void sendMessage(content);
+    if (!bookingIdForSend) {
+      alert('Select a booking to send a message');
+      return;
+    }
+    void sendMessage(content, bookingIdForSend);
   };
+
+  if (!hydrated) {
+    return (
+      <div className="max-w-7xl mx-auto h-[80vh] flex items-center justify-center bg-white rounded-2xl shadow-lg">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-500 text-sm">Preparing chat...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (showLoader) {
     return (
@@ -90,14 +150,29 @@ export default function ChatLayout() {
           <>
             <ChatHeader
               user={activeConversation.otherUser}
-              serviceName={activeConversation.serviceName}
-              bookingStatus={activeConversation.bookingStatus}
+              serviceName={selectedBooking?.serviceName || activeConversation.serviceName}
+              bookingStatus={selectedBooking?.status || activeConversation.bookingStatus}
+            />
+            <BookingFilterBar
+              bookings={availableBookings}
+              value={effectiveFilter}
+              onChange={setBookingFilter}
+              allowAll={false}
             />
             <ChatMessages
-              messages={messages}
+              messages={filteredMessages}
               currentUserId={currentUserId}
+              bookings={availableBookings}
+              bookingFilter={effectiveFilter}
             />
-            <ChatInput onSend={handleSend} disabled={sending} />
+            {!bookingIdForSend && (
+              <div className="px-4 py-2 text-xs text-amber-700 bg-amber-50 border-t border-amber-100">
+                {availableBookings.length === 0
+                  ? 'No eligible bookings available for chat.'
+                  : 'Select a booking to send a message.'}
+              </div>
+            )}
+            <ChatInput onSend={handleSend} disabled={sending || !bookingIdForSend} />
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-400">

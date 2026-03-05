@@ -1,8 +1,10 @@
-import { Message } from './types';
+import { ConversationBooking, Message } from './types';
 
 interface Props {
   message: Message;
   currentUserId: string;
+  booking?: ConversationBooking;
+  showBookingLabel?: boolean;
 }
 
 function formatTime(timestamp: string): string {
@@ -14,7 +16,7 @@ function formatTime(timestamp: string): string {
   }
 }
 
-export default function ChatBubble({ message, currentUserId }: Props) {
+export default function ChatBubble({ message, currentUserId, booking, showBookingLabel = false }: Props) {
   const isMe = message.senderId === currentUserId;
 
   return (
@@ -26,6 +28,11 @@ export default function ChatBubble({ message, currentUserId }: Props) {
             : 'bg-gray-100 text-gray-900 rounded-bl-sm'
         }`}
       >
+        {showBookingLabel && booking && (
+          <span className={`block text-[10px] font-semibold tracking-wide mb-1 ${isMe ? 'text-emerald-200' : 'text-emerald-600'}`}>
+            {booking.serviceName}
+          </span>
+        )}
         <p>{message.content}</p>
         <div className={`flex items-center gap-1 mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
           <span className={`text-[10px] ${isMe ? 'text-emerald-200' : 'text-gray-400'}`}>
