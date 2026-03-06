@@ -11,17 +11,13 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 }) => {
   const tabs = [
     { key: 'services', label: 'My Services' },
-    { key: 'appointments', label: 'Appointments' },
     { key: 'analytics', label: 'Analytics' },
     { key: 'work-history', label: 'Work History' },
     { key: 'reviews', label: 'Reviews' },
     { key: 'availability', label: 'Availability' },
     { key: 'bookings', label: 'Booking Requests' },
-    { key: 'booking-status', label: 'Booking Status' },
     { key: 'chat', label: 'Chat' },
-    { key: 'verify-identity', label: 'Verify Identity' },
     { key: 'documents', label: 'Documents' },
-    { key: 'portfolio', label: 'Portfolio' },
   ];
 
   return (
