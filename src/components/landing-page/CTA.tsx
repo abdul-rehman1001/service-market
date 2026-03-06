@@ -1,63 +1,46 @@
-"use client";
-
 import Button from "../ui/Button";
-import { motion } from "framer-motion";
-import { FaArrowRight } from "react-icons/fa";
-import { HiSparkles } from "react-icons/hi2";
+import { ArrowRight, Sparkles, Zap } from "lucide-react";
 
 export default function CTA() {
   return (
-    <section className="py-20 md:py-28 bg-gradient-to-br from-blue-50/30 via-white to-emerald-50/50 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute -top-16 -left-16 w-[300px] h-[300px] bg-emerald-100 rounded-full opacity-20 blur-[80px] pointer-events-none" />
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ type: "spring", stiffness: 100, damping: 20 }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-emerald-600 to-teal-600 p-12 md:p-16 text-center shadow-2xl shadow-emerald-200"
-        >
-          {/* Background decorations */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/4" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/[0.03] rounded-full" />
-
+    <section className="relative overflow-hidden bg-white py-20 md:py-28">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-950 px-8 py-12 text-center shadow-[0_30px_90px_-30px_rgba(15,23,42,0.5)] md:px-14 md:py-16">
+          <div className="pointer-events-none absolute inset-0 bg-emerald-900/10" />
           <div className="relative">
-            <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm text-white/90 px-4 py-1.5 rounded-full text-sm font-medium mb-6">
-              <HiSparkles className="text-yellow-300" />
-              Join the Community
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-emerald-200 backdrop-blur-sm">
+              <Sparkles className="h-4 w-4 text-emerald-300" />
+              Ready to launch the next booking?
             </div>
 
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight">
-              Ready to Get Started?
+            <h2 className="mx-auto mt-6 max-w-3xl text-3xl font-black tracking-tight text-white md:text-5xl">
+              A sharper landing page. A faster first impression. A more credible marketplace.
             </h2>
 
-            <p className="text-emerald-100 mt-4 md:mt-6 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
-              Join thousands of users already on Servizo. Whether you&apos;re
-              looking for help or aiming to grow your business — your journey
-              starts here.
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-slate-300 md:text-lg">
+              Whether you want more customers or need to hire a trusted professional quickly,
+              Servizo now presents the platform with the clarity and polish it should have had from the start.
             </p>
 
-            <div className="flex flex-col sm:flex-row justify-center gap-4 mt-10">
+            <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
               <Button
                 href="/register/seeker"
-                className="group bg-white text-emerald-700 hover:bg-emerald-50 shadow-lg px-8 py-3.5 text-base rounded-xl font-semibold flex items-center justify-center gap-2 w-full sm:w-auto"
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-8 py-4 text-base font-semibold text-slate-950 transition hover:bg-emerald-50 sm:w-auto"
               >
-                Find a Service Now
-                <FaArrowRight className="text-sm transition-transform group-hover:translate-x-1" />
+                Find a service now
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
 
               <Button
                 href="/register/provider"
-                className="group bg-transparent text-white border-2 border-white/30 hover:border-white/60 hover:bg-white/10 px-8 py-3.5 text-base rounded-xl font-semibold flex items-center justify-center gap-2 w-full sm:w-auto"
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/5 px-8 py-4 text-base font-semibold text-white transition hover:bg-white/10 sm:w-auto"
               >
-                Become a Provider
-                <FaArrowRight className="text-sm transition-transform group-hover:translate-x-1" />
+                Grow as a provider
+                <Zap className="h-4 w-4 transition-transform group-hover:scale-110" />
               </Button>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

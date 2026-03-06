@@ -1,66 +1,61 @@
-"use client";
-
-import { HiSparkles } from "react-icons/hi2";
+import Link from "next/link";
+import { Sparkles } from "lucide-react";
 
 export default function LandingFooter() {
   return (
-    <footer className="bg-gray-900 text-gray-300 pt-16 pb-8">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-gray-800">
-          {/* Brand */}
+    <footer className="border-t border-slate-200 bg-slate-950 pt-16 text-slate-300">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="grid grid-cols-1 gap-10 border-b border-white/10 pb-12 md:grid-cols-4">
           <div className="md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
-                <HiSparkles className="text-white text-sm" />
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
+                <Sparkles className="h-5 w-5 text-emerald-300" />
               </div>
-              <span className="text-xl font-extrabold text-white">Servizo</span>
+              <div>
+                <div className="text-xl font-black text-white">Servizo</div>
+                <div className="text-xs uppercase tracking-[0.24em] text-slate-500">Trusted service discovery</div>
+              </div>
             </div>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              The smart way to find and offer services. Connecting professionals with those who need them.
+            <p className="text-sm leading-7 text-slate-400">
+              A database-backed marketplace for discovering verified professionals, matching service intent, and booking with more confidence.
             </p>
           </div>
 
-          {/* Platform */}
           <div>
-            <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Platform</h4>
-            <ul className="space-y-3">
-              <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">How It Works</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">Find Services</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">Become a Provider</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">Pricing</a></li>
+            <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">Platform</h4>
+            <ul className="space-y-3 text-sm">
+              <li><Link href="/landing#features" className="text-slate-400 transition hover:text-emerald-300">Features</Link></li>
+              <li><Link href="/landing#how-it-works" className="text-slate-400 transition hover:text-emerald-300">How It Works</Link></li>
+              <li><Link href="/register/seeker" className="text-slate-400 transition hover:text-emerald-300">Find Services</Link></li>
+              <li><Link href="/register/provider" className="text-slate-400 transition hover:text-emerald-300">Become a Provider</Link></li>
             </ul>
           </div>
 
-          {/* Company */}
           <div>
-            <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Company</h4>
-            <ul className="space-y-3">
-              <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">About Us</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">Contact</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">FAQ</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">Blog</a></li>
+            <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">Company</h4>
+            <ul className="space-y-3 text-sm">
+              <li><Link href="/about" className="text-slate-400 transition hover:text-emerald-300">About</Link></li>
+              <li><Link href="/faq" className="text-slate-400 transition hover:text-emerald-300">FAQ</Link></li>
+              <li><Link href="/login" className="text-slate-400 transition hover:text-emerald-300">Login</Link></li>
+              <li><Link href="/register" className="text-slate-400 transition hover:text-emerald-300">Create Account</Link></li>
             </ul>
           </div>
 
-          {/* Legal */}
           <div>
-            <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Legal</h4>
-            <ul className="space-y-3">
-              <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">Terms of Service</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">Privacy Policy</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">Cookie Policy</a></li>
+            <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">Legal</h4>
+            <ul className="space-y-3 text-sm">
+              <li><Link href="/terms" className="text-slate-400 transition hover:text-emerald-300">Terms of Service</Link></li>
+              <li><Link href="/privacy" className="text-slate-400 transition hover:text-emerald-300">Privacy Policy</Link></li>
+              <li><Link href="/landing#testimonials" className="text-slate-400 transition hover:text-emerald-300">Customer Stories</Link></li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-gray-500 text-sm">
+        <div className="flex flex-col items-center justify-between gap-4 py-8 text-sm md:flex-row">
+          <p className="text-slate-500">
             &copy; {new Date().getFullYear()} Servizo. All rights reserved.
           </p>
-          <div className="flex items-center gap-1 text-sm text-gray-500">
-            Made with <span className="text-emerald-500 mx-0.5">♥</span> for service providers & seekers
-          </div>
+          <div className="text-slate-500">Designed for service seekers and professionals who expect a cleaner marketplace experience.</div>
         </div>
       </div>
     </footer>

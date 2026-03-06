@@ -1,126 +1,93 @@
-"use client";
-
-import { ReactNode } from "react";
-import { FaShieldAlt, FaBolt, FaUsers, FaTools } from "react-icons/fa";
-import { motion, Variants } from "framer-motion";
+import { BrainCircuit, CalendarClock, CircleCheckBig, ShieldCheck, SlidersHorizontal, Users } from "lucide-react";
 
 export default function Features() {
   const features: {
-    icon: ReactNode;
+    icon: React.ReactNode;
     title: string;
     description: string;
     iconBg: string;
     iconColor: string;
   }[] = [
     {
-      icon: <FaBolt className="text-xl" />,
-      title: "AI-Powered Matching",
+      icon: <BrainCircuit className="h-5 w-5" />,
+      title: "Intent-aware matching",
       description:
-        "Our intelligent AI connects you with the perfect provider in seconds — no more endless searching.",
+        "Queries are mapped to real marketplace categories so search results reflect actual providers in your database.",
       iconBg: "bg-emerald-100",
-      iconColor: "text-emerald-600",
+      iconColor: "text-emerald-700",
     },
     {
-      icon: <FaShieldAlt className="text-xl" />,
-      title: "Verified Providers",
+      icon: <ShieldCheck className="h-5 w-5" />,
+      title: "Verified provider quality",
       description:
-        "Every provider is vetted and verified so you can hire with complete confidence.",
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
-    },
-    {
-      icon: <FaTools className="text-xl" />,
-      title: "Easy Booking",
-      description:
-        "Book any service in just a few clicks. Simple scheduling, instant confirmation.",
+        "Only approved, active providers are surfaced, creating a safer and more credible marketplace experience.",
       iconBg: "bg-emerald-100",
-      iconColor: "text-emerald-600",
+      iconColor: "text-emerald-700",
     },
     {
-      icon: <FaUsers className="text-xl" />,
-      title: "Simple Management",
+      icon: <CalendarClock className="h-5 w-5" />,
+      title: "Faster booking journey",
       description:
-        "Track bookings, manage schedules, and communicate — all from one clean dashboard.",
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
+        "From discovery to provider comparison and booking, the flow is structured to reduce friction and drop-off.",
+      iconBg: "bg-slate-100",
+      iconColor: "text-slate-700",
+    },
+    {
+      icon: <Users className="h-5 w-5" />,
+      title: "Built for both sides",
+      description:
+        "Customers get clarity while professionals get better visibility, simpler scheduling, and more relevant leads.",
+      iconBg: "bg-emerald-100",
+      iconColor: "text-emerald-700",
+    },
+    {
+      icon: <SlidersHorizontal className="h-5 w-5" />,
+      title: "Smarter ranking",
+      description:
+        "Results can be sorted by quality signals like rating, distance, price, and experience for more useful outcomes.",
+      iconBg: "bg-slate-100",
+      iconColor: "text-slate-700",
+    },
+    {
+      icon: <CircleCheckBig className="h-5 w-5" />,
+      title: "Production-ready structure",
+      description:
+        "A cleaner component system and lighter rendering path keep the landing page fast, scalable, and easier to maintain.",
+      iconBg: "bg-emerald-100",
+      iconColor: "text-emerald-700",
     },
   ];
 
-  const containerVariants: Variants = {
-    hidden: {},
-    visible: {
-      transition: { staggerChildren: 0.15 },
-    },
-  };
-
-  const cardVariants: Variants = {
-    hidden: { opacity: 0, y: 40 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring" as const,
-        stiffness: 120,
-        damping: 20,
-      },
-    },
-  };
-
   return (
-    <section className="py-20 md:py-28 bg-gradient-to-br from-white via-emerald-50/40 to-blue-50/30 relative overflow-hidden">
-      {/* Subtle background accents */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-emerald-100 rounded-full opacity-20 blur-[100px] pointer-events-none" />
-      <div className="absolute -bottom-20 -right-20 w-[400px] h-[400px] bg-blue-100 rounded-full opacity-20 blur-[80px] pointer-events-none" />
-
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section header */}
-        <div className="text-center mb-16">
-          <span className="inline-block text-emerald-600 font-semibold text-sm tracking-wider uppercase mb-3">
-            Why Servizo
-          </span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900">
-            Everything You Need,{" "}
-            <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
-              All in One Place
-            </span>
+    <section className="relative overflow-hidden bg-slate-950 py-20 text-white md:py-28">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-300">Why Servizo</div>
+          <h2 className="mt-4 text-3xl font-black tracking-tight text-white md:text-5xl">
+            A marketplace experience that feels structured, fast and trustworthy.
           </h2>
-          <p className="text-gray-500 mt-4 max-w-2xl mx-auto text-base md:text-lg">
-            Discover powerful features that make finding and providing services
-            easier than ever before.
+          <p className="mt-5 text-base leading-8 text-slate-300 md:text-lg">
+            Every section is designed to communicate confidence: clear discovery, stronger proof points,
+            and a lighter rendering path for better perceived performance.
           </p>
         </div>
 
-        {/* Feature cards */}
-        <motion.div
-          className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={containerVariants}
-        >
+        <div className="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {features.map((feature, idx) => (
-            <motion.div key={idx} variants={cardVariants}>
-              <div className="group relative bg-white border border-gray-100 rounded-2xl p-7 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-100/50 hover:-translate-y-1 hover:border-emerald-100 h-full">
-                {/* Icon */}
-                <div
-                  className={`w-14 h-14 ${feature.iconBg} ${feature.iconColor} rounded-xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110`}
-                >
+            <div
+              key={idx}
+              className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-7 shadow-2xl shadow-black/10 backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-emerald-400/30 hover:bg-white/[0.06]"
+            >
+              <div className="relative">
+                <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl ${feature.iconBg} ${feature.iconColor}`}>
                   {feature.icon}
                 </div>
-
-                <h3 className="font-bold text-gray-900 text-lg mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-500 text-sm leading-relaxed">
-                  {feature.description}
-                </p>
-
-                {/* Bottom accent line */}
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-b-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <h3 className="text-xl font-bold text-white">{feature.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-300">{feature.description}</p>
               </div>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );
