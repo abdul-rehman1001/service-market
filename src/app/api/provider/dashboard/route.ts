@@ -29,6 +29,14 @@ export async function GET(req: NextRequest) {
         businessName: true,
         verificationStatus: true,
         cnic: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profileImage: true,
+          },
+        },
       },
     });
 

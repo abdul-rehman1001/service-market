@@ -10,6 +10,14 @@ interface NotificationItem {
   isRead: boolean;
   bookingId?: string | null;
   createdAt: string;
+  booking?: {
+    id: string;
+    bookingNumber: string;
+    status: string;
+    service: {
+      name: string;
+    };
+  };
 }
 
 export function useNotifications() {

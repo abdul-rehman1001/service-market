@@ -16,7 +16,6 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     { key: 'reviews', label: 'Reviews' },
     { key: 'availability', label: 'Availability' },
     { key: 'bookings', label: 'Booking Requests' },
-    { key: 'chat', label: 'Chat' },
     { key: 'documents', label: 'Documents' },
   ];
 
