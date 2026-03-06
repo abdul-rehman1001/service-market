@@ -8,11 +8,13 @@ interface ClassificationResult {
   success: boolean;
   query: string;
   category: string;
-  subcategory: string;
+  categoryId: string | null;
+  categoryName: string;
   confidence: number;
   allMatches: Array<{
     category: string;
-    subcategory: string;
+    categoryId: string | null;
+    categoryName: string;
     similarity: number;
   }>;
 }
@@ -71,11 +73,11 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
     }
   };
 
-  const handleFindProviders = (category: string, subcategory: string) => {
+  const handleFindProviders = (category: string, categoryId: string | null, categoryName: string) => {
     // Trigger AI search on home page
     window.dispatchEvent(
       new CustomEvent("aiSearchProviders", {
-        detail: { category, subcategory },
+        detail: { category, categoryId, categoryName },
       })
     );
   };
@@ -86,11 +88,6 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
   };
 
   const formatCategoryName = (name: string) => name.charAt(0).toUpperCase() + name.slice(1);
-  const formatSubcategoryName = (name: string) =>
-    name
-      .split("_")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
 
   return (
     <motion.section
@@ -258,7 +255,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                       <motion.div 
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -267,19 +264,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                       >
                         <span className="text-xs text-gray-600 font-medium">Category</span>
                         <span className="px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-bold rounded-lg shadow-md">
-                          {formatCategoryName(result.category)}
-                        </span>
-                      </motion.div>
-
-                      <motion.div 
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="flex flex-col gap-2 p-3 bg-white/80 backdrop-blur rounded-xl"
-                      >
-                        <span className="text-xs text-gray-600 font-medium">Service Type</span>
-                        <span className="px-3 py-2 bg-emerald-100 text-emerald-800 text-sm font-bold rounded-lg">
-                          {formatSubcategoryName(result.subcategory)}
+                          {result.categoryName || formatCategoryName(result.category)}
                         </span>
                       </motion.div>
 
@@ -312,12 +297,12 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                     </div>
 
                     <motion.button
-                      onClick={() => handleFindProviders(result.category, result.subcategory)}
+                      onClick={() => handleFindProviders(result.category, result.categoryId, result.categoryName)}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className="w-full px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 text-base"
                     >
-                      Find {formatCategoryName(result.category)} Providers Near You
+                      Find {result.categoryName || formatCategoryName(result.category)} Providers Near You
                       <ArrowRight className="w-5 h-5" />
                     </motion.button>
                   </div>
@@ -344,7 +329,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.3 + idx * 0.1 }}
                           whileHover={{ scale: 1.02, x: 4 }}
-                          onClick={() => handleFindProviders(match.category, match.subcategory)}
+                          onClick={() => handleFindProviders(match.category, match.categoryId, match.categoryName)}
                           className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border-2 border-gray-200 hover:border-emerald-400 hover:from-emerald-50 hover:to-teal-50 transition-all cursor-pointer group"
                         >
                           <div className="flex items-center gap-3">
@@ -353,7 +338,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                             </div>
                             <div>
                               <div className="text-sm font-bold text-gray-900 group-hover:text-emerald-700 transition">
-                                {formatCategoryName(match.category)} → {formatSubcategoryName(match.subcategory)}
+                                {match.categoryName || formatCategoryName(match.category)}
                               </div>
                               <div className="text-xs text-gray-500">Click to search providers</div>
                             </div>

@@ -1,286 +1,185 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { calculateDistance } from '@/lib/geocoding';
-import { Prisma } from '@prisma/client';
-
-interface ProviderWithDistance {
-  id: string;
-  userId: string;
-  businessName: string | null;
-  yearsOfExperience: number;
-  verificationStatus: string;
-  averageRating: number;
-  totalReviews: number;
-  totalJobsCompleted: number;
-  isAvailable: boolean;
-  baseAddress: string;
-  longitude: number;
-  latitude: number;
-  user: {
-    firstName: string;
-    lastName: string;
-    profileImage: string | null;
-    bio: string | null;
-  };
-  services: Array<{
-    id: string;
-    name: string;
-    description: string;
-    minPrice: number;
-    maxPrice: number;
-    category: {
-      id: string;
-      name: string;
-      parentId: string | null;
-    };
-  }>;
-  distance?: number;
-  minPrice?: number;
-}
+import { categoryKeywords } from '@/lib/training-data';
 
 /**
  * GET /api/providers/ai-search
- * 
- * Search providers by category/subcategory with AI classification
- * Multi-level sorting: rating DESC, distance ASC, price ASC, experience DESC
- * Only returns verified and active providers
- * 
+ *
+ * Search providers by AI-classified category.
+ * Accepts either a `categoryId` (preferred, from classifier) or a `category` text.
+ *
  * Query params:
- * - category: string (required)
- * - subcategory: string (optional)
- * - page: number (default: 1)
- * - limit: number (default: 12)
- * - userLat: number (optional - for distance calculation)
- * - userLng: number (optional - for distance calculation)
+ * - categoryId: string  (DB category ID – fastest path)
+ * - category:   string  (fallback text search)
+ * - page:       number  (default 1)
+ * - limit:      number  (default 12, max 50)
+ * - userLat:    number  (optional)
+ * - userLng:    number  (optional)
  */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    
+
+    const categoryId = searchParams.get('categoryId');
     const category = searchParams.get('category');
-    const subcategory = searchParams.get('subcategory');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '12');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '12')));
     const userLat = searchParams.get('userLat') ? parseFloat(searchParams.get('userLat')!) : null;
     const userLng = searchParams.get('userLng') ? parseFloat(searchParams.get('userLng')!) : null;
 
-    if (!category) {
+    if (!categoryId && !category) {
       return NextResponse.json(
-        { error: 'Category is required' },
+        { error: 'Either categoryId or category is required' },
         { status: 400 }
       );
     }
 
-    const skip = (page - 1) * limit;
+    // ------------------------------------------------------------------
+    // Resolve category IDs
+    // ------------------------------------------------------------------
+    let categoryIds: string[] = [];
 
-    // Build category filter
-    const categoryFilter: any = {
-      OR: [
-        { name: { contains: category, mode: 'insensitive' } },
-        { 
-          parent: { 
-            name: { contains: category, mode: 'insensitive' } 
-          } 
-        }
-      ]
-    };
+    if (categoryId) {
+      // Direct DB ID – also include children of this category
+      const children = await prisma.serviceCategory.findMany({
+        where: { parentId: categoryId, isActive: true },
+        select: { id: true },
+      });
+      categoryIds = [categoryId, ...children.map((c) => c.id)];
+    } else if (category) {
+      // Text-based fallback: use keyword patterns + contains search
+      const keywords = categoryKeywords[category.toLowerCase()] ?? [category];
 
-    if (subcategory) {
-      categoryFilter.OR = [
-        { 
-          name: { contains: subcategory, mode: 'insensitive' },
-          parent: { name: { contains: category, mode: 'insensitive' } }
+      const matched = await prisma.serviceCategory.findMany({
+        where: {
+          isActive: true,
+          OR: keywords.map((kw) => ({
+            name: { contains: kw, mode: 'insensitive' as const },
+          })),
         },
-        { 
-          name: { contains: subcategory, mode: 'insensitive' }
-        }
-      ];
+        select: { id: true },
+      });
+
+      categoryIds = matched.map((c) => c.id);
+
+      // If a parent category matched, also include its children
+      if (categoryIds.length > 0) {
+        const children = await prisma.serviceCategory.findMany({
+          where: { parentId: { in: categoryIds }, isActive: true },
+          select: { id: true },
+        });
+        categoryIds = [...new Set([...categoryIds, ...children.map((c) => c.id)])];
+      }
     }
-
-    // Find matching categories
-    const categories = await prisma.serviceCategory.findMany({
-      where: categoryFilter,
-      select: { id: true }
-    });
-
-    const categoryIds = categories.map(c => c.id);
 
     if (categoryIds.length === 0) {
       return NextResponse.json({
         success: true,
         data: [],
-        pagination: {
-          page,
-          limit,
-          total: 0,
-          totalPages: 0
-        },
-        message: 'No categories found matching the search criteria'
+        pagination: { page, limit, total: 0, totalPages: 0, hasMore: false },
+        message: 'No categories found matching the search criteria',
       });
     }
 
-    // Find providers with services in these categories
+    // ------------------------------------------------------------------
+    // Fetch providers with matching active services
+    // ------------------------------------------------------------------
     const providers = await prisma.serviceProvider.findMany({
       where: {
         verificationStatus: 'APPROVED',
         isAvailable: true,
         services: {
           some: {
-            categoryId: {
-              in: categoryIds
-            },
-            isActive: true
-          }
-        }
+            categoryId: { in: categoryIds },
+            isActive: true,
+          },
+        },
       },
       include: {
         user: {
-          select: {
-            firstName: true,
-            lastName: true,
-            profileImage: true,
-            bio: true,
-          }
+          select: { firstName: true, lastName: true, profileImage: true, bio: true },
         },
         services: {
-          where: {
-            categoryId: {
-              in: categoryIds
-            },
-            isActive: true
-          },
+          where: { categoryId: { in: categoryIds }, isActive: true },
           select: {
             id: true,
             name: true,
             description: true,
             minPrice: true,
             maxPrice: true,
-            category: {
-              select: {
-                id: true,
-                name: true,
-                parentId: true
-              }
-            }
-          }
-        }
-      }
+            category: { select: { id: true, name: true, parentId: true } },
+          },
+        },
+      },
     });
 
-    // Calculate distance and prepare for sorting
-    const providersWithDistance: ProviderWithDistance[] = providers.map(provider => {
-      const providerData: ProviderWithDistance = {
-        id: provider.id,
-        userId: provider.userId,
-        businessName: provider.businessName,
-        yearsOfExperience: provider.yearsOfExperience,
-        verificationStatus: provider.verificationStatus,
-        averageRating: parseFloat(provider.averageRating.toString()),
-        totalReviews: provider.totalReviews,
-        totalJobsCompleted: provider.totalJobsCompleted,
-        isAvailable: provider.isAvailable,
-        baseAddress: provider.baseAddress,
-        longitude: parseFloat(provider.longitude.toString()),
-        latitude: parseFloat(provider.latitude.toString()),
-        user: provider.user,
-        services: provider.services.map(s => ({
-          id: s.id,
-          name: s.name,
-          description: s.description,
-          minPrice: parseFloat(s.minPrice.toString()),
-          maxPrice: parseFloat(s.maxPrice.toString()),
-          category: s.category
-        }))
-      };
+    // ------------------------------------------------------------------
+    // Enrich, sort, paginate
+    // ------------------------------------------------------------------
+    const enriched = providers.map((p) => {
+      const avgRating = parseFloat(p.averageRating.toString());
+      const services = p.services.map((s) => ({
+        id: s.id,
+        name: s.name,
+        description: s.description,
+        minPrice: parseFloat(s.minPrice.toString()),
+        maxPrice: parseFloat(s.maxPrice.toString()),
+        category: s.category,
+      }));
+      const minPrice = services.length > 0 ? Math.min(...services.map((s) => s.minPrice)) : undefined;
 
-      // Calculate distance if user coordinates provided
+      let distance: number | undefined;
       if (userLat !== null && userLng !== null) {
-        providerData.distance = calculateDistance(
+        distance = calculateDistance(
           userLat,
           userLng,
-          providerData.latitude,
-          providerData.longitude
+          parseFloat(p.latitude.toString()),
+          parseFloat(p.longitude.toString())
         );
       }
 
-      // Calculate minimum price from services
-      if (providerData.services.length > 0) {
-        providerData.minPrice = Math.min(...providerData.services.map(s => s.minPrice));
-      }
-
-      return providerData;
+      return {
+        id: p.id,
+        userId: p.userId,
+        name: p.businessName || `${p.user.firstName} ${p.user.lastName}`,
+        firstName: p.user.firstName,
+        lastName: p.user.lastName,
+        profileImage: p.user.profileImage,
+        bio: p.user.bio,
+        rating: avgRating,
+        totalReviews: p.totalReviews,
+        totalJobsCompleted: p.totalJobsCompleted,
+        yearsOfExperience: p.yearsOfExperience,
+        baseAddress: p.baseAddress,
+        verificationStatus: p.verificationStatus,
+        distance,
+        minPrice,
+        services,
+      };
     });
 
-    // Multi-level sorting
-    // Primary: rating (descending)
-    // Secondary: distance (ascending)
-    // Tertiary: price (ascending)
-    // Quaternary: years_of_experience (descending)
-    const sortedProviders = providersWithDistance.sort((a, b) => {
-      // Primary: Rating (descending)
-      if (a.averageRating !== b.averageRating) {
-        return b.averageRating - a.averageRating;
-      }
-
-      // Secondary: Distance (ascending) - only if both have distance
-      if (a.distance !== undefined && b.distance !== undefined) {
-        if (a.distance !== b.distance) {
-          return a.distance - b.distance;
-        }
-      }
-
-      // Tertiary: Price (ascending) - only if both have price
-      if (a.minPrice !== undefined && b.minPrice !== undefined) {
-        if (a.minPrice !== b.minPrice) {
-          return a.minPrice - b.minPrice;
-        }
-      }
-
-      // Quaternary: Experience (descending)
+    // Multi-level sort: rating DESC → distance ASC → price ASC → experience DESC
+    enriched.sort((a, b) => {
+      if (a.rating !== b.rating) return b.rating - a.rating;
+      if (a.distance != null && b.distance != null && a.distance !== b.distance)
+        return a.distance - b.distance;
+      if (a.minPrice != null && b.minPrice != null && a.minPrice !== b.minPrice)
+        return a.minPrice - b.minPrice;
       return b.yearsOfExperience - a.yearsOfExperience;
     });
 
-    // Apply pagination
-    const paginatedProviders = sortedProviders.slice(skip, skip + limit);
-    const total = sortedProviders.length;
+    const total = enriched.length;
     const totalPages = Math.ceil(total / limit);
-
-    // Format response
-    const formattedProviders = paginatedProviders.map(provider => ({
-      id: provider.id,
-      userId: provider.userId,
-      name: provider.businessName || `${provider.user.firstName} ${provider.user.lastName}`,
-      firstName: provider.user.firstName,
-      lastName: provider.user.lastName,
-      profileImage: provider.user.profileImage,
-      bio: provider.user.bio,
-      rating: provider.averageRating,
-      totalReviews: provider.totalReviews,
-      totalJobsCompleted: provider.totalJobsCompleted,
-      yearsOfExperience: provider.yearsOfExperience,
-      baseAddress: provider.baseAddress,
-      distance: provider.distance,
-      minPrice: provider.minPrice,
-      services: provider.services,
-      verificationStatus: provider.verificationStatus
-    }));
+    const skip = (page - 1) * limit;
+    const paginated = enriched.slice(skip, skip + limit);
 
     return NextResponse.json({
       success: true,
-      data: formattedProviders,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasMore: page < totalPages
-      },
-      filters: {
-        category,
-        subcategory
-      }
+      data: paginated,
+      pagination: { page, limit, total, totalPages, hasMore: page < totalPages },
+      filters: { categoryId, category },
     });
-
   } catch (error: any) {
     console.error('Error in AI search providers:', error);
     return NextResponse.json(

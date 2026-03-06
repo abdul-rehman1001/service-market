@@ -51,7 +51,6 @@ interface AISearchResultsProps {
   providers: Provider[];
   loading: boolean;
   category: string;
-  subcategory?: string;
   pagination: {
     page: number;
     totalPages: number;
@@ -65,19 +64,12 @@ export default function AISearchResults({
   providers,
   loading,
   category,
-  subcategory,
   pagination,
   onPageChange
 }: AISearchResultsProps) {
   
   const formatCategoryName = (name: string) => 
     name.charAt(0).toUpperCase() + name.slice(1);
-
-  const formatSubcategoryName = (name: string) =>
-    name
-      .split("_")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
 
   return (
     <motion.div
@@ -103,8 +95,7 @@ export default function AISearchResults({
               AI-Powered Results
             </h2>
             <p className="text-gray-600 mt-1">
-              Showing {pagination.total} {formatCategoryName(category)}{" "}
-              {subcategory && `· ${formatSubcategoryName(subcategory)}`}
+              Showing {pagination.total} {formatCategoryName(category)} providers
             </p>
           </div>
         </div>
