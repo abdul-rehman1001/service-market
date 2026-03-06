@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
 import { adminDb } from '@/lib/firebaseAdmin';
 import admin from '@/lib/firebaseAdmin';
+import { sendChatNotification } from '@/lib/notifications';
 
 const buildConversationId = (seekerId: string, providerId: string) =>
   `conversation_${seekerId}_${providerId}`;
@@ -123,6 +124,18 @@ export async function POST(req: NextRequest) {
       lastMessage: trimmedContent,
       lastMessageAt: new Date().toISOString(),
       serviceName: booking.service.name,
+    });
+
+    // Send push notification to the recipient
+    const senderName = isSeeker
+      ? `${booking.seeker.firstName} ${booking.seeker.lastName}`
+      : `${booking.provider.user.firstName} ${booking.provider.user.lastName}`;
+
+    sendChatNotification({
+      recipientUserId: receiverId,
+      senderName,
+      messagePreview: trimmedContent,
+      bookingId,
     });
 
     return NextResponse.json(

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
 import { PROVIDER_RESPONSE_MINUTES, cancelExpiredHolds } from '@/lib/bookings';
+import { sendNotification } from '@/lib/notifications';
 
 class ApiError extends Error {
   status: number;
@@ -100,6 +101,28 @@ export async function POST(
         },
       });
     });
+
+    // Notify the provider about the new booking request
+    const confirmedBooking = await prisma.booking.findUnique({
+      where: { id },
+      include: {
+        provider: { select: { userId: true } },
+        service: { select: { name: true } },
+      },
+    });
+
+    if (confirmedBooking) {
+      sendNotification({
+        userId: confirmedBooking.provider.userId,
+        type: 'BOOKING_REQUEST',
+        bookingId: id,
+        data: {
+          bookingNumber: confirmedBooking.bookingNumber || '',
+          serviceName: confirmedBooking.service?.name || '',
+          bookingId: id,
+        },
+      });
+    }
 
     return NextResponse.json({ booking }, { status: 200 });
   } catch (error) {
