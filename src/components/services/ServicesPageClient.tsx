@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { usePagination } from './hooks/usePagination';
 import SearchHeader from './SearchHeader';
 import SearchFilters from './SearchFilters';
@@ -60,6 +60,23 @@ export default function ServicesPageClient() {
 
   const { currentPage, totalPages, paginatedItems, goNext, goPrev, goTo } =
     usePagination(filteredProviders, 6);
+
+  // Reorder providers to show selected provider at the top
+  const orderedProviders = useMemo(() => {
+    if (!selectedProvider || !paginatedItems.some(p => p.id === selectedProvider.id)) {
+      return paginatedItems;
+    }
+    
+    const selectedIndex = paginatedItems.findIndex(p => p.id === selectedProvider.id);
+    if (selectedIndex === -1 || selectedIndex === 0) {
+      return paginatedItems;
+    }
+    
+    // Move selected provider to the top
+    const reordered = [...paginatedItems];
+    const [selected] = reordered.splice(selectedIndex, 1);
+    return [selected, ...reordered];
+  }, [paginatedItems, selectedProvider]);
 
   // Fetch user location
   useEffect(() => {
@@ -286,7 +303,7 @@ export default function ServicesPageClient() {
                 animate={{ opacity: 1, y: 0 }}
               >
                 <ProvidersList
-                  providers={paginatedItems}
+                  providers={orderedProviders}
                   selectedProvider={selectedProvider}
                   onProviderSelect={handleProviderSelect}
                 />

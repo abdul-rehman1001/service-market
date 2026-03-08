@@ -156,12 +156,16 @@ export default function SearchMap({
     providers.forEach((provider) => {
       const el = document.createElement("div");
       el.className =
-        "provider-marker w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:scale-125 transition border-2 border-white";
-      el.innerHTML = `<span class="text-white font-bold text-sm">${Math.round(
-        provider.rating
-      )}</span>`;
+        "provider-marker w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:shadow-xl hover:brightness-110 transition-all border-2 border-white relative";
+      el.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none">
+          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>
+      `;
 
-      el.addEventListener("click", () => {
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
         setSelectedProvider(provider);
         onProviderSelect?.(provider);
         map.current?.flyTo({
@@ -171,7 +175,10 @@ export default function SearchMap({
         });
       });
 
-      new mapboxgl.Marker({ element: el })
+      new mapboxgl.Marker({ 
+        element: el,
+        anchor: 'center'
+      })
         .setLngLat([provider.longitude, provider.latitude])
         .addTo(map.current!);
     });
@@ -208,8 +215,10 @@ export default function SearchMap({
             <span className="text-xs text-gray-700">Your Location</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600"></div>
-            <span className="text-xs text-gray-700">Provider</span>
+            <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+              <MapPin className="w-3 h-3 text-white" />
+            </div>
+            <span className="text-xs text-gray-700">Provider Location</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-0.5 bg-emerald-500" style={{ width: "16px" }}></div>
@@ -246,22 +255,13 @@ export default function SearchMap({
                   </span>
                 </div>
                 {selectedProvider.distance && (
-                  <span className="text-sm font-semibold text-blue-600">
+                  <span className="text-sm font-semibold text-green-600">
                     {selectedProvider.distance.toFixed(1)} km away
                   </span>
                 )}
               </div>
 
-              <div className="flex gap-2">
-                <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition">
-                  <Phone className="w-4 h-4" />
-                  <span className="hidden sm:inline">Call</span>
-                </button>
-                <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">
-                  <MessageSquare className="w-4 h-4" />
-                  <span className="hidden sm:inline">Message</span>
-                </button>
-              </div>
+             
             </div>
           </motion.div>
         )}
