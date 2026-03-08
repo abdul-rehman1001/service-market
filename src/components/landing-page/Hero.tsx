@@ -22,16 +22,16 @@ export default function Hero() {
           <div className="animate-slide-up-fade">
             <div className="inline-flex items-center gap-3 rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm">
               <Sparkles className="h-4 w-4 text-emerald-600" />
-              AI-first marketplace for trusted local services
+              AI-Powered Service Marketplace
             </div>
 
             <h1 className="mt-6 max-w-3xl text-4xl font-extrabold leading-tight text-slate-900 sm:text-5xl lg:text-6xl">
-              Hire verified professionals — fast, local, and reliable.
+              Find verified service providers near you, instantly.
             </h1>
 
             <p className="mt-4 max-w-2xl text-lg text-slate-600">
-              Match with vetted providers from your local marketplace. Compare profiles,
-              check ratings, and book confidently — all powered by intent-aware AI.
+              Describe your problem in plain words. Get matched with verified professionals.
+              Book with confidence using real-time availability and authentic reviews.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-4">
@@ -85,10 +85,10 @@ export default function Hero() {
               {/* header */}
               <div className="flex items-center justify-between rounded-2xl bg-emerald-800 px-5 py-3 text-white">
                 <div>
-                  <div className="text-xs uppercase tracking-widest text-emerald-200">Live match preview</div>
-                  <div className="mt-1 text-sm font-semibold">"Need an electrician for wiring repair"</div>
+                  <div className="text-xs uppercase tracking-widest text-emerald-200">AI Smart Matching</div>
+                  <div className="mt-1 text-sm font-semibold">"My house wiring needs repair"</div>
                 </div>
-                <div className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium">AI matched</div>
+                <div className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium">Matched</div>
               </div>
 
               {/* content */}
@@ -96,10 +96,10 @@ export default function Hero() {
                 <div className="overflow-hidden rounded-2xl border border-emerald-100 bg-slate-50 p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <div>
-                      <div className="text-sm font-semibold text-slate-900">Recommended provider</div>
-                      <div className="text-sm text-slate-500">Matched by category, rating & distance</div>
+                      <div className="text-sm font-semibold text-slate-900">Top Match</div>
+                      <div className="text-sm text-slate-500">Based on rating, location & availability</div>
                     </div>
-                    <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">98% fit</div>
+                    <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Best Match</div>
                   </div>
 
                   <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-slate-100">
@@ -116,28 +116,28 @@ export default function Hero() {
 
                 <div className="space-y-4">
                   <div className="rounded-2xl border border-slate-100 bg-white p-4">
-                    <div className="text-sm font-semibold text-slate-900">Result summary</div>
+                    <div className="text-sm font-semibold text-slate-900">Provider Details</div>
                     <div className="mt-3 space-y-3 text-sm text-slate-600">
                       <KeyValue label="Category" value="Electrician" />
-                      <KeyValue label="Availability" value="Today" valueClass="text-emerald-700 font-semibold" />
-                      <KeyValue label="Typical response" value="Under 10 min" />
+                      <KeyValue label="Available" value="Today" valueClass="text-emerald-700 font-semibold" />
+                      <KeyValue label="Response Time" value="Under 30 min" />
                     </div>
                   </div>
 
                   <div className="rounded-2xl border border-emerald-100 bg-white p-4">
-                    <div className="text-sm font-semibold text-slate-900">Why customers trust us</div>
+                    <div className="text-sm font-semibold text-slate-900">Why Choose Us</div>
                     <ul className="mt-3 space-y-2 text-sm text-slate-600">
                       <li className="flex items-start gap-3">
                         <ShieldCheck className="mt-0.5 h-4 w-4 text-emerald-600" />
-                        Only active, approved providers appear in results
+                        CNIC verified providers only
                       </li>
                       <li className="flex items-start gap-3">
                         <Sparkles className="mt-0.5 h-4 w-4 text-emerald-600" />
-                        AI maps real intent to correct categories
+                        AI understands your problem
                       </li>
                       <li className="flex items-start gap-3">
                         <MapPin className="mt-0.5 h-4 w-4 text-emerald-600" />
-                        Distance-aware sorting for local relevance
+                        Search by location radius
                       </li>
                     </ul>
                   </div>

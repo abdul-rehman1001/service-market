@@ -10,16 +10,16 @@ export default function CTA() {
           <div className="relative">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-emerald-200 backdrop-blur-sm">
               <Sparkles className="h-4 w-4 text-emerald-300" />
-              Ready to launch the next booking?
+              Join our growing community
             </div>
 
             <h2 className="mx-auto mt-6 max-w-3xl text-3xl font-black tracking-tight text-white md:text-5xl">
-              A sharper landing page. A faster first impression. A more credible marketplace.
+              Ready to get started?
             </h2>
 
             <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-slate-300 md:text-lg">
-              Whether you want more customers or need to hire a trusted professional quickly,
-              Servizo now presents the platform with the clarity and polish it should have had from the start.
+              Join thousands of satisfied customers and verified professionals.
+              Find services or grow your business with Servizo today.
             </p>
 
             <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">

@@ -11,20 +11,20 @@ export default function HowItWorks() {
   const seekers: Step[] = [
     {
       icon: <Search className="h-5 w-5 text-emerald-700" />,
-      title: "Describe the job clearly",
-      desc: "Enter a natural language request and let the platform map it to the right service category.",
+      title: "Describe your problem",
+      desc: "Tell us what you need in plain words. AI will identify the service category and show relevant providers near you.",
       step: 1,
     },
     {
       icon: <CheckCircle2 className="h-5 w-5 text-emerald-700" />,
-      title: "Review the best matches",
-      desc: "Compare verified providers using quality signals like rating, availability, experience and location.",
+      title: "Compare verified providers",
+      desc: "View profiles, portfolios, ratings, prices, and real-time availability. Filter by location, price, or experience.",
       step: 2,
     },
     {
       icon: <CalendarCheck2 className="h-5 w-5 text-emerald-700" />,
-      title: "Book with confidence",
-      desc: "Move from search to scheduling without a messy handoff or guesswork around the right provider.",
+      title: "Book and track your service",
+      desc: "Select a time slot, confirm booking, chat with provider, track job status, and review after completion.",
       step: 3,
     },
   ];
@@ -32,20 +32,20 @@ export default function HowItWorks() {
   const providers: Step[] = [
     {
       icon: <UserRoundPlus className="h-5 w-5 text-emerald-700" />,
-      title: "Build a credible profile",
-      desc: "Present services, experience and business details in a format that supports trust and conversion.",
+      title: "Register and verify",
+      desc: "Complete registration, upload CNIC for verification, add certifications, and showcase your portfolio with work images.",
       step: 1,
     },
     {
       icon: <BellRing className="h-5 w-5 text-emerald-700" />,
-      title: "Receive relevant demand",
-      desc: "Get surfaced for the work you actually offer instead of appearing in vague or random search results.",
+      title: "Receive booking requests",
+      desc: "Get notified when customers book your services. Accept, reject, or suggest alternate times within 30 minutes.",
       step: 2,
     },
     {
       icon: <WalletCards className="h-5 w-5 text-emerald-700" />,
-      title: "Convert more efficiently",
-      desc: "Respond faster, manage availability and turn profile visibility into booked work.",
+      title: "Complete jobs and grow",
+      desc: "Update job status, chat with customers, complete work, collect reviews, and build your reputation.",
       step: 3,
     },
   ];
@@ -90,10 +90,10 @@ export default function HowItWorks() {
         <div className="mx-auto max-w-3xl text-center">
           <div className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700">How It Works</div>
           <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-950 md:text-5xl">
-            One workflow for customers. Another for professionals. Both stay clean.
+            Three simple steps for seekers and providers
           </h2>
           <p className="mt-5 text-base leading-8 text-slate-600 md:text-lg">
-            The platform experience is structured around clarity, faster decision-making and fewer unnecessary steps.
+            Whether you need a service or provide one, our platform makes the entire process straightforward and secure.
           </p>
         </div>
 

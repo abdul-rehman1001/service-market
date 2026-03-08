@@ -13,26 +13,26 @@ interface CarouselItem {
 const carouselItems: CarouselItem[] = [
   {
     id: 1,
-    eyebrow: "For homeowners",
-    title: "Book reliable help across plumbing, electrical, cleaning and more.",
+    eyebrow: "For Service Seekers",
+    title: "Find trusted professionals for plumbing, electrical, cleaning & more.",
     subtitle:
-      "Clear categories, verified profiles and fast provider discovery keep urgent tasks moving.",
+      "Describe your problem, get matched with verified providers, view portfolios, check reviews, and book instantly.",
     image: "/images/service1.png",
   },
   {
     id: 2,
-    eyebrow: "For professionals",
-    title: "Turn expertise into booked jobs with a profile built to convert.",
+    eyebrow: "For Service Providers",
+    title: "Grow your business with verified credentials and real bookings.",
     subtitle:
-      "Showcase skills, manage availability and receive better-matched leads from real customers.",
+      "Upload certifications, showcase your portfolio, manage availability, and connect with customers actively looking for your services.",
     image: "/images/service2.png",
   },
   {
     id: 3,
-    eyebrow: "For operations",
-    title: "Run discovery, matching and booking from one professional workflow.",
+    eyebrow: "Smart & Simple",
+    title: "Everything happens in one place - search, chat, book, and review.",
     subtitle:
-      "A streamlined marketplace experience reduces friction from search to confirmed work.",
+      "No phone calls, no confusion. Track booking status, chat with providers in real-time, and leave reviews after job completion.",
     image: "/images/service3.png",
   },
 ];
@@ -46,11 +46,11 @@ export default function HeroCarousel() {
         <div className="mb-14 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div className="text-sm font-semibold uppercase tracking-widest text-emerald-600">
-              Platform Highlights
+              How It Works
             </div>
 
             <h2 className="mt-3 max-w-3xl text-3xl font-extrabold text-slate-900 md:text-5xl">
-              Built for trust, speed, and a better booking experience.
+              Simple, fast, and secure service booking
             </h2>
           </div>
 

@@ -33,12 +33,12 @@ export default function Testimonials() {
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-14 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
-            <div className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700">Testimonials</div>
+            <div className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700">Customer Reviews</div>
             <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-950 md:text-5xl">
-              Social proof that looks credible and reads like a real product.
+              Trusted by customers across Pakistan
             </h2>
             <p className="mt-5 text-base leading-8 text-slate-600 md:text-lg">
-              Strong marketplaces communicate confidence through consistency, not noise. These testimonials now sit within a cleaner proof section.
+              Real experiences from people who found the right professionals for their needs. Fast, reliable, and verified.
             </p>
           </div>
           <div className="grid gap-4 rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5 shadow-sm sm:grid-cols-3">

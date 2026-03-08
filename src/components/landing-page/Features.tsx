@@ -17,39 +17,39 @@ export default function Features() {
   const features: Feature[] = [
     {
       icon: <BrainCircuit className="h-6 w-6 text-emerald-600" />,
-      title: "Intent-aware matching",
+      title: "AI-Powered Search",
       description:
-        "User queries are mapped to real service categories so search results reflect verified providers from your database.",
+        "Describe your problem in plain English. Our AI automatically identifies the right service category and matches you with qualified providers.",
     },
     {
       icon: <ShieldCheck className="h-6 w-6 text-emerald-600" />,
-      title: "Verified provider quality",
+      title: "Verified Providers",
       description:
-        "Only approved and active professionals appear in results, improving trust and marketplace reliability.",
+        "All service providers are verified with CNIC and undergo admin approval. Only trusted professionals are listed on our platform.",
     },
     {
       icon: <CalendarClock className="h-6 w-6 text-emerald-600" />,
-      title: "Faster booking journey",
+      title: "Real-Time Booking",
       description:
-        "A streamlined discovery and booking flow reduces friction and helps customers hire professionals quickly.",
+        "View provider availability instantly, select your preferred time slot, and book services directly. No back-and-forth needed.",
     },
     {
       icon: <Users className="h-6 w-6 text-emerald-600" />,
-      title: "Built for both sides",
+      title: "Authentic Reviews",
       description:
-        "Customers gain clarity while professionals receive more visibility, better scheduling, and relevant leads.",
+        "Read real reviews from verified customers. Rate providers on professionalism, quality, punctuality, and communication.",
     },
     {
       icon: <SlidersHorizontal className="h-6 w-6 text-emerald-600" />,
-      title: "Smarter ranking",
+      title: "Location-Based Search",
       description:
-        "Providers are ranked using quality signals like ratings, distance, price, and experience.",
+        "Find providers near you using our map search. Set your preferred radius (1-20 km) and see available providers in your area.",
     },
     {
       icon: <CircleCheckBig className="h-6 w-6 text-emerald-600" />,
-      title: "Production-ready architecture",
+      title: "Real-Time Chat",
       description:
-        "Clean components and optimized rendering keep the platform fast, scalable, and maintainable.",
+        "Chat directly with service providers before and during the job. Get instant clarification and updates on job status.",
     },
   ];
 
@@ -59,17 +59,16 @@ export default function Features() {
         {/* Section Header */}
         <div className="mx-auto max-w-3xl text-center">
           <div className="text-sm font-semibold uppercase tracking-widest text-emerald-600">
-            Why Servizo
+            Key Features
           </div>
 
           <h2 className="mt-4 text-3xl font-extrabold text-slate-900 md:text-5xl">
-            A smarter marketplace experience
+            Everything you need to find and hire professionals
           </h2>
 
           <p className="mt-5 text-lg text-slate-600">
-            Designed to deliver trust, speed, and clarity for both customers
-            and professionals. Every interaction focuses on simplicity and
-            reliable service discovery.
+            From AI-powered search to verified providers, real-time booking to authentic reviews.
+            We've built features that make finding services simple and reliable.
           </p>
         </div>
 
