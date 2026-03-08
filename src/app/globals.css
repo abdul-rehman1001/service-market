@@ -3,8 +3,6 @@
 @import "tailwindcss";
 /* Your existing global styles */
 
-
-
 html,
 body {
   padding: 0;
@@ -22,36 +20,65 @@ a {
   box-sizing: border-box;
 }
 
-/* ===== Landing Page Animations ===== */
+/* Performance optimization: Reduce repaints */
+img, picture, video {
+  will-change: transform;
+}
+
+/* ===== Landing Page Animations (GPU Accelerated) ===== */
 
 @keyframes float-slow {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -20px, 0); }
 }
 
 @keyframes float-medium {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-15px); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -15px, 0); }
 }
 
 @keyframes float-fast {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -10px, 0); }
 }
 
 .animate-float-slow {
   animation: float-slow 8s ease-in-out infinite;
+  will-change: transform;
 }
 
 .animate-float-medium {
   animation: float-medium 6s ease-in-out infinite;
+  will-change: transform;
 }
 
 .animate-float-fast {
   animation: float-fast 4s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow,
+  .animate-float-medium,
+  .animate-float-fast,
+  .animate-slide-up-fade,
+  .animate-drift {
+    animation: none !important;
+  }
+}
+
+/* Optimize transitions with GPU */
+.transition {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+  will-change: auto;
 }
 
 @keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -12px, 0) scale(1.02); }
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
   50% { transform: translate3d(0, -12px, 0) scale(1.02); }
 }
@@ -59,20 +86,22 @@ a {
 @keyframes slide-up-fade {
   0% {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translate3d(0, 20px, 0);
   }
   100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
 .animate-drift {
   animation: drift 10s ease-in-out infinite;
+  will-change: transform;
 }
 
 .animate-slide-up-fade {
   animation: slide-up-fade 0.7s ease-out both;
+  will-change: transform, opacity;
 }
 
 .landing-grid {

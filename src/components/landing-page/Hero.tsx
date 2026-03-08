@@ -20,10 +20,7 @@ export default function Hero() {
         <div className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] items-center">
           {/* LEFT: Headline + CTAs */}
           <div className="animate-slide-up-fade">
-            <div className="inline-flex items-center gap-3 rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm">
-              <Sparkles className="h-4 w-4 text-emerald-600" />
-              AI-Powered Service Marketplace
-            </div>
+           
 
             <h1 className="mt-6 max-w-3xl text-4xl font-extrabold leading-tight text-slate-900 sm:text-5xl lg:text-6xl">
               Find verified service providers near you, instantly.

@@ -87,6 +87,7 @@ export default function HeroCarousel() {
                   alt={item.title}
                   fill
                   priority={index === 0}
+                  loading={index === 0 ? undefined : "lazy"}
                   sizes="(min-width:1024px) 33vw, (min-width:768px) 50vw, 100vw"
                   className="object-cover transition duration-500 group-hover:scale-105"
                 />
