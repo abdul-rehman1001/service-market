@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Loader2, Sparkles, ArrowRight, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, Loader2, Sparkles, ArrowRight, X, History, Clock, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ClassificationResult {
@@ -19,6 +19,13 @@ interface ClassificationResult {
   }>;
 }
 
+interface SearchHistoryItem {
+  id: string;
+  query: string;
+  filters: any;
+  createdAt: string;
+}
+
 interface SearchSectionProps {
   onClearSearch?: () => void;
 }
@@ -28,11 +35,124 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ClassificationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const historyRef = useRef<HTMLDivElement>(null);
+
+  // Check authentication and fetch search history
+  useEffect(() => {
+    const checkAuthAndFetchHistory = async () => {
+      try {
+        // Check if user is authenticated
+        const userRes = await fetch('/api/user');
+        if (userRes.ok) {
+          setIsAuthenticated(true);
+          fetchSearchHistory();
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+      }
+    };
+
+    checkAuthAndFetchHistory();
+  }, []);
+
+  // Close history dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (historyRef.current && !historyRef.current.contains(event.target as Node)) {
+        setShowHistory(false);
+      }
+    };
+
+    if (showHistory) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showHistory]);
+
+  const fetchSearchHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      const response = await fetch('/api/search/history');
+      if (response.ok) {
+        const data = await response.json();
+        setSearchHistory(data.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch search history:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const saveSearchToHistory = async (searchQuery: string) => {
+    if (!isAuthenticated || !searchQuery.trim()) return;
+
+    try {
+      const response = await fetch('/api/search/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: searchQuery }),
+      });
+
+      if (response.ok) {
+        fetchSearchHistory(); // Refresh history
+      }
+    } catch (err) {
+      console.error('Failed to save search history:', err);
+    }
+  };
+
+  const deleteHistoryItem = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const response = await fetch(`/api/search/history/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setSearchHistory(prev => prev.filter(item => item.id !== id));
+      }
+    } catch (err) {
+      console.error('Failed to delete history item:', err);
+    }
+  };
+
+  const clearAllHistory = async () => {
+    try {
+      const response = await fetch('/api/search/history', {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setSearchHistory([]);
+        setShowHistory(false);
+      }
+    } catch (err) {
+      console.error('Failed to clear history:', err);
+    }
+  };
+
+  const selectHistoryItem = (historyQuery: string) => {
+    setQuery(historyQuery);
+    setShowHistory(false);
+    // Auto-trigger search when selecting from history
+    setTimeout(() => {
+      handleSearch(historyQuery);
+    }, 100);
+  };
 
   const handleClear = () => {
     setQuery("");
     setResult(null);
     setError(null);
+    setShowHistory(false);
     
     // Clear AI search results on home page
     if (onClearSearch) {
@@ -47,23 +167,30 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
     );
   };
 
-  const handleSearch = async () => {
-    if (!query.trim()) return;
+  const handleSearch = async (searchQuery?: string | React.MouseEvent) => {
+    // If searchQuery is an event object (from onClick), use the current query state
+    const queryToSearch = (typeof searchQuery === 'string' ? searchQuery : query) || query;
+    
+    if (!queryToSearch || typeof queryToSearch !== 'string' || !queryToSearch.trim()) return;
 
     setLoading(true);
     setError(null);
     setResult(null);
+    setShowHistory(false);
 
     try {
       const response = await fetch("/api/classify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query: queryToSearch }),
       });
 
       if (!response.ok) throw new Error("Classification failed");
       const data = await response.json();
       setResult(data);
+
+      // Save to history after successful search
+      await saveSearchToHistory(queryToSearch);
 
       // Don't trigger search yet - wait for user to click button
     } catch (err: any) {
@@ -133,11 +260,25 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyPress}
+                onFocus={() => isAuthenticated && searchHistory.length > 0 && setShowHistory(true)}
                 placeholder="Describe your service needs (e.g. 'sink clogged', 'AC not cooling')"
                 className="flex-1 text-gray-700 bg-transparent outline-none placeholder:text-gray-400 text-sm sm:text-base"
                 disabled={loading}
                 aria-label="Search services"
               />
+
+              {!query && isAuthenticated && searchHistory.length > 0 && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  onClick={() => setShowHistory(!showHistory)}
+                  className="p-2 hover:bg-emerald-50 rounded-lg transition flex items-center gap-1.5 text-emerald-600"
+                  title="View search history"
+                >
+                  <History className="w-4 h-4" />
+                  <span className="text-xs font-medium">{searchHistory.length}</span>
+                </motion.button>
+              )}
 
               {query && (
                 <motion.button
@@ -190,6 +331,86 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
               </motion.button>
             </div>
           </div>
+
+          {/* Search History Dropdown */}
+          <AnimatePresence>
+            {showHistory && isAuthenticated && searchHistory.length > 0 && (
+              <motion.div
+                ref={historyRef}
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="mt-3 bg-white border-2 border-emerald-100 rounded-xl shadow-xl overflow-hidden"
+              >
+                <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-emerald-600" />
+                    <span className="text-sm font-bold text-gray-900">Recent Searches</span>
+                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
+                      {searchHistory.length}
+                    </span>
+                  </div>
+                  <button
+                    onClick={clearAllHistory}
+                    className="text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Clear All
+                  </button>
+                </div>
+
+                <div className="max-h-80 overflow-y-auto">
+                  {loadingHistory ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 text-emerald-600 animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-gray-100">
+                      {searchHistory.map((item, index) => (
+                        <motion.div
+                          key={item.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          onClick={() => selectHistoryItem(item.query)}
+                          className="group flex items-center justify-between px-4 py-3 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 cursor-pointer transition-all"
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-emerald-100 transition-colors">
+                              <Search className="w-4 h-4 text-gray-500 group-hover:text-emerald-600 transition-colors" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate group-hover:text-emerald-700 transition-colors">
+                                {item.query}
+                              </p>
+                              <p className="text-xs text-gray-500 group-hover:text-emerald-600">
+                                {new Date(item.createdAt).toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={(e) => deleteHistoryItem(item.id, e)}
+                            className="p-2 hover:bg-red-100 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                            title="Remove from history"
+                          >
+                            <X className="w-4 h-4 text-red-600" />
+                          </motion.button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Error Message */}
           <AnimatePresence>
