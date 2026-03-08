@@ -74,7 +74,7 @@ export default function RegisterProvider() {
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-[#f5f7f8]">
+    <div className="min-h-screen flex justify-center items-center bg-[#f5f7f8] px-4 py-10 md:py-16 lg:py-20">
       <AuthCard>
         <h2 className="text-3xl font-bold text-center">Service Provider</h2>
         <p className="text-center mt-1 text-gray-500">Offer your services</p>
