@@ -1,90 +1,99 @@
-import { BrainCircuit, CalendarClock, CircleCheckBig, ShieldCheck, SlidersHorizontal, Users } from "lucide-react";
+import {
+  BrainCircuit,
+  CalendarClock,
+  CircleCheckBig,
+  ShieldCheck,
+  SlidersHorizontal,
+  Users,
+} from "lucide-react";
+
+type Feature = {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+};
 
 export default function Features() {
-  const features: {
-    icon: React.ReactNode;
-    title: string;
-    description: string;
-    iconBg: string;
-    iconColor: string;
-  }[] = [
+  const features: Feature[] = [
     {
-      icon: <BrainCircuit className="h-5 w-5" />,
+      icon: <BrainCircuit className="h-6 w-6 text-emerald-600" />,
       title: "Intent-aware matching",
       description:
-        "Queries are mapped to real marketplace categories so search results reflect actual providers in your database.",
-      iconBg: "bg-emerald-100",
-      iconColor: "text-emerald-700",
+        "User queries are mapped to real service categories so search results reflect verified providers from your database.",
     },
     {
-      icon: <ShieldCheck className="h-5 w-5" />,
+      icon: <ShieldCheck className="h-6 w-6 text-emerald-600" />,
       title: "Verified provider quality",
       description:
-        "Only approved, active providers are surfaced, creating a safer and more credible marketplace experience.",
-      iconBg: "bg-emerald-100",
-      iconColor: "text-emerald-700",
+        "Only approved and active professionals appear in results, improving trust and marketplace reliability.",
     },
     {
-      icon: <CalendarClock className="h-5 w-5" />,
+      icon: <CalendarClock className="h-6 w-6 text-emerald-600" />,
       title: "Faster booking journey",
       description:
-        "From discovery to provider comparison and booking, the flow is structured to reduce friction and drop-off.",
-      iconBg: "bg-slate-100",
-      iconColor: "text-slate-700",
+        "A streamlined discovery and booking flow reduces friction and helps customers hire professionals quickly.",
     },
     {
-      icon: <Users className="h-5 w-5" />,
+      icon: <Users className="h-6 w-6 text-emerald-600" />,
       title: "Built for both sides",
       description:
-        "Customers get clarity while professionals get better visibility, simpler scheduling, and more relevant leads.",
-      iconBg: "bg-emerald-100",
-      iconColor: "text-emerald-700",
+        "Customers gain clarity while professionals receive more visibility, better scheduling, and relevant leads.",
     },
     {
-      icon: <SlidersHorizontal className="h-5 w-5" />,
+      icon: <SlidersHorizontal className="h-6 w-6 text-emerald-600" />,
       title: "Smarter ranking",
       description:
-        "Results can be sorted by quality signals like rating, distance, price, and experience for more useful outcomes.",
-      iconBg: "bg-slate-100",
-      iconColor: "text-slate-700",
+        "Providers are ranked using quality signals like ratings, distance, price, and experience.",
     },
     {
-      icon: <CircleCheckBig className="h-5 w-5" />,
-      title: "Production-ready structure",
+      icon: <CircleCheckBig className="h-6 w-6 text-emerald-600" />,
+      title: "Production-ready architecture",
       description:
-        "A cleaner component system and lighter rendering path keep the landing page fast, scalable, and easier to maintain.",
-      iconBg: "bg-emerald-100",
-      iconColor: "text-emerald-700",
+        "Clean components and optimized rendering keep the platform fast, scalable, and maintainable.",
     },
   ];
 
   return (
-    <section className="relative overflow-hidden bg-slate-950 py-20 text-white md:py-28">
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="relative bg-white py-20 md:py-28">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        {/* Section Header */}
         <div className="mx-auto max-w-3xl text-center">
-          <div className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-300">Why Servizo</div>
-          <h2 className="mt-4 text-3xl font-black tracking-tight text-white md:text-5xl">
-            A marketplace experience that feels structured, fast and trustworthy.
+          <div className="text-sm font-semibold uppercase tracking-widest text-emerald-600">
+            Why Servizo
+          </div>
+
+          <h2 className="mt-4 text-3xl font-extrabold text-slate-900 md:text-5xl">
+            A smarter marketplace experience
           </h2>
-          <p className="mt-5 text-base leading-8 text-slate-300 md:text-lg">
-            Every section is designed to communicate confidence: clear discovery, stronger proof points,
-            and a lighter rendering path for better perceived performance.
+
+          <p className="mt-5 text-lg text-slate-600">
+            Designed to deliver trust, speed, and clarity for both customers
+            and professionals. Every interaction focuses on simplicity and
+            reliable service discovery.
           </p>
         </div>
 
-        <div className="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {/* Features Grid */}
+        <div className="mt-16 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
           {features.map((feature, idx) => (
             <div
               key={idx}
-              className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-7 shadow-2xl shadow-black/10 backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-emerald-400/30 hover:bg-white/[0.06]"
+              className="group rounded-2xl border border-slate-100 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md"
             >
-              <div className="relative">
-                <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl ${feature.iconBg} ${feature.iconColor}`}>
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-bold text-white">{feature.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-300">{feature.description}</p>
+              {/* Icon */}
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50">
+                {feature.icon}
               </div>
+
+              {/* Title */}
+              <h3 className="text-lg font-semibold text-slate-900">
+                {feature.title}
+              </h3>
+
+              {/* Description */}
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                {feature.description}
+              </p>
             </div>
           ))}
         </div>
