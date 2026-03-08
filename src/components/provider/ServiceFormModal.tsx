@@ -52,8 +52,8 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
         const res = await fetch('/api/categories');
         const data = await res.json();
 
-        if (res.ok) {
-          setCategories(data.categories);
+        if (res.ok && data.success) {
+          setCategories(data.data || []);
         }
       } catch (err) {
         console.error('Failed to fetch categories:', err);
