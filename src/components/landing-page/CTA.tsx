@@ -1,31 +1,59 @@
-"use client";
-
 import Button from "../ui/Button";
+import { ArrowRight, Sparkles, Zap } from "lucide-react";
 
 export default function CTA() {
   return (
-    <section className="py-20 bg-[#f5f7f8]">
-      <div className="max-w-5xl mx-auto text-center bg-white rounded-2xl p-12 md:p-16 shadow-sm">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-          Ready to Get Started?
-        </h2>
+    <section className="relative overflow-hidden bg-white py-20 md:py-28">
+      <div className="mx-auto max-w-6xl px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-950 px-8 py-14 text-center shadow-[0_30px_90px_-30px_rgba(2,6,23,0.55)] md:px-14 md:py-16">
 
-        <p className="text-gray-600 mt-4 md:mt-6 max-w-2xl mx-auto text-sm md:text-base">
-          Join our community today. Whether you are looking for help or aiming to grow your business, your journey starts here.
-        </p>
+          {/* subtle glow accents */}
+          <div className="pointer-events-none absolute -left-20 top-0 h-72 w-72 rounded-full bg-emerald-500/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl" />
 
-        <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
-          <Button 
-           href="/register/seeker"
-          className="bg-blue-600 text-white hover:bg-blue-700 w-full sm:w-auto">
-            Find a Service Now
-          </Button>
+          <div className="relative">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-emerald-300 backdrop-blur">
+              <Sparkles className="h-4 w-4 text-emerald-400" />
+              Join our growing community
+            </div>
 
-          <Button 
-           href="/register/provider"
-          className="bg-emerald-600 text-white hover:bg-emerald-700 w-full sm:w-auto">
-            Become a Provider
-          </Button>
+            {/* Heading */}
+            <h2 className="mx-auto mt-6 max-w-3xl text-3xl font-extrabold tracking-tight text-white md:text-5xl">
+              Ready to get started?
+            </h2>
+
+            {/* Description */}
+            <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-300">
+              Join thousands of satisfied customers and verified professionals.
+              Discover trusted services or grow your business with Servizo today.
+            </p>
+
+            {/* Buttons */}
+            <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
+
+              {/* Primary CTA */}
+              <Button
+                href="/register/seeker"
+                aria-label="Find a service"
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-emerald-700/30 transition hover:-translate-y-0.5 hover:bg-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-400/40 sm:w-auto"
+              >
+                Find a service
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+
+              {/* Secondary CTA */}
+              <Button
+  href="/register/provider"
+  aria-label="Become a provider"
+  className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-white bg-white px-8 py-4 text-base font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white hover:text-slate-900 focus:outline-none focus:ring-4 focus:ring-white/30 sm:w-auto"
+>
+  Become a provider
+  <Zap className="h-4 w-4 transition-transform group-hover:scale-110" />
+</Button>
+
+            </div>
+          </div>
         </div>
       </div>
     </section>

@@ -1,104 +1,491 @@
 'use client';
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import {
+  Upload,
+  FileText,
+  CheckCircle,
+  XCircle,
+  Clock,
+  AlertCircle,
+  Loader2,
+  Image as ImageIcon,
+} from 'lucide-react';
+
+interface ProviderData {
+  id: string;
+  verificationStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+}
+
+interface ProviderDocument {
+  id: string;
+  documentType: string;
+  fileName: string;
+  fileUrl: string;
+  fileSize: number;
+  mimeType: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  rejectionReason?: string | null;
+  createdAt: string;
+}
 
 export const DocumentManagementPanel: React.FC = () => {
-  const [documents, setDocuments] = useState<File[]>([]);
-  const [error, setError] = useState('');
+  const [provider, setProvider] = useState<ProviderData | null>(null);
+  const [documents, setDocuments] = useState<ProviderDocument[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [message, setMessage] = useState<{ type: '' | 'success' | 'error'; text: string }>({
+    type: '',
+    text: '',
+  });
+
+  const [uploadForm, setUploadForm] = useState({
+    documentType: 'CNIC_FRONT',
+    cnicNumber: '',
+    files: [] as File[],
+  });
+
+  useEffect(() => {
+    void fetchProviderData();
+  }, []);
+
+  const fetchProviderData = async () => {
+    try {
+      const providerRes = await fetch('/api/provider/dashboard');
+      if (!providerRes.ok) {
+        const data = await providerRes.json();
+        throw new Error(data.error || 'Failed to fetch provider data');
+      }
+
+      const providerData = await providerRes.json();
+      const providerInfo: ProviderData = {
+        id: providerData.provider.id,
+        verificationStatus: providerData.provider.verificationStatus,
+      };
+      setProvider(providerInfo);
+
+      const docsRes = await fetch(`/api/providers/${providerInfo.id}/documents`);
+      if (!docsRes.ok) {
+        const data = await docsRes.json();
+        throw new Error(data.error || 'Failed to fetch documents');
+      }
+
+      const docsData = await docsRes.json();
+      setDocuments(docsData.documents || []);
+      setMessage({ type: '', text: '' });
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : 'Failed to load provider data';
+      setMessage({ type: 'error', text: errMsg });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewDocument = (fileUrl: string) => {
+    window.open(fileUrl, '_blank', 'noopener,noreferrer');
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
 
-    if (file.type !== 'application/pdf') {
-      setError('Only PDF files are allowed.');
+    const invalidFiles = selectedFiles.filter(
+      (file) => !['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)
+    );
+
+    if (invalidFiles.length > 0) {
+      setMessage({
+        type: 'error',
+        text: 'All files must be images (JPEG or PNG)',
+      });
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      setError('File size must be less than 2MB.');
+    const maxSize = 5 * 1024 * 1024;
+    const oversizedFiles = selectedFiles.filter((file) => file.size > maxSize);
+
+    if (oversizedFiles.length > 0) {
+      setMessage({
+        type: 'error',
+        text: 'Each file must be less than 5MB',
+      });
       return;
     }
 
-    if (documents.length >= 3) {
-      setError('Maximum 3 documents allowed.');
+    if (
+      (uploadForm.documentType === 'CNIC_FRONT' || uploadForm.documentType === 'CNIC_BACK') &&
+      selectedFiles.length > 1
+    ) {
+      setMessage({
+        type: 'error',
+        text: 'Only one image allowed for CNIC documents',
+      });
       return;
     }
 
-    setError('');
-    setDocuments([...documents, file]);
+    setMessage({ type: '', text: '' });
+    setUploadForm({ ...uploadForm, files: selectedFiles });
   };
 
-  const handleRemove = (index: number) => {
-    setDocuments(documents.filter((_, i) => i !== index));
+  const uploadToCloudinary = async (file: File): Promise<string> => {
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+    if (!cloudName || !uploadPreset) {
+      throw new Error('Cloudinary configuration missing');
+    }
+
+    const folder = `service-market/providers/${provider?.id}/documents`;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', uploadPreset);
+    formData.append('folder', folder);
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      {
+        method: 'POST',
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || 'Upload failed');
+    }
+
+    const data = await response.json();
+    return data.secure_url;
   };
 
-  const handleUpload = () => {
-    if (documents.length === 0) {
-      setError('Please select at least one document.');
+  const handleUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (uploadForm.files.length === 0) {
+      setMessage({ type: 'error', text: 'Please select at least one image' });
       return;
     }
-    alert('Documents uploaded successfully.');
+
+    if (!provider) {
+      setMessage({ type: 'error', text: 'Failed to load provider data' });
+      return;
+    }
+
+    if (
+      (uploadForm.documentType === 'CNIC_FRONT' || uploadForm.documentType === 'CNIC_BACK') &&
+      !uploadForm.cnicNumber
+    ) {
+      setMessage({
+        type: 'error',
+        text: 'CNIC number is required for CNIC documents',
+      });
+      return;
+    }
+
+    if (uploadForm.documentType === 'CNIC_FRONT' || uploadForm.documentType === 'CNIC_BACK') {
+      const cnicRegex = /^\d{13}$/;
+      if (!cnicRegex.test(uploadForm.cnicNumber)) {
+        setMessage({
+          type: 'error',
+          text: 'CNIC must be exactly 13 digits',
+        });
+        return;
+      }
+    }
+
+    setUploading(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      let uploadedCount = 0;
+
+      for (const file of uploadForm.files) {
+        const fileUrl = await uploadToCloudinary(file);
+
+        const res = await fetch(`/api/providers/${provider.id}/documents`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileUrl,
+            fileName: file.name,
+            fileSize: file.size,
+            mimeType: file.type,
+            documentType: uploadForm.documentType,
+            cnicNumber:
+              uploadForm.documentType === 'CNIC_FRONT' || uploadForm.documentType === 'CNIC_BACK'
+                ? uploadForm.cnicNumber
+                : undefined,
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Upload failed');
+        }
+
+        uploadedCount++;
+      }
+
+      setMessage({
+        type: 'success',
+        text:
+          uploadedCount === 1
+            ? 'Document uploaded successfully!'
+            : `${uploadedCount} documents uploaded successfully!`,
+      });
+
+      setUploadForm({ documentType: 'CNIC_FRONT', cnicNumber: '', files: [] });
+      const fileInput = document.getElementById('provider-doc-file-input') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+
+      await fetchProviderData();
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : 'Upload failed';
+      setMessage({ type: 'error', text: errMsg });
+    } finally {
+      setUploading(false);
+    }
   };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'APPROVED':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'REJECTED':
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      case 'PENDING':
+        return <Clock className="w-4 h-4 text-yellow-500" />;
+      default:
+        return <AlertCircle className="w-4 h-4 text-gray-500" />;
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const styles = {
+      APPROVED: 'bg-green-100 text-green-800',
+      REJECTED: 'bg-red-100 text-red-800',
+      PENDING: 'bg-yellow-100 text-yellow-800',
+    };
+    return styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800';
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  if (loading) {
+    return (
+      <section className="min-h-[320px] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+      </section>
+    );
+  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl shadow-md p-6 space-y-4 max-w-lg mx-auto"
-    >
-      <h2 className="text-2xl font-semibold text-slate-800">Manage Certifications</h2>
-      <p className="text-sm text-slate-500">Upload PDF certifications (max 3 files, 2MB each)</p>
-
-      {/* File Input */}
-      <label className="block w-full border-2 border-dashed border-slate-300 rounded-xl px-4 py-6 text-center cursor-pointer hover:border-emerald-500 transition-colors">
-        <input
-          type="file"
-          accept="application/pdf"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-        <span className="text-slate-500 text-sm">
-          Click to upload or drag & drop your PDF here
-        </span>
-      </label>
-
-      {/* Uploaded Documents List */}
-      <ul className="space-y-2">
-        <AnimatePresence>
-          {documents.map((doc, idx) => (
-            <motion.li
-              key={idx}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="flex justify-between items-center bg-slate-100 rounded-lg p-2 px-4 shadow-sm"
+    <section className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-semibold text-slate-800 tracking-tight">
+          Identity Verification & Documents
+        </h2>
+        <p className="text-sm text-slate-500 mt-1">
+          Upload CNIC and certification documents for provider verification
+        </p>
+        {provider && (
+          <div className="mt-3">
+            <span
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${
+                provider.verificationStatus === 'APPROVED'
+                  ? 'bg-green-100 text-green-800'
+                  : provider.verificationStatus === 'REJECTED'
+                  ? 'bg-red-100 text-red-800'
+                  : 'bg-yellow-100 text-yellow-800'
+              }`}
             >
-              <span className="text-slate-700 text-sm">{doc.name}</span>
-              <button
-                className="text-red-500 font-medium hover:text-red-600 transition-colors"
-                onClick={() => handleRemove(idx)}
+              {getStatusIcon(provider.verificationStatus)}
+              Verification Status: {provider.verificationStatus}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {message.text && (
+        <div
+          className={`p-4 rounded-lg border text-sm ${
+            message.type === 'success'
+              ? 'bg-green-50 text-green-800 border-green-200'
+              : 'bg-red-50 text-red-800 border-red-200'
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-5">Upload New Document</h3>
+          <form onSubmit={handleUpload} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Document Type *</label>
+              <select
+                value={uploadForm.documentType}
+                onChange={(e) =>
+                  setUploadForm({ ...uploadForm, documentType: e.target.value, files: [] })
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                required
               >
-                Remove
-              </button>
-            </motion.li>
-          ))}
-        </AnimatePresence>
-      </ul>
+                <option value="CNIC_FRONT">CNIC Front</option>
+                <option value="CNIC_BACK">CNIC Back</option>
+                <option value="CERTIFICATE">Certificate (Multiple Images)</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
 
-      {/* Error Message */}
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+            {(uploadForm.documentType === 'CNIC_FRONT' || uploadForm.documentType === 'CNIC_BACK') && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  CNIC Number (13 digits) *
+                </label>
+                <input
+                  type="text"
+                  value={uploadForm.cnicNumber}
+                  onChange={(e) =>
+                    setUploadForm({
+                      ...uploadForm,
+                      cnicNumber: e.target.value.replace(/\D/g, '').slice(0, 13),
+                    })
+                  }
+                  placeholder="1234567890123"
+                  maxLength={13}
+                  pattern="\d{13}"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">Enter exactly 13 digits without dashes</p>
+              </div>
+            )}
 
-      {/* Upload Button */}
-      <motion.button
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.97 }}
-        onClick={handleUpload}
-        className="w-full py-2 rounded-xl bg-emerald-600 text-white font-medium shadow hover:bg-emerald-700 transition-all"
-      >
-        Upload Documents
-      </motion.button>
-    </motion.div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Image{uploadForm.documentType === 'CERTIFICATE' ? 's' : ''} *
+              </label>
+              <input
+                id="provider-doc-file-input"
+                type="file"
+                onChange={handleFileChange}
+                accept="image/jpeg,image/png,image/jpg"
+                multiple={uploadForm.documentType === 'CERTIFICATE'}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {uploadForm.documentType === 'CERTIFICATE'
+                  ? 'JPEG or PNG only, max 5MB each. You can select multiple images.'
+                  : 'JPEG or PNG only, max 5MB'}
+              </p>
+            </div>
+
+            {uploadForm.files.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-700">
+                  Selected {uploadForm.files.length} file{uploadForm.files.length > 1 ? 's' : ''}:
+                </p>
+                {uploadForm.files.map((file, index) => (
+                  <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <ImageIcon className="w-5 h-5 text-emerald-600" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                      <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={uploading || uploadForm.files.length === 0}
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-5 h-5" />
+                  Upload {uploadForm.files.length > 1 ? `${uploadForm.files.length} Documents` : 'Document'}
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-5">Uploaded Documents</h3>
+          {documents.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">No documents uploaded yet</p>
+          ) : (
+            <div className="space-y-3 max-h-[560px] overflow-auto pr-1">
+              {documents.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="p-4 border border-gray-200 rounded-lg hover:border-emerald-300 transition-colors"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                      {doc.mimeType.startsWith('image/') ? (
+                        <ImageIcon className="w-8 h-8 text-emerald-600" />
+                      ) : (
+                        <FileText className="w-8 h-8 text-emerald-600" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900">
+                            {doc.documentType.replace(/_/g, ' ')}
+                          </h4>
+                          <p className="text-sm text-gray-600 truncate">{doc.fileName}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {formatFileSize(doc.fileSize)} • {new Date(doc.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(
+                            doc.status
+                          )}`}
+                        >
+                          {getStatusIcon(doc.status)}
+                          {doc.status}
+                        </span>
+                      </div>
+
+                      {doc.status === 'REJECTED' && doc.rejectionReason && (
+                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <p className="text-xs font-medium text-red-800">Rejection Reason:</p>
+                          <p className="text-xs text-red-700 mt-1">{doc.rejectionReason}</p>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={() => handleViewDocument(doc.fileUrl)}
+                        className="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-700 text-sm font-medium mt-2 hover:underline"
+                      >
+                        View Document
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
   );
 };

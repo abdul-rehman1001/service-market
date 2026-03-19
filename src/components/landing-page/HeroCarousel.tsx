@@ -1,10 +1,10 @@
-"use client";
-
-import Slider from "react-slick";
 import Image from "next/image";
+import Button from "../ui/Button";
+import { ArrowRight, BadgeDollarSign, Clock3, ShieldCheck } from "lucide-react";
 
 interface CarouselItem {
   id: number;
+  eyebrow: string;
   title: string;
   subtitle: string;
   image: string;
@@ -13,81 +13,115 @@ interface CarouselItem {
 const carouselItems: CarouselItem[] = [
   {
     id: 1,
-    title: "Find Quality Services",
-    subtitle: "Connect with verified professionals and get work done efficiently.",
+    eyebrow: "For Service Seekers",
+    title: "Find trusted professionals for plumbing, electrical, cleaning & more.",
+    subtitle:
+      "Describe your problem, get matched with verified providers, view portfolios, check reviews, and book instantly.",
     image: "/images/service1.png",
   },
   {
     id: 2,
-    title: "Offer Your Services",
-    subtitle: "Showcase your skills, attract clients, and grow your business.",
+    eyebrow: "For Service Providers",
+    title: "Grow your business with verified credentials and real bookings.",
+    subtitle:
+      "Upload certifications, showcase your portfolio, manage availability, and connect with customers actively looking for your services.",
     image: "/images/service2.png",
   },
   {
     id: 3,
-    title: "Smart & Simple Platform",
-    subtitle: "Everything you need to manage and discover services in one place.",
+    eyebrow: "Smart & Simple",
+    title: "Everything happens in one place - search, chat, book, and review.",
+    subtitle:
+      "No phone calls, no confusion. Track booking status, chat with providers in real-time, and leave reviews after job completion.",
     image: "/images/service3.png",
   },
 ];
 
 export default function HeroCarousel() {
-  const settings = {
-    dots: true,
-    infinite: true,
-    speed: 700,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 3500,
-    pauseOnHover: true,
-    arrows: true,
-  };
-
   return (
-    <section className="relative bg-gradient-to-b from-slate-50 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <Slider {...settings}>
-          {carouselItems.map((item) => (
-            <div key={item.id}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center bg-white rounded-2xl border border-slate-200 shadow-sm px-8 py-12 md:px-14">
-                
-                {/* Content */}
-                <div className="text-center md:text-left">
-                  <h1 className="text-3xl md:text-4xl font-semibold text-slate-900 leading-tight">
-                    {item.title}
-                  </h1>
+    <section id="features" className="relative bg-white py-20 md:py-28">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
 
-                  <p className="mt-4 text-slate-600 max-w-lg">
-                    {item.subtitle}
-                  </p>
-
-                  <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                    <button className="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-white font-medium transition">
-                      Get Started
-                    </button>
-                    <button className="px-6 py-3 rounded-lg border border-slate-300 text-slate-700 bg-emerald-600 font-medium hover:bg-emerald-700 transition">
-                      Learn More
-                    </button>
-                  </div>
-                </div>
-
-                {/* Image */}
-                <div className="flex justify-center md:justify-end">
-                  <Image
-                    src={item.image}
-                    alt={item.title}
-                    width={520}
-                    height={360}
-                    className="object-contain"
-                    priority
-                  />
-                </div>
-
-              </div>
+        {/* Section Header */}
+        <div className="mb-14 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="text-sm font-semibold uppercase tracking-widest text-emerald-600">
+              How It Works
             </div>
+
+            <h2 className="mt-3 max-w-3xl text-3xl font-extrabold text-slate-900 md:text-5xl">
+              Simple, fast, and secure service booking
+            </h2>
+          </div>
+
+          {/* Feature indicators */}
+          <div className="grid gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:grid-cols-3">
+            <div className="flex items-center gap-2 text-sm text-slate-700">
+              <ShieldCheck className="h-4 w-4 text-emerald-600" />
+              Approved providers
+            </div>
+
+            <div className="flex items-center gap-2 text-sm text-slate-700">
+              <Clock3 className="h-4 w-4 text-emerald-600" />
+              Faster discovery
+            </div>
+
+            <div className="flex items-center gap-2 text-sm text-slate-700">
+              <BadgeDollarSign className="h-4 w-4 text-emerald-600" />
+              Transparent pricing
+            </div>
+          </div>
+        </div>
+
+        {/* Cards */}
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {carouselItems.map((item, index) => (
+            <article
+              key={item.id}
+              className="group overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+            >
+              {/* Image */}
+              <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  priority={index === 0}
+                  loading={index === 0 ? undefined : "lazy"}
+                  sizes="(min-width:1024px) 33vw, (min-width:768px) 50vw, 100vw"
+                  className="object-cover transition duration-500 group-hover:scale-105"
+                />
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <div className="text-xs font-semibold uppercase tracking-widest text-emerald-600">
+                  {item.eyebrow}
+                </div>
+
+                <h3 className="mt-2 text-xl font-bold text-slate-900">
+                  {item.title}
+                </h3>
+
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                  {item.subtitle}
+                </p>
+              </div>
+            </article>
           ))}
-        </Slider>
+        </div>
+
+        {/* CTA */}
+        <div className="mt-14 flex justify-center">
+          <Button
+            href="/register"
+            aria-label="Start using Servizo"
+            className="group inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-7 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-emerald-700"
+          >
+            Start with Servizo
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Button>
+        </div>
       </div>
     </section>
   );

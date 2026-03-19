@@ -57,7 +57,7 @@ export default function ProvidersList({
           onClick={() => onProviderSelect?.(provider)}
           className={`relative cursor-pointer transition-all rounded-2xl ${
             selectedProvider?.id === provider.id
-              ? 'ring-2 ring-emerald-500 ring-offset-2'
+              ? 'ring-2 ring-emerald-500 ring-offset-2 bg-emerald-50'
               : ''
           }`}
         >

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
 import { autoCancelExpiredBookings } from '@/lib/bookings';
+import { sendNotification } from '@/lib/notifications';
 
 class ApiError extends Error {
   status: number;
@@ -130,6 +131,43 @@ export async function POST(
         },
       });
     });
+
+    // Send notification to seeker
+    if (type === 'ACCEPT') {
+      sendNotification({
+        userId: booking.seeker.id,
+        type: 'BOOKING_CONFIRMED',
+        bookingId: id,
+        data: {
+          bookingNumber: booking.bookingNumber || '',
+          serviceName: booking.service?.name || '',
+          bookingId: id,
+        },
+      });
+      // Also notify the provider
+      sendNotification({
+        userId: decoded.userId,
+        type: 'BOOKING_CONFIRMED',
+        bookingId: id,
+        data: {
+          bookingNumber: booking.bookingNumber || '',
+          serviceName: booking.service?.name || '',
+          bookingId: id,
+        },
+      });
+    } else {
+      sendNotification({
+        userId: booking.seeker.id,
+        type: 'BOOKING_CANCELLED',
+        bookingId: id,
+        data: {
+          bookingNumber: booking.bookingNumber || '',
+          serviceName: booking.service?.name || '',
+          bookingId: id,
+          reason: 'Rejected by provider',
+        },
+      });
+    }
 
     return NextResponse.json({ booking }, { status: 200 });
   } catch (error) {

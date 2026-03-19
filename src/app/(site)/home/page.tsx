@@ -30,7 +30,8 @@ interface Provider {
 interface AISearchState {
   active: boolean;
   category: string;
-  subcategory: string;
+  categoryId: string | null;
+  categoryName: string;
   providers: Provider[];
   loading: boolean;
   pagination: {
@@ -45,7 +46,8 @@ export default function HomePage() {
   const [aiSearchState, setAISearchState] = useState<AISearchState>({
     active: false,
     category: "",
-    subcategory: "",
+    categoryId: null,
+    categoryName: "",
     providers: [],
     loading: false,
     pagination: {
@@ -79,14 +81,15 @@ export default function HomePage() {
   // Listen for AI search events
   useEffect(() => {
     const handleAISearch = async (event: any) => {
-      const { category, subcategory } = event.detail;
+      const { category, categoryId, categoryName } = event.detail;
       
       if (!category) {
         // Clear AI search
         setAISearchState({
           active: false,
           category: "",
-          subcategory: "",
+          categoryId: null,
+          categoryName: "",
           providers: [],
           loading: false,
           pagination: {
@@ -104,7 +107,8 @@ export default function HomePage() {
         ...prev,
         active: true,
         category,
-        subcategory: subcategory || "",
+        categoryId: categoryId || null,
+        categoryName: categoryName || "",
         loading: true,
         pagination: { ...prev.pagination, page: 1 }
       }));
@@ -112,13 +116,15 @@ export default function HomePage() {
       // Fetch providers
       try {
         const params = new URLSearchParams({
-          category,
           page: "1",
           limit: "12"
         });
 
-        if (subcategory) {
-          params.append('subcategory', subcategory);
+        // Prefer categoryId for exact DB matching, fall back to text
+        if (categoryId) {
+          params.append('categoryId', categoryId);
+        } else {
+          params.append('category', category);
         }
 
         if (userLocation) {
@@ -171,13 +177,14 @@ export default function HomePage() {
 
     try {
       const params = new URLSearchParams({
-        category: aiSearchState.category,
         page: page.toString(),
         limit: "12"
       });
 
-      if (aiSearchState.subcategory) {
-        params.append('subcategory', aiSearchState.subcategory);
+      if (aiSearchState.categoryId) {
+        params.append('categoryId', aiSearchState.categoryId);
+      } else {
+        params.append('category', aiSearchState.category);
       }
 
       if (userLocation) {
@@ -218,7 +225,8 @@ export default function HomePage() {
         setAISearchState({
           active: false,
           category: "",
-          subcategory: "",
+          categoryId: null,
+          categoryName: "",
           providers: [],
           loading: false,
           pagination: {
@@ -237,8 +245,7 @@ export default function HomePage() {
             <AISearchResults
               providers={aiSearchState.providers}
               loading={aiSearchState.loading}
-              category={aiSearchState.category}
-              subcategory={aiSearchState.subcategory}
+              category={aiSearchState.categoryName || aiSearchState.category}
               pagination={aiSearchState.pagination}
               onPageChange={handlePageChange}
             />

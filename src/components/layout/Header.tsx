@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
+import NotificationBell from "./NotificationBell";
 
 interface UserData {
   id: string;
@@ -86,6 +87,9 @@ export default function Header() {
 
         {/* Right Icons / Buttons */}
         <div className="flex items-center gap-4">
+          {/* Notification Bell */}
+          <NotificationBell />
+
           {/* User Avatar - Clickable to Profile */}
           <Link
             href="/profile"

@@ -1,119 +1,88 @@
-"use client";
-
-import { ReactNode } from "react";
-import { FaStar, FaQuoteLeft } from "react-icons/fa";
-import { motion, Variants } from "framer-motion";
-
-// Updated Card component supporting className
-interface CardProps {
-  children: ReactNode;
-  className?: string;
-}
-
-function Card({ children, className }: CardProps) {
-  return (
-    <div className={`bg-white rounded-xl p-6 ${className ?? ""}`}>
-      {children}
-    </div>
-  );
-}
+﻿import { Quote, Star } from "lucide-react";
 
 export default function Testimonials() {
   const reviews = [
-  {
-    text: "I needed a plumber urgently, and I found one within an hour. Quick and reliable service!",
-    name: "Farhan",
-    role: "Homeowner",
-  },
-  {
-    text: "My car needed repair, and the mechanic I booked was professional and fast. Very satisfied!",
-    name: "Umer",
-    role: "Car Owner",
-  },
-  {
-    text: "“Booking a house cleaner was quick and easy. He arrived on time and provided an excellent, reliable service.”",
-    name: "Ali",
-    role: "Homeowner",
-  },
-
-];
-
-
-  const cardVariants: Variants = {
-    hidden: { opacity: 0, y: 40 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: i * 0.2,
-        type: "spring" as const,
-        stiffness: 120,
-        damping: 20,
-      },
-    }),
-  };
-
-  const quoteVariants: Variants = {
-    float: {
-      y: [0, -5, 0],
-      transition: {
-        duration: 2,
-        repeat: Infinity,
-        repeatType: "loop",
-        ease: "easeInOut",
-      },
+    {
+      text: "I needed a plumber urgently, and I found one within an hour. Quick and reliable service!",
+      name: "Farhan",
+      role: "Homeowner",
+      initials: "F",
+      bg: "bg-emerald-100 text-emerald-700",
+      metric: "Booked in under 30 min",
     },
-  };
+    {
+      text: "My car needed repair, and the mechanic I booked was professional and fast. Very satisfied!",
+      name: "Umer",
+      role: "Car Owner",
+      initials: "U",
+      bg: "bg-emerald-100 text-emerald-700",
+      metric: "Fast response from provider",
+    },
+    {
+      text: "Booking a house cleaner was quick and easy. He arrived on time and provided an excellent, reliable service.",
+      name: "Ali",
+      role: "Homeowner",
+      initials: "A",
+      bg: "bg-emerald-100 text-emerald-700",
+      metric: "Smooth booking experience",
+    },
+  ];
 
   return (
-    <section className="py-16 bg-[#f5f7f8]">
-      <div className="text-center px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-          Trusted by Thousands
-        </h2>
-        <p className="text-gray-600 mt-2 max-w-2xl mx-auto">
-          See what our users have to say about their experience.
-        </p>
-      </div>
+    <section id="testimonials" className="relative overflow-hidden bg-white py-20 md:py-28">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-14 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <div className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700">Customer Reviews</div>
+            <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-950 md:text-5xl">
+              Trusted by customers across Pakistan
+            </h2>
+            <p className="mt-5 text-base leading-8 text-slate-600 md:text-lg">
+              Real experiences from people who found the right professionals for their needs. Fast, reliable, and verified.
+            </p>
+          </div>
+          <div className="grid gap-4 rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5 shadow-sm sm:grid-cols-3">
+            <div>
+              <div className="text-2xl font-black text-slate-950">92%</div>
+              <div className="text-sm text-slate-600">Users report faster discovery</div>
+            </div>
+            <div>
+              <div className="text-2xl font-black text-slate-950">4.9</div>
+              <div className="text-sm text-slate-600">Average satisfaction rating</div>
+            </div>
+            <div>
+              <div className="text-2xl font-black text-slate-950">500+</div>
+              <div className="text-sm text-slate-600">Verified providers listed</div>
+            </div>
+          </div>
+        </div>
 
-      <div className="max-w-6xl mx-auto mt-10 grid md:grid-cols-3 gap-6 px-4 sm:px-6 lg:px-8">
-        {reviews.map((review, i) => (
-          <motion.div
-            key={i}
-            custom={i}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={cardVariants}
-          >
-            <Card className="relative hover:scale-105 transition-transform">
-              {/* Animated quote icon */}
-              <motion.div
-                className="absolute -top-4 left-4 text-blue-400 text-4xl opacity-30"
-                variants={quoteVariants}
-                animate="float"
-              >
-                <FaQuoteLeft />
-              </motion.div>
-
-              {/* Stars */}
-              <div className="flex gap-1 text-yellow-400 mb-4">
+        <div className="grid gap-8 md:grid-cols-3">
+          {reviews.map((review, i) => (
+            <article
+              key={i}
+              className="group flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-8 shadow-[0_18px_50px_-28px_rgba(15,23,42,0.35)] transition duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-[0_24px_70px_-30px_rgba(16,185,129,0.35)]"
+            >
+              <Quote className="mb-6 h-9 w-9 text-emerald-200" />
+              <div className="mb-4 flex gap-1">
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <FaStar key={s} />
+                  <Star key={s} className="h-4 w-4 fill-emerald-500 text-emerald-500" />
                 ))}
               </div>
-
-              {/* Review Text */}
-              <p className="text-gray-700 text-sm md:text-base mt-2">{review.text}</p>
-
-              {/* Reviewer Info */}
-              <div className="mt-4 md:mt-6">
-                <h4 className="font-bold text-gray-900">{review.name}</h4>
-                <p className="text-gray-500 text-sm">{review.role}</p>
+              <p className="flex-1 text-base leading-8 text-slate-600">&ldquo;{review.text}&rdquo;</p>
+              <div className="mt-6 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">{review.metric}</div>
+              <div className="mt-6 flex items-center gap-3 border-t border-slate-100 pt-6">
+                <div className={`flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold ${review.bg}`}>
+                  {review.initials}
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-950">{review.name}</h4>
+                  <p className="text-xs text-slate-500">{review.role}</p>
+                </div>
               </div>
-            </Card>
-          </motion.div>
-        ))}
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );

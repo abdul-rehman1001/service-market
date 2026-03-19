@@ -50,15 +50,16 @@ export default function ServiceClassifier() {
         <div className="bg-gray-50 p-4 rounded">
           <h2 className="font-semibold mb-2">Result:</h2>
           <div className="space-y-1">
-            <p><strong>Category:</strong> {result.category}</p>
-            <p><strong>Subcategory:</strong> {result.subcategory}</p>
+            <p><strong>Category:</strong> {result.categoryName || result.category}</p>
+            <p><strong>Category ID:</strong> {result.categoryId || 'N/A'}</p>
             <p><strong>Confidence:</strong> {(result.confidence * 100).toFixed(1)}%</p>
           </div>
           
-          <h3 className="font-semibold mt-4 mb-2">Top 5 Matches:</h3>
+          <h3 className="font-semibold mt-4 mb-2">Top Matches:</h3>
           {result.allMatches?.map((match: any, i: number) => (
             <div key={i} className="text-sm border-b py-1">
-              {match.category} → {match.subcategory}: {(match.similarity * 100).toFixed(1)}%
+              {match.categoryName || match.category}: {(match.similarity * 100).toFixed(1)}%
+              {match.categoryId && <span className="text-gray-500 ml-2">(DB: {match.categoryId})</span>}
             </div>
           ))}
         </div>

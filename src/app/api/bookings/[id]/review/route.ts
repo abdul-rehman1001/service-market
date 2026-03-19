@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
+import { sendNotification } from '@/lib/notifications';
 
 interface ReviewRequest {
   rating: number;
@@ -140,6 +141,28 @@ export async function POST(
 
       return review;
     });
+
+    // Notify the provider about the review
+    const reviewedBooking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        provider: { select: { userId: true } },
+        service: { select: { name: true } },
+      },
+    });
+
+    if (reviewedBooking) {
+      sendNotification({
+        userId: reviewedBooking.provider.userId,
+        type: 'REVIEW_RECEIVED',
+        bookingId,
+        data: {
+          rating: String(body.rating),
+          serviceName: reviewedBooking.service?.name || '',
+          bookingId,
+        },
+      });
+    }
 
     return NextResponse.json({ review: result }, { status: 201 });
   } catch (error) {

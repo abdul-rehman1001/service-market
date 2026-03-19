@@ -1,63 +1,77 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import { Loader, AlertCircle } from 'lucide-react';
 
-interface Job {
+interface Booking {
   id: string;
-  customerName: string;
-  service: string;
-  scheduledTime: string; // ISO string
-  status:
-    | 'Pending'
-    | 'Confirmed'
-    | 'En Route'
-    | 'In Progress'
-    | 'Completed'
-    | 'Cancelled by User'
-    | 'Cancelled by Provider';
+  status: string;
+  scheduledStart: string;
+  scheduledEnd: string;
+  location: string;
+  seeker?: {
+    firstName: string;
+    lastName: string;
+  } | null;
+  service?: {
+    name: string;
+  } | null;
 }
 
 export const BookingStatusPanel: React.FC = () => {
-  const [jobs, setJobs] = useState<Job[]>([
-    {
-      id: 'j1',
-      customerName: 'Sarah Jenkins',
-      service: 'AC Repair',
-      scheduledTime: new Date().toISOString(),
-      status: 'Confirmed',
-    },
-    {
-      id: 'j2',
-      customerName: 'Michael Chen',
-      service: 'Washing Machine Repair',
-      scheduledTime: new Date(new Date().getTime() + 3600000).toISOString(),
-      status: 'Pending',
-    },
-  ]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const updateStatus = (id: string, newStatus: Job['status']) => {
-    setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, status: newStatus } : j)));
+  useEffect(() => {
+    fetchBookings();
+    const interval = setInterval(fetchBookings, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/provider/bookings');
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch bookings');
+      }
+      // Filter to show confirmed, in progress, en route, and completed bookings
+      const filtered = (data.bookings || []).filter((b: Booking) =>
+        ['CONFIRMED', 'IN_PROGRESS', 'EN_ROUTE', 'COMPLETED'].includes(b.status)
+      );
+      setBookings(filtered);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch bookings');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const statusColor = (status: Job['status']) => {
+  const statusColor = (status: string) => {
     switch (status) {
-      case 'Pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Confirmed':
+      case 'CONFIRMED':
         return 'bg-emerald-100 text-emerald-800';
-      case 'En Route':
+      case 'EN_ROUTE':
         return 'bg-blue-100 text-blue-800';
-      case 'In Progress':
+      case 'IN_PROGRESS':
         return 'bg-orange-100 text-orange-800';
-      case 'Completed':
+      case 'COMPLETED':
         return 'bg-green-100 text-green-800';
-      case 'Cancelled by User':
-      case 'Cancelled by Provider':
-        return 'bg-red-100 text-red-800';
       default:
-        return '';
+        return 'bg-slate-100 text-slate-800';
     }
+  };
+
+  const formatStatus = (status: string) => {
+    return status
+      .replace(/_/g, ' ')
+      .split(' ')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
   };
 
   return (
@@ -67,94 +81,56 @@ export const BookingStatusPanel: React.FC = () => {
         <p className="text-sm text-slate-500 mt-1">Track and manage your ongoing jobs</p>
       </div>
 
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader className="w-8 h-8 animate-spin text-emerald-600" />
+        </div>
+      )}
+
+      {error && (
+        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <AlertCircle className="w-5 h-5 text-red-600" />
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
+
+      {!loading && bookings.length === 0 && (
+        <div className="text-center py-12 bg-slate-50 rounded-lg">
+          <p className="text-slate-500">No active bookings at the moment</p>
+        </div>
+      )}
+
       <ul className="space-y-4">
-        {jobs.map((job) => (
+        {bookings.map((booking) => (
           <li
-            key={job.id}
+            key={booking.id}
             className="
               bg-white border border-slate-200 rounded-2xl p-5 shadow-md
               hover:shadow-lg transition-all duration-300 ease-out
             "
           >
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-              <div className="space-y-1">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+              <div className="space-y-2 flex-1">
                 <p className="text-sm font-semibold text-slate-800">
-                  {job.customerName}{' '}
-                  <span className="font-normal text-slate-600">- {job.service}</span>
+                  {booking.seeker?.firstName} {booking.seeker?.lastName}{' '}
+                  <span className="font-normal text-slate-600">- {booking.service?.name}</span>
                 </p>
                 <p className="text-sm text-slate-500">
-                  Scheduled: {format(new Date(job.scheduledTime), 'PPPpp')}
+                  Scheduled: {format(new Date(booking.scheduledStart), 'PPPpp')}
                 </p>
+                {booking.location && (
+                  <p className="text-sm text-slate-500">
+                    Location: {booking.location}
+                  </p>
+                )}
                 <span
-                  className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(
-                    job.status
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${statusColor(
+                    booking.status
                   )}`}
                 >
-                  {job.status}
+                  {formatStatus(booking.status)}
                 </span>
               </div>
-
-              {/* Action Buttons */}
-              {['Pending', 'Confirmed', 'En Route', 'In Progress'].includes(job.status) && (
-                <div className="flex flex-wrap gap-2 mt-3 sm:mt-0">
-                  {job.status !== 'Confirmed' && (
-                    <button
-                      className="
-                        px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium
-                        shadow transition hover:bg-emerald-700 active:scale-95
-                      "
-                      onClick={() => updateStatus(job.id, 'Confirmed')}
-                    >
-                      Confirm
-                    </button>
-                  )}
-                  {job.status === 'Confirmed' && (
-                    <button
-                      className="
-                        px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium
-                        shadow transition hover:bg-blue-700 active:scale-95
-                      "
-                      onClick={() => updateStatus(job.id, 'En Route')}
-                    >
-                      En Route
-                    </button>
-                  )}
-                  {job.status === 'En Route' && (
-                    <button
-                      className="
-                        px-4 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium
-                        shadow transition hover:bg-orange-600 active:scale-95
-                      "
-                      onClick={() => updateStatus(job.id, 'In Progress')}
-                    >
-                      Start Job
-                    </button>
-                  )}
-                  {job.status === 'In Progress' && (
-                    <button
-                      className="
-                        px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-medium
-                        shadow transition hover:bg-green-700 active:scale-95
-                      "
-                      onClick={() => updateStatus(job.id, 'Completed')}
-                    >
-                      Complete
-                    </button>
-                  )}
-                  <button
-                    className="
-                      px-4 py-2 rounded-xl bg-rose-600 text-white text-sm font-medium
-                      shadow transition hover:bg-rose-700 active:scale-95
-                    "
-                    onClick={() => {
-                      const reason = prompt('Cancel reason (User/Provider)?', 'Cancelled by Provider');
-                      if (reason) updateStatus(job.id, reason as Job['status']);
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
             </div>
           </li>
         ))}

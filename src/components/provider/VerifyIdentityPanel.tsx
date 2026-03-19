@@ -1,14 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
+import { Loader } from 'lucide-react';
 
 export const VerifyIdentityPanel: React.FC = () => {
   const [frontCNIC, setFrontCNIC] = useState<File | null>(null);
   const [backCNIC, setBackCNIC] = useState<File | null>(null);
   const [status, setStatus] = useState<'Pending' | 'Verified' | 'Rejected'>('Pending');
   const [error, setError] = useState('');
+  const [providerId, setProviderId] = useState<string | null>(null);
+  const [cnicNumber, setCnicNumber] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    const fetchProvider = async () => {
+      try {
+        const res = await fetch('/api/provider/dashboard');
+        const data = await res.json();
+        if (res.ok && data.provider?.id) {
+          setProviderId(data.provider.id);
+          const verificationStatus = (data.provider.verificationStatus || 'PENDING') as string;
+          setStatus(
+            verificationStatus === 'APPROVED'
+              ? 'Verified'
+              : verificationStatus === 'REJECTED'
+              ? 'Rejected'
+              : 'Pending'
+          );
+          setCnicNumber(data.provider.cnic || '');
+        }
+      } catch (err) {
+        console.error('Failed to fetch provider dashboard:', err);
+      }
+    };
+    fetchProvider();
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') => {
     const file = e.target.files?.[0];
@@ -29,13 +57,92 @@ export const VerifyIdentityPanel: React.FC = () => {
     side === 'front' ? setFrontCNIC(file) : setBackCNIC(file);
   };
 
-  const handleUpload = () => {
+  const uploadToCloudinary = async (file: File): Promise<string> => {
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+    if (!cloudName || !uploadPreset) {
+      throw new Error('Cloudinary configuration missing');
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', uploadPreset);
+    formData.append('folder', `service-market/providers/${providerId}/cnic`);
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      {
+        method: 'POST',
+        body: formData,
+      }
+    );
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'Cloudinary upload failed');
+    }
+
+    return data.secure_url;
+  };
+
+  const saveDocument = async (
+    file: File,
+    documentType: 'CNIC_FRONT' | 'CNIC_BACK'
+  ) => {
+    const fileUrl = await uploadToCloudinary(file);
+
+    const res = await fetch(`/api/providers/${providerId}/documents`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fileUrl,
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type,
+        documentType,
+        cnicNumber: cnicNumber || undefined,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to save document');
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!providerId) {
+      setError('Provider profile not found. Please refresh and try again.');
+      return;
+    }
+
     if (!frontCNIC || !backCNIC) {
       setError('Please upload both front and back images.');
       return;
     }
-    setStatus('Pending');
-    toast.success('Files uploaded successfully. Awaiting admin verification.');
+
+    if (!/^\d{13}$/.test(cnicNumber)) {
+      setError('CNIC must be exactly 13 digits.');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setError('');
+      await saveDocument(frontCNIC, 'CNIC_FRONT');
+      await saveDocument(backCNIC, 'CNIC_BACK');
+      setStatus('Pending');
+      toast.success('CNIC uploaded successfully. Awaiting admin verification.');
+      setFrontCNIC(null);
+      setBackCNIC(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Upload failed';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -47,6 +154,18 @@ export const VerifyIdentityPanel: React.FC = () => {
     >
       <h2 className="text-2xl font-semibold text-slate-800">Verify Your Identity</h2>
       <p className="text-sm text-slate-500">Upload your CNIC images (front and back). Max size 5MB each.</p>
+
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-slate-700">CNIC Number (13 digits)</label>
+        <input
+          type="text"
+          inputMode="numeric"
+          value={cnicNumber}
+          onChange={(e) => setCnicNumber(e.target.value.replace(/\D/g, '').slice(0, 13))}
+          placeholder="1234567890123"
+          className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:ring-emerald-500 focus:border-emerald-500 transition"
+        />
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {[{ label: 'Front Image', file: frontCNIC, side: 'front' }, { label: 'Back Image', file: backCNIC, side: 'back' }].map((item) => (
@@ -67,9 +186,17 @@ export const VerifyIdentityPanel: React.FC = () => {
 
       <button
         onClick={handleUpload}
+        disabled={uploading}
         className="px-4 py-1.5 bg-emerald-600 text-white font-medium rounded-md hover:bg-emerald-700 active:scale-95 transition-transform text-sm"
       >
-        Upload CNIC
+        {uploading ? (
+          <span className="inline-flex items-center gap-2">
+            <Loader className="w-4 h-4 animate-spin" />
+            Uploading...
+          </span>
+        ) : (
+          'Upload CNIC'
+        )}
       </button>
 
       <motion.div

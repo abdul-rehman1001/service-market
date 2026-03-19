@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
 import { sendEmail } from '@/lib/email';
+import { sendNotification } from '@/lib/notifications';
 
 export async function POST(
   req: NextRequest,
@@ -104,6 +105,15 @@ export async function POST(
       'Verification Approved - Service Market',
       emailHtml
     );
+
+    // Send push notification
+    sendNotification({
+      userId: provider.userId,
+      type: 'VERIFICATION_STATUS_CHANGED',
+      data: {
+        status: 'APPROVED',
+      },
+    });
 
     return NextResponse.json(
       {

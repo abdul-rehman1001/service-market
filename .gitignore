@@ -45,3 +45,6 @@ next-env.d.ts
 
 # Generated files
 # Code Citations.md
+
+src/lib/firebase-adminsdk.json
+>>>>>>> feature-search-v2

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
+import { sendNotification } from '@/lib/notifications';
 
 type BookingStatus =
   | 'HOLD'
@@ -174,6 +175,44 @@ export async function PATCH(
         },
       },
     });
+
+    // Send notifications based on new status
+    const notificationData = {
+      bookingNumber: updatedBooking.service?.name ? `${updatedBooking.service.name}` : '',
+      serviceName: updatedBooking.service?.name || '',
+      bookingId: id,
+    };
+
+    const statusToNotificationType: Record<string, string> = {
+      EN_ROUTE: 'EN_ROUTE',
+      IN_PROGRESS: 'IN_PROGRESS',
+      COMPLETED: 'COMPLETED',
+      CANCELLED: 'BOOKING_CANCELLED',
+    };
+
+    const notifType = statusToNotificationType[newStatus];
+    if (notifType) {
+      // Notify the seeker
+      sendNotification({
+        userId: updatedBooking.seeker.id,
+        type: notifType as any,
+        bookingId: id,
+        data: {
+          ...notificationData,
+          ...(newStatus === 'CANCELLED' ? { reason: cancellationReason || '' } : {}),
+        },
+      });
+
+      // For COMPLETED and CANCELLED, also notify the provider's user
+      if (newStatus === 'COMPLETED') {
+        sendNotification({
+          userId: decoded.userId,
+          type: 'COMPLETED',
+          bookingId: id,
+          data: notificationData,
+        });
+      }
+    }
 
     return NextResponse.json({ booking: updatedBooking }, { status: 200 });
   } catch (error) {
