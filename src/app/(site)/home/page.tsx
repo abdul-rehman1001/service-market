@@ -52,7 +52,13 @@ export default function HomePage() {
         setAiFilter({ active: false, category: null, categoryId: null, categoryName: null });
         window.dispatchEvent(
           new CustomEvent("filterProviders", {
-            detail: { category: null, subcategory: null, categoryId: null, categoryName: null },
+            detail: {
+              category: null,
+              subcategory: null,
+              categoryId: null,
+              categoryName: null,
+              source: null,
+            },
           })
         );
         return;
@@ -73,6 +79,7 @@ export default function HomePage() {
             subcategory: null,
             categoryId,
             categoryName,
+            source: "ai",
           },
         })
       );
@@ -88,7 +95,13 @@ export default function HomePage() {
         setAiFilter({ active: false, category: null, categoryId: null, categoryName: null });
         window.dispatchEvent(
           new CustomEvent("filterProviders", {
-            detail: { category: null, subcategory: null, categoryId: null, categoryName: null },
+            detail: {
+              category: null,
+              subcategory: null,
+              categoryId: null,
+              categoryName: null,
+              source: null,
+            },
           })
         );
       }} />

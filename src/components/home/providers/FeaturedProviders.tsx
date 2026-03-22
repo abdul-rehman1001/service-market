@@ -19,16 +19,20 @@ export default function FeaturedProviders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
   const [active, setActive] = useState<{
     category: string | null;
     categoryId: string | null;
     categoryName: string | null;
     subcategory: string | null;
+    source: "ai" | "category" | null;
   }>({
     category: null,
     categoryId: null,
     categoryName: null,
     subcategory: null,
+    source: null,
   });
 
   const [pagination, setPagination] = useState<Pagination>({
@@ -38,9 +42,14 @@ export default function FeaturedProviders() {
     hasMore: false,
   });
 
-  const fetchProviders = async (opts?: { page?: number; categoryId?: string | null }) => {
+  const fetchProviders = async (opts?: {
+    page?: number;
+    categoryId?: string | null;
+    source?: "ai" | "category" | null;
+  }) => {
     const page = opts?.page ?? 1;
     const categoryId = opts?.categoryId ?? null;
+    const source = opts?.source ?? null;
 
     try {
       setLoading(true);
@@ -50,6 +59,15 @@ export default function FeaturedProviders() {
       params.set("limit", "6");
       params.set("page", String(page));
       if (categoryId) params.set("categoryId", categoryId);
+
+      // Only AI-driven searches use combined scoring (price + distance + rating + experience)
+      if (source === "ai") {
+        params.set("sort", "combined");
+        if (userLocation) {
+          params.set("userLat", String(userLocation.lat));
+          params.set("userLng", String(userLocation.lng));
+        }
+      }
 
       const response = await fetch(`/api/providers/top-rated?${params.toString()}`);
 
@@ -77,8 +95,32 @@ export default function FeaturedProviders() {
   };
 
   useEffect(() => {
+    // Capture user location for distance-based ranking (used only for AI search)
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      () => {
+        // Ignore location errors; ranking will fall back without distance.
+      },
+      { enableHighAccuracy: false, maximumAge: 60_000, timeout: 8_000 }
+    );
+  }, []);
+
+  // If AI filtering is active and location arrives after the initial fetch,
+  // refetch so distance participates in the combined ranking.
+  useEffect(() => {
+    if (!userLocation) return;
+    if (active.source !== "ai") return;
+    if (!active.categoryId) return;
+    fetchProviders({ page: pagination.page || 1, categoryId: active.categoryId, source: "ai" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userLocation?.lat, userLocation?.lng]);
+
+  useEffect(() => {
     // Initial load (unfiltered)
-    fetchProviders({ page: 1, categoryId: null });
+    fetchProviders({ page: 1, categoryId: null, source: null });
   }, []);
 
   // Listen for category filter events from the Categories section
@@ -89,17 +131,18 @@ export default function FeaturedProviders() {
       const subcategory = (detail.subcategory ?? null) as string | null;
       const categoryId = (detail.categoryId ?? null) as string | null;
       const categoryName = (detail.categoryName ?? null) as string | null;
+      const source = (detail.source ?? null) as "ai" | "category" | null;
 
-      setActive({ category, subcategory, categoryId, categoryName });
+      setActive({ category, subcategory, categoryId, categoryName, source });
 
       // If cleared, show default (page 1)
       if (!categoryId) {
-        fetchProviders({ page: 1, categoryId: null });
+        fetchProviders({ page: 1, categoryId: null, source: null });
         return;
       }
 
       // Filtered category view starts at page 1
-      fetchProviders({ page: 1, categoryId });
+      fetchProviders({ page: 1, categoryId, source });
     };
 
     window.addEventListener("filterProviders", handler);
@@ -117,7 +160,7 @@ export default function FeaturedProviders() {
   const handlePageChange = (page: number) => {
     if (!active.categoryId) return;
     if (page < 1 || page > pagination.totalPages) return;
-    fetchProviders({ page, categoryId: active.categoryId });
+    fetchProviders({ page, categoryId: active.categoryId, source: active.source });
   };
 
   return (

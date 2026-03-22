@@ -10,6 +10,8 @@ import { getTopRatedProvidersPage, formatProviderForDisplay } from '@/lib/provid
  * - limit (optional): Page size (default: 6)
  * - page (optional): Page number (default: 1)
  * - categoryId (optional): Filter providers by service category (includes subcategories)
+ * - sort (optional): 'combined' to rank by price+distance+rating+experience (default: top-rated)
+ * - userLat/userLng (optional): user coordinates (used only when sort=combined)
  */
 export async function GET(req: NextRequest) {
   try {
@@ -17,6 +19,17 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '6', 10);
     const page = parseInt(searchParams.get('page') || '1', 10);
     const categoryId = searchParams.get('categoryId');
+    const sort = searchParams.get('sort') === 'combined' ? 'combined' : 'top-rated';
+
+    const userLatRaw = searchParams.get('userLat');
+    const userLngRaw = searchParams.get('userLng');
+    const userLat = userLatRaw ? Number(userLatRaw) : null;
+    const userLng = userLngRaw ? Number(userLngRaw) : null;
+    const hasUserCoords =
+      userLat !== null &&
+      userLng !== null &&
+      Number.isFinite(userLat) &&
+      Number.isFinite(userLng);
 
     // Validate limit
     if (isNaN(limit) || limit < 1 || limit > 50) {
@@ -37,6 +50,8 @@ export async function GET(req: NextRequest) {
       page,
       limit,
       categoryId: categoryId || null,
+      sort,
+      userLocation: hasUserCoords ? { lat: userLat, lng: userLng } : null,
     });
 
     const providers = result.providers;

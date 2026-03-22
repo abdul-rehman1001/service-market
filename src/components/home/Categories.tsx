@@ -174,6 +174,7 @@ export default function Categories() {
                               .replace(/\s+/g, '_'),
                             categoryId: cat.id,
                             categoryName: cat.name,
+                            source: 'category',
                           },
                         })
                       )
