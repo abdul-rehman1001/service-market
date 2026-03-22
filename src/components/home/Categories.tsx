@@ -172,6 +172,8 @@ export default function Categories() {
                             category: cat.name
                               .toLowerCase()
                               .replace(/\s+/g, '_'),
+                            categoryId: cat.id,
+                            categoryName: cat.name,
                           },
                         })
                       )

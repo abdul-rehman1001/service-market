@@ -2,24 +2,28 @@ import { Filter } from "lucide-react";
 
 interface Props {
   category: string | null;
+  categoryName?: string | null;
   subcategory: string | null;
   onClear: () => void;
 }
 
 export default function ProvidersHeader({
   category,
+  categoryName,
   subcategory,
   onClear,
 }: Props) {
   const format = (s: string) =>
     s.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
 
+  const heading = categoryName || "Featured Providers";
+
   return (
     <div className="flex items-center justify-between mb-6">
       <div>
-        <h2 className="text-3xl font-semibold">Featured Providers</h2>
+        <h2 className="text-3xl font-semibold">{heading}</h2>
 
-        {category && (
+        {category && !categoryName && (
           <p className="text-sm text-gray-600 mt-1">
             Showing results for {format(category)}
             {subcategory && ` → ${format(subcategory)}`}
