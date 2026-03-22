@@ -17,7 +17,7 @@ export default function ProviderCard({ provider }: Props) {
       <div className="flex items-start gap-4">
         <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
           <Image
-            src={provider.avatar || "/images/avatar-placeholder.png"}
+            src={provider.avatar || "/images/avatar1.png"}
             alt={provider.name}
             width={64}
             height={64}

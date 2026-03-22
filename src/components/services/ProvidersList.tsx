@@ -38,7 +38,7 @@ export default function ProvidersList({
   const transformProvider = (provider: Provider): any => ({
     id: provider.id,
     userId: provider.userId,
-    avatar: provider.profileImage || '/images/avatar-placeholder.png',
+    avatar: provider.profileImage || '/images/avatar1.png',
     name: provider.name,
     role: provider.services?.[0]?.name || 'Service Provider',
     rating: provider.rating,

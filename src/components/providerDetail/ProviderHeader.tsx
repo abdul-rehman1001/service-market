@@ -21,7 +21,7 @@ export default function ProviderHeader({ provider }: Props) {
       {/* Avatar */}
       <div className="flex-shrink-0 relative">
         <Image
-          src={provider.user.profileImage || '/images/avatar-placeholder.png'}
+          src={provider.user.profileImage || '/images/avatar1.png'}
           alt={fullName}
           width={112}
           height={112}

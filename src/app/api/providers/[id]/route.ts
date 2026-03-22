@@ -5,10 +5,10 @@ import { verifyToken } from '@/lib/jwt';
 // GET - Get provider by user ID or provider ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const lookupId = params.id;
+    const { id: lookupId } = await context.params;
 
     // Get token and verify authentication
     const token = req.cookies.get('token')?.value;
@@ -95,12 +95,12 @@ export async function GET(
           yearsOfExperience: provider.yearsOfExperience,
           cnic: provider.cnic,
           verificationStatus: provider.verificationStatus,
-          averageRating: provider.averageRating,
+          averageRating: Number(provider.averageRating),
           totalReviews: provider.totalReviews,
           totalJobsCompleted: provider.totalJobsCompleted,
           isAvailable: provider.isAvailable,
-          createdAt: provider.createdAt,
-          updatedAt: provider.updatedAt,
+          createdAt: provider.createdAt.toISOString(),
+          updatedAt: provider.updatedAt.toISOString(),
         },
       },
       { status: 200 }

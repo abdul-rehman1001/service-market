@@ -8,7 +8,7 @@ import { verifyToken } from '@/lib/jwt';
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = req.cookies.get('token')?.value;
@@ -23,7 +23,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await context.params;
 
     // Verify that the history entry belongs to the user before deleting
     const historyEntry = await prisma.searchHistory.findUnique({

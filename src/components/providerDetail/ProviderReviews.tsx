@@ -13,6 +13,7 @@ interface Props {
 }
 
 interface ReviewResponse {
+  error?: string;
   reviews: ReviewType[];
   pagination: {
     page: number;

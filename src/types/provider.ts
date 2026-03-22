@@ -1,7 +1,5 @@
 // src/types/provider.ts
 
-import { Decimal } from '@prisma/client/runtime/library';
-
 export interface ServiceCategoryType {
   id: string;
   name: string;
@@ -13,8 +11,8 @@ export interface ServiceType {
   id: string;
   name: string;
   description: string;
-  minPrice: Decimal;
-  maxPrice: Decimal;
+  minPrice: number;
+  maxPrice: number;
   defaultDurationMinutes: number;
   images: string[];
   isActive: boolean;
@@ -34,7 +32,7 @@ export interface ProviderDocumentType {
   fileName: string;
   fileUrl: string;
   status: string;
-  uploadedAt: Date;
+  uploadedAt: string;
 }
 
 export interface ReviewType {
@@ -46,7 +44,7 @@ export interface ReviewType {
   qualityOfWork?: number | null;
   communication?: number | null;
   valueForMoney?: number | null;
-  createdAt: Date;
+  createdAt: string;
   reviewer: {
     firstName: string;
     lastName: string;
@@ -71,7 +69,7 @@ export interface ProviderProfileType {
   businessName?: string | null;
   yearsOfExperience: number;
   verificationStatus: string;
-  averageRating: Decimal;
+  averageRating: number;
   totalReviews: number;
   totalJobsCompleted: number;
   isAvailable: boolean;

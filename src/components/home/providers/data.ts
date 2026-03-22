@@ -3,7 +3,8 @@ import { Provider } from "./types";
 
 export const allProviders: Provider[] = [
   {
-    id: 1,
+    id: "1",
+    userId: "1",
     name: "Ahmed",
     role: "Expert Plumber",
     rating: 4.9,
@@ -14,7 +15,8 @@ export const allProviders: Provider[] = [
     subcategory: "pipe_repair",
   },
   {
-    id: 2,
+    id: "2",
+    userId: "2",
     name: "Ahsan",
     role: "Professional Plumber",
     rating: 5.0,

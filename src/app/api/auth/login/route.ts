@@ -19,8 +19,17 @@ export async function POST(req: NextRequest) {
 
   const token = signToken({ userId: user.id, role: user.role });
 
+  const fullName = `${user.firstName} ${user.lastName}`.trim();
+
   const res = NextResponse.json({
-    user: { id: user.id, email: user.email, name: user.name, role: user.role },
+    user: {
+      id: user.id,
+      email: user.email,
+      fullName,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+    },
   });
 
   setTokenCookie(res, token);

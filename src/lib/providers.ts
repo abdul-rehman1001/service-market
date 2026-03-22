@@ -117,7 +117,7 @@ export function formatProviderForDisplay(provider: any) {
       mainService?.description ||
       provider.user.bio ||
       'Professional service provider',
-    avatar: provider.user.profileImage || '/images/avatar-placeholder.png',
+    avatar: provider.user.profileImage || '/images/avatar1.png',
     // Additional data for reference
     userId: provider.userId,
     mainService: mainService,
