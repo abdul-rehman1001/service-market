@@ -162,7 +162,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
     // Trigger event to clear any filtered providers
     window.dispatchEvent(
       new CustomEvent("aiSearchProviders", {
-        detail: { category: null, subcategory: null },
+        detail: { category: null, subcategory: null, categoryId: null, categoryName: null },
       })
     );
   };
@@ -261,7 +261,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyPress}
                 onFocus={() => isAuthenticated && searchHistory.length > 0 && setShowHistory(true)}
-                placeholder="Describe your service needs (e.g. 'sink clogged', 'AC not cooling')"
+                placeholder="Find providers"
                 className="flex-1 text-gray-700 bg-transparent outline-none placeholder:text-gray-400 text-sm sm:text-base"
                 disabled={loading}
                 aria-label="Search services"
@@ -523,7 +523,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                       whileTap={{ scale: 0.98 }}
                       className="w-full px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 text-base"
                     >
-                      Find {result.categoryName || formatCategoryName(result.category)} Providers Near You
+                      Find providers
                       <ArrowRight className="w-5 h-5" />
                     </motion.button>
                   </div>
