@@ -1,8 +1,9 @@
 
 import { getEmbedding } from './embeddings';
-import { trainingData, categoryKeywords } from './training-data';
+import { trainingData, categoryKeywords, aiCategories } from './training-data';
 import { cosineSimilarity } from './utils';
 import prisma from './prisma';
+import { classifyWithStoredEmbeddings } from './ai/stored-embedding-classifier';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -140,6 +141,30 @@ export async function classifyQuery(query: string): Promise<ClassificationResult
   }
 
   // 2. Fall back to embedding similarity
+  const dbBackedResult = await classifyWithStoredEmbeddings(query);
+  if (dbBackedResult) {
+    const allMatches = dbBackedResult.allMatches.map((match) => {
+      const dbEntry = dbMap[match.category]?.[0];
+      return {
+        category: match.category,
+        categoryId: dbEntry?.id ?? null,
+        categoryName: dbEntry?.name ?? match.categoryName,
+        similarity: match.similarity,
+      };
+    });
+
+    const best = allMatches[0];
+
+    return {
+      category: best.category,
+      categoryId: best.categoryId,
+      categoryName: best.categoryName,
+      confidence: best.similarity,
+      allMatches,
+    };
+  }
+
+  // 3. Fall back to in-memory training data similarity if DB embeddings are missing
   const [queryEmbedding, cache] = await Promise.all([
     getEmbedding(query),
     getEmbeddingCache(),
@@ -183,6 +208,9 @@ export async function classifyQuery(query: string): Promise<ClassificationResult
 // Helpers
 // ---------------------------------------------------------------------------
 function formatKey(key: string): string {
+  const catalogName = aiCategories.find((category) => category.key === key)?.name;
+  if (catalogName) return catalogName;
+
   return key
     .split('_')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))

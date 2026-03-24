@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "ai:sync-embeddings": "tsx scripts/sync-ai-embeddings.ts"
   },
   "dependencies": {
     "@mapbox/search-js-core": "^1.5.1",

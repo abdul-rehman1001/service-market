@@ -81,6 +81,11 @@ enum NotificationType {
   SYSTEM_UPDATE
 }
 
+enum EmbeddingSourceType {
+  CATEGORY
+  EXAMPLE
+}
+
 //////////////////////////////////////////////////////
 // AUTH & USER
 //////////////////////////////////////////////////////
@@ -376,6 +381,21 @@ model ProblemQuery {
   confidenceScore Float?
 
   createdAt   DateTime @default(now())
+}
+
+model AiCategoryEmbedding {
+  id           String              @id @default(cuid())
+  categoryKey  String
+  categoryName String
+  sourceType   EmbeddingSourceType
+  sourceText   String
+  embedding    Float[]
+
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([categoryKey])
+  @@unique([categoryKey, sourceType, sourceText])
 }
 
 //////////////////////////////////////////////////////

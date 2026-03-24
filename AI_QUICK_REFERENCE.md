@@ -12,7 +12,7 @@
 | **Model** | Xenova/paraphrase-multilingual-MiniLM-L12-v2 |
 | **Architecture** | Pre-trained Transformer (384-dim embeddings) |
 | **Training Method** | No training needed (pre-trained) |
-| **Learning Capability** | Manual via training-data.ts updates |
+| **Learning Capability** | Manual via ai-categories.json updates |
 | **API Keys Required** | None ❌ |
 | **Cloud Dependencies** | None ❌ (runs locally) |
 | **Languages Supported** | 50+ ✅ (multilingual) |
@@ -23,9 +23,28 @@
 
 ## 🚀 Getting Started (Developers)
 
+### Sync AI Embeddings to PostgreSQL (New)
+
+The AI catalog now uses a JSON source-of-truth and a DB embedding store:
+
+1. Update category data in `src/data/ai-categories.json`
+2. Run Prisma migration (once per environment)
+3. Rebuild embeddings into PostgreSQL:
+
+```bash
+npm run ai:sync-embeddings
+```
+
+This command:
+- Reads categories and example queries from JSON
+- Generates embeddings with `Xenova/paraphrase-multilingual-MiniLM-L12-v2`
+- Stores embeddings in `AiCategoryEmbedding.embedding` as float arrays
+
+The classifier automatically uses stored DB embeddings first, and falls back to in-memory examples if DB embeddings are not yet synced.
+
 ### Adding a New Service Category
 
-**File:** `src/lib/training-data.ts`
+**File:** `src/data/ai-categories.json`
 
 1. Add category with examples:
 ```typescript
@@ -123,7 +142,7 @@ curl -X POST http://localhost:3000/api/classify \
 
 ### Task 2: Add More Examples to Existing Category
 
-**File:** `src/lib/training-data.ts`
+**File:** `src/data/ai-categories.json`
 
 ```typescript
 plumber: {
@@ -220,7 +239,7 @@ Then:
 |------|------|-------|
 | `embeddings.ts` | Model loading | ❌ Rarely |
 | `classifier.ts` | Classification logic | ❌ No |
-| **`training-data.ts`** | **Examples** | **✅ Often** |
+| **`ai-categories.json`** | **Examples + Category Catalog** | **✅ Often** |
 | `utils.ts` | Utilities | ❌ No |
 | `ServiceClassifier.tsx` | UI | ✅ Sometimes |
 | `classify/route.ts` | API endpoint | ⚠️ Careful |
@@ -404,7 +423,7 @@ if (result.confidence < 0.7) {
 | Question | Where |
 |----------|-------|
 | How to add category? | Check AI_FILE_STRUCTURE.md |
-| Why low confidence? | Add more examples to training-data.ts |
+| Why low confidence? | Add more examples to src/data/ai-categories.json |
 | Model performance? | Check AI_ARCHITECTURE.md scaling section |
 | Custom fine-tuning? | See AI_ARCHITECTURE.md training section |
 | API details? | Check API endpoint docs |
