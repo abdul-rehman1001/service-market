@@ -5,7 +5,6 @@ import { signToken } from '@/lib/jwt';
 import { setTokenCookie } from '@/lib/cookies';
 import { sendEmail } from '@/lib/email';
 import crypto from 'crypto';
-import { geocodeAddress } from '@/lib/geocoding';
 import { Prisma } from '@prisma/client';
 
 export async function POST(req: NextRequest) {
@@ -13,6 +12,11 @@ export async function POST(req: NextRequest) {
 
   if (!name || !email || !password || !role || !phone || !address) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  }
+
+  const normalizedAddress = String(address).trim();
+  if (!normalizedAddress) {
+    return NextResponse.json({ error: 'Address is required' }, { status: 400 });
   }
 
   // Validate phone format
@@ -40,18 +44,8 @@ export async function POST(req: NextRequest) {
   const firstName = nameParts[0];
   const lastName = nameParts.slice(1).join(' ') || '';
 
-  // Geocode address (required for all users)
-  let geocodeData;
-  try {
-    geocodeData = await geocodeAddress(address);
-    console.log('Address geocoded successfully:', geocodeData);
-  } catch (geocodeError) {
-    console.error('Error geocoding address:', geocodeError);
-    return NextResponse.json(
-      { error: 'Invalid address. Please provide a valid address that can be located on the map.' },
-      { status: 400 }
-    );
-  }
+  const defaultLongitude = new Prisma.Decimal(0);
+  const defaultLatitude = new Prisma.Decimal(0);
 
   // Create user with UNVERIFIED status (stays UNVERIFIED until all verifications done)
   const user = await prisma.user.create({
@@ -63,9 +57,9 @@ export async function POST(req: NextRequest) {
       role,
       profileImage: profileImage || null,
       phone,
-      address: geocodeData.formatted_address,
-      longitude: new Prisma.Decimal(geocodeData.longitude),
-      latitude: new Prisma.Decimal(geocodeData.latitude),
+      address: normalizedAddress,
+      longitude: defaultLongitude,
+      latitude: defaultLatitude,
       status: 'UNVERIFIED', // Will be set to ACTIVE after email + phone verification
     },
   });
@@ -78,9 +72,9 @@ export async function POST(req: NextRequest) {
         yearsOfExperience: 0,
         cnic: null,
         verificationStatus: 'PENDING',
-        baseAddress: geocodeData.formatted_address,
-        longitude: new Prisma.Decimal(geocodeData.longitude),
-        latitude: new Prisma.Decimal(geocodeData.latitude),
+        baseAddress: normalizedAddress,
+        longitude: defaultLongitude,
+        latitude: defaultLatitude,
       };
 
       await prisma.serviceProvider.create({
