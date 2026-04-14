@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthCard from '@/components/auth/AuthCard';
@@ -127,6 +128,18 @@ export default function RegisterSeeker() {
           >
             {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
+
+          <div className="mt-5 border-t border-gray-200 pt-4 text-center">
+            <p className="text-sm text-gray-600">
+              Already have an account?{' '}
+              <Link
+                href="/login"
+                className="font-semibold text-emerald-600 hover:text-emerald-700 hover:underline"
+              >
+                Login here
+              </Link>
+            </p>
+          </div>
         </form>
       </AuthCard>
     </div>
