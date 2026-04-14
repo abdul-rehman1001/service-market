@@ -142,7 +142,11 @@ function VerifyOtpContent() {
 
       // Redirect to appropriate dashboard after 1.5 seconds
       setTimeout(() => {
-        if (userData?.role === 'PROVIDER') {
+        const normalizedRole = String(userData?.role || '').toUpperCase();
+
+        if (normalizedRole === 'PROVIDER') {
+          router.push('/provider/dashboard');
+        } else if (normalizedRole === 'ADMIN') {
           router.push('/admin');
         } else {
           router.push('/home');

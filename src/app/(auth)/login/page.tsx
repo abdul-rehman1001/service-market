@@ -47,7 +47,15 @@ export default function LoginPage() {
       if (data.token) localStorage.setItem('token', data.token);
 
       // Redirect based on role
-      router.push(data.role === 'provider' ? '/provider/dashboard' : '/home');
+      const normalizedRole = String(data?.user?.role || data?.role || '').toUpperCase();
+
+      if (normalizedRole === 'PROVIDER') {
+        router.push('/provider/dashboard');
+      } else if (normalizedRole === 'ADMIN') {
+        router.push('/admin');
+      } else {
+        router.push('/home');
+      }
     } catch (err) {
       setError('Something went wrong. Try again.');
     } finally {
