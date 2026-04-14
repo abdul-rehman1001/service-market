@@ -50,7 +50,7 @@ export default function ServicesPage({
         {/* Left Column */}
         <main className="flex-1 space-y-6">
           {/* Filters */}
-          <SearchFilters searchQuery={searchQuery} location={location} />
+          <SearchFilters searchQuery={searchQuery} />
 
           {/* Providers List */}
           <ProvidersList providers={paginatedItems} />

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { usePagination } from './hooks/usePagination';
-import SearchHeader from './SearchHeader';
 import SearchFilters from './SearchFilters';
 import ProvidersList from './ProvidersList';
 import Pagination from './Pagination';
@@ -10,6 +9,7 @@ import SearchMap from './SearchMap/SearchMap';
 import Footer from '@/components/layout/Footer';
 import Header from '@/components/layout/Header';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useUserLocation } from '@/hooks/useUserLocation';
 
 interface Provider {
   id: string;
@@ -42,12 +42,10 @@ interface FiltersState {
 }
 
 export default function ServicesPageClient() {
-  const [searchQuery, setSearchQuery] = useState('All Services');
-  const [location, setLocation] = useState('Current Location');
+  const [searchQuery, setSearchQuery] = useState('');
   const [allProviders, setAllProviders] = useState<Provider[]>([]);
   const [filteredProviders, setFilteredProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [showMap, setShowMap] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<any>(null);
   const [filters, setFilters] = useState<FiltersState>({
@@ -60,6 +58,27 @@ export default function ServicesPageClient() {
 
   const { currentPage, totalPages, paginatedItems, goNext, goPrev, goTo } =
     usePagination(filteredProviders, 6);
+
+  const {
+    location: detectedLocation,
+  } = useUserLocation({
+    requestOnMount: true,
+    enableHighAccuracy: true,
+    maximumAge: 5 * 60_000,
+    timeout: 12_000,
+    cacheMaxAgeMs: 30 * 60_000,
+  });
+
+  const userLocation = useMemo(
+    () =>
+      detectedLocation
+        ? { lat: detectedLocation.lat, lng: detectedLocation.lng }
+        : null,
+    [detectedLocation?.lat, detectedLocation?.lng]
+  );
+
+  const locationLat = userLocation?.lat;
+  const locationLng = userLocation?.lng;
 
   // Reorder providers to show selected provider at the top
   const orderedProviders = useMemo(() => {
@@ -78,31 +97,16 @@ export default function ServicesPageClient() {
     return [selected, ...reordered];
   }, [paginatedItems, selectedProvider]);
 
-  // Fetch user location
+  // Fetch all providers for initial unfiltered view
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const loc = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
-          setUserLocation(loc);
-          setLocation(`${loc.lat.toFixed(2)}, ${loc.lng.toFixed(2)}`);
-        },
-        () => {
-          console.warn('Location access denied');
-        }
-      );
-    }
-  }, []);
+    const controller = new AbortController();
 
-  // Fetch initial random providers
-  useEffect(() => {
-    const fetchRandomProviders = async () => {
+    const fetchProviders = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/providers/random?limit=12');
+        const response = await fetch('/api/providers', {
+          signal: controller.signal,
+        });
         if (!response.ok) throw new Error('Failed to fetch');
         const data = await response.json();
 
@@ -120,17 +124,26 @@ export default function ServicesPageClient() {
           }));
         }
 
-        setAllProviders(providersWithDistance);
-        setFilteredProviders(providersWithDistance);
+        if (!controller.signal.aborted) {
+          setAllProviders(providersWithDistance);
+        }
       } catch (error) {
-        console.error('Error fetching providers:', error);
+        if (!(error instanceof DOMException && error.name === 'AbortError')) {
+          console.error('Error fetching providers:', error);
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchRandomProviders();
-  }, [userLocation]);
+    fetchProviders();
+
+    return () => {
+      controller.abort();
+    };
+  }, [locationLat, locationLng]);
 
   // Calculate distance using Haversine formula
   const calculateDistance = (
@@ -153,47 +166,53 @@ export default function ServicesPageClient() {
     return Math.round(distance * 100) / 100;
   };
 
-  // Handle filters change
-  const handleFiltersChange = (newFilters: FiltersState) => {
-    setFilters(newFilters);
+  const applyFilters = (
+    providers: Provider[],
+    activeFilters: FiltersState,
+    activeSearchQuery: string
+  ) => {
+    let filtered = [...providers];
 
-    // Apply filters
-    let filtered = allProviders;
+    const normalizedSearch = activeSearchQuery.trim().toLowerCase();
+    if (normalizedSearch) {
+      filtered = filtered.filter((provider) => {
+        const serviceText = (provider.services || [])
+          .map((service: any) => `${service.name || ''} ${service.description || ''} ${service.category?.name || ''}`)
+          .join(' ')
+          .toLowerCase();
 
-    // Rating filter
-    if (newFilters.rating !== null) {
-      filtered = filtered.filter((p) => p.rating >= newFilters.rating!);
+        const providerText = `${provider.name || ''} ${provider.firstName || ''} ${provider.lastName || ''} ${provider.bio || ''} ${provider.baseAddress || ''}`.toLowerCase();
+
+        return `${providerText} ${serviceText}`.includes(normalizedSearch);
+      });
     }
 
-    // Price range filter
-    if (newFilters.priceRange[0] > 0 || newFilters.priceRange[1] < 5000) {
+    if (activeFilters.rating !== null) {
+      filtered = filtered.filter((provider) => provider.rating >= activeFilters.rating!);
+    }
+
+    if (activeFilters.priceRange[0] > 0 || activeFilters.priceRange[1] < 5000) {
       filtered = filtered.filter(
-        (p) =>
-          p.minPrice &&
-          p.minPrice >= newFilters.priceRange[0] &&
-          p.minPrice <= newFilters.priceRange[1]
+        (provider) =>
+          provider.minPrice !== null &&
+          provider.minPrice >= activeFilters.priceRange[0] &&
+          provider.minPrice <= activeFilters.priceRange[1]
       );
     }
 
-    // Radius filter
-    if (newFilters.radius > 0) {
+    if (activeFilters.radius > 0 && userLocation) {
       filtered = filtered.filter(
-        (p) => p.distance && p.distance <= newFilters.radius
-      );
-      setShowMap(true);
-    } else {
-      setShowMap(false);
-    }
-
-    // Experience filter
-    if (newFilters.experience !== null) {
-      filtered = filtered.filter(
-        (p) => p.yearsOfExperience >= newFilters.experience!
+        (provider) => provider.distance !== undefined && provider.distance <= activeFilters.radius
       );
     }
 
-    // Sort
-    switch (newFilters.sortBy) {
+    if (activeFilters.experience !== null) {
+      filtered = filtered.filter(
+        (provider) => provider.yearsOfExperience >= activeFilters.experience!
+      );
+    }
+
+    switch (activeFilters.sortBy) {
       case 'rating':
         filtered.sort((a, b) => b.rating - a.rating);
         break;
@@ -201,18 +220,31 @@ export default function ServicesPageClient() {
         filtered.sort((a, b) => b.yearsOfExperience - a.yearsOfExperience);
         break;
       case 'price':
-        filtered.sort(
-          (a, b) => (a.minPrice || 0) - (b.minPrice || 0)
-        );
+        filtered.sort((a, b) => (a.minPrice || 0) - (b.minPrice || 0));
         break;
       case 'distance':
-        filtered.sort(
-          (a, b) => (a.distance || Infinity) - (b.distance || Infinity)
-        );
+        filtered.sort((a, b) => (a.distance || Infinity) - (b.distance || Infinity));
+        break;
+      default:
         break;
     }
 
-    setFilteredProviders(filtered);
+    return filtered;
+  };
+
+  useEffect(() => {
+    setFilteredProviders(applyFilters(allProviders, filters, searchQuery));
+    setShowMap(filters.radius > 0 && Boolean(userLocation));
+  }, [allProviders, filters, searchQuery, locationLat, locationLng]);
+
+  // Handle filters change
+  const handleFiltersChange = (newFilters: FiltersState) => {
+    setFilters(newFilters);
+    goTo(1);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
     goTo(1);
   };
 
@@ -229,13 +261,6 @@ export default function ServicesPageClient() {
       {/* Header */}
       <Header />
 
-      {/* Page Title & Summary */}
-      <SearchHeader
-        searchQuery={searchQuery}
-        location={location}
-        totalResults={filteredProviders.length}
-      />
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col lg:flex-row gap-8 py-8">
         {/* Left Column */}
@@ -243,7 +268,8 @@ export default function ServicesPageClient() {
           {/* Filters */}
           <SearchFilters
             searchQuery={searchQuery}
-            location={location}
+            canUseRadius={Boolean(userLocation)}
+            onSearchChange={handleSearchChange}
             onFiltersChange={handleFiltersChange}
             onRadiusChange={handleRadiusChange}
           />
@@ -343,7 +369,7 @@ export default function ServicesPageClient() {
             className="w-full lg:w-2/5 h-[600px] lg:h-auto lg:sticky lg:top-24"
           >
             <SearchMap
-              location={location}
+              location="Current Location"
               providers={filteredProviders.map((p) => ({
                 id: p.id,
                 userId: p.userId,
