@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Bell, MessageCircle, User, LogOut, Settings } from 'lucide-react';
+import { Bell, MessageCircle, User, LogOut, Settings, LocateFixed, Navigation } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useNotifications } from '@/hooks/useNotifications';
 
@@ -16,20 +16,93 @@ interface ProviderData {
   };
 }
 
+type LocationMode = 'current' | 'default';
+
+interface LocationState {
+  lat: number;
+  lng: number;
+  updatedAt?: string;
+}
+
+const LOCATION_MODE_STORAGE_KEY = 'provider-location-mode';
+const LOCATION_SYNC_INTERVAL_MS = 15000;
+
 export const ProviderDashboardHeader: React.FC = () => {
   const router = useRouter();
   const [provider, setProvider] = useState<ProviderData | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [locationMode, setLocationMode] = useState<LocationMode>('current');
+  const [locationModeHydrated, setLocationModeHydrated] = useState(false);
+  const [hasDefaultLocation, setHasDefaultLocation] = useState(false);
+  const [lastKnownLocation, setLastKnownLocation] = useState<LocationState | null>(null);
+  const [locationMessage, setLocationMessage] = useState('Location sync idle');
+  const [locationSyncing, setLocationSyncing] = useState(false);
   const { notifications, markAsRead } = useNotifications();
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
+  const watchIdRef = useRef<number | null>(null);
+  const lastSyncRef = useRef<number>(0);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   useEffect(() => {
     fetchProviderData();
+    fetchLocationState();
+
+    if (typeof window !== 'undefined') {
+      const savedMode = window.localStorage.getItem(LOCATION_MODE_STORAGE_KEY);
+      if (savedMode === 'current' || savedMode === 'default') {
+        setLocationMode(savedMode);
+      }
+    }
+
+    setLocationModeHydrated(true);
   }, []);
+
+  useEffect(() => {
+    return () => {
+      stopLocationTracking();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!locationModeHydrated) return;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopLocationTracking();
+        setLocationMessage('App inactive. Keeping last known location.');
+        return;
+      }
+
+      if (locationMode === 'current') {
+        startCurrentLocationTracking();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [locationMode, locationModeHydrated]);
+
+  useEffect(() => {
+    if (!locationModeHydrated) return;
+
+    if (locationMode === 'current') {
+      startCurrentLocationTracking();
+      return;
+    }
+
+    stopLocationTracking();
+  }, [locationMode, locationModeHydrated]);
+
+  useEffect(() => {
+    if (!locationModeHydrated) return;
+    if (locationMode !== 'default') return;
+    if (!hasDefaultLocation) return;
+
+    void applyDefaultLocation();
+  }, [locationMode, hasDefaultLocation, locationModeHydrated]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -45,6 +118,219 @@ export const ProviderDashboardHeader: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const persistMode = (mode: LocationMode) => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(LOCATION_MODE_STORAGE_KEY, mode);
+  };
+
+  const stopLocationTracking = () => {
+    if (watchIdRef.current !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+  };
+
+  const fetchLocationState = async () => {
+    try {
+      const response = await fetch('/api/provider/location');
+      if (!response.ok) return;
+
+      const data = await response.json();
+      setHasDefaultLocation(Boolean(data.hasDefaultLocation));
+
+      if (data.lastKnownLocation) {
+        setLastKnownLocation({
+          lat: Number(data.lastKnownLocation.lat),
+          lng: Number(data.lastKnownLocation.lng),
+          updatedAt: data.lastKnownLocation.updatedAt,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch provider location state:', error);
+    }
+  };
+
+  const syncCurrentLocation = async (lat: number, lng: number) => {
+    const now = Date.now();
+    if (now - lastSyncRef.current < LOCATION_SYNC_INTERVAL_MS) {
+      return;
+    }
+
+    try {
+      setLocationSyncing(true);
+
+      const response = await fetch('/api/provider/location', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update-current', lat, lng }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to sync current location');
+      }
+
+      const data = await response.json();
+      lastSyncRef.current = now;
+
+      if (data.lastKnownLocation) {
+        setLastKnownLocation({
+          lat: Number(data.lastKnownLocation.lat),
+          lng: Number(data.lastKnownLocation.lng),
+          updatedAt: data.lastKnownLocation.updatedAt,
+        });
+      }
+
+      setLocationMessage('Live location syncing while dashboard is active.');
+    } catch (error) {
+      setLocationMessage('Unable to sync live location. Keeping last known location.');
+    } finally {
+      setLocationSyncing(false);
+    }
+  };
+
+  const startCurrentLocationTracking = () => {
+    if (document.hidden) return;
+
+    if (!navigator.geolocation) {
+      setLocationMessage('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    stopLocationTracking();
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        void syncCurrentLocation(position.coords.latitude, position.coords.longitude);
+      },
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          setLocationMessage('Location permission denied. Using last known location.');
+          return;
+        }
+        setLocationMessage('Unable to get current location. Using last known location.');
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 5000,
+        timeout: 12000,
+      }
+    );
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (position) => {
+        void syncCurrentLocation(position.coords.latitude, position.coords.longitude);
+      },
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          setLocationMessage('Location permission denied. Using last known location.');
+          stopLocationTracking();
+          return;
+        }
+        setLocationMessage('Live tracking interrupted. Using last known location.');
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 5000,
+        timeout: 12000,
+      }
+    );
+  };
+
+  const applyDefaultLocation = async () => {
+    try {
+      setLocationSyncing(true);
+      const response = await fetch('/api/provider/location', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'use-default' }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Default location is not configured');
+      }
+
+      if (data.lastKnownLocation) {
+        setLastKnownLocation({
+          lat: Number(data.lastKnownLocation.lat),
+          lng: Number(data.lastKnownLocation.lng),
+          updatedAt: data.lastKnownLocation.updatedAt,
+        });
+      }
+
+      setLocationMessage('Using default location.');
+    } catch (error: any) {
+      setLocationMessage(error.message || 'Failed to switch to default location.');
+    } finally {
+      setLocationSyncing(false);
+    }
+  };
+
+  const handleSetDefaultLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationMessage('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    setLocationSyncing(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+
+          const response = await fetch('/api/provider/location', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'set-default', lat, lng }),
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to save default location');
+          }
+
+          setHasDefaultLocation(true);
+          setLocationMessage('Default location saved. Switched to default mode.');
+          setLocationMode('default');
+          persistMode('default');
+        } catch (error: any) {
+          setLocationMessage(error.message || 'Failed to save default location.');
+        } finally {
+          setLocationSyncing(false);
+        }
+      },
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          setLocationMessage('Permission denied. Cannot set default location.');
+        } else {
+          setLocationMessage('Unable to get location for default setup.');
+        }
+        setLocationSyncing(false);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 12000,
+      }
+    );
+  };
+
+  const handleCurrentMode = () => {
+    setLocationMode('current');
+    persistMode('current');
+  };
+
+  const handleDefaultMode = () => {
+    if (!hasDefaultLocation) {
+      handleSetDefaultLocation();
+      return;
+    }
+
+    setLocationMode('default');
+    persistMode('default');
+  };
 
   const fetchProviderData = async () => {
     try {
@@ -100,15 +386,67 @@ export const ProviderDashboardHeader: React.FC = () => {
     }
   };
 
+  const getLastKnownTimeLabel = () => {
+    if (!lastKnownLocation?.updatedAt) return 'Last known location unavailable';
+    return `Last known updated ${new Date(lastKnownLocation.updatedAt).toLocaleTimeString()}`;
+  };
+
   return (
     <header className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-40">
-      <div className="flex items-center justify-between px-6 py-4">
+      <div className="flex items-center justify-between gap-5 px-6 py-4">
         {/* Left: Dashboard Title */}
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Provider Dashboard</h1>
           <p className="text-sm text-slate-500 mt-0.5">
             {provider?.businessName || (provider?.user ? `${provider.user.firstName} ${provider.user.lastName}` : 'Loading...')}
           </p>
+        </div>
+
+        {/* Middle: Location Mode Controls */}
+        <div className="hidden md:flex flex-1 max-w-3xl items-center justify-center gap-3">
+          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1">
+            <button
+              onClick={handleCurrentMode}
+              className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                locationMode === 'current'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:bg-white'
+              }`}
+              title="Use live location while dashboard is active"
+            >
+              <LocateFixed className="w-3.5 h-3.5" />
+              Use My Current Location
+            </button>
+
+            <button
+              onClick={handleDefaultMode}
+              className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                locationMode === 'default'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:bg-white'
+              }`}
+              title={
+                hasDefaultLocation
+                  ? 'Use saved default location'
+                  : 'Set your current position as default location'
+              }
+            >
+              <Navigation className="w-3.5 h-3.5" />
+              {hasDefaultLocation ? 'Use Default Location' : 'Set Default Location'}
+            </button>
+          </div>
+
+          <div className="min-w-[280px] rounded-xl border border-slate-200 bg-white px-3 py-2">
+            <p className="text-xs font-semibold text-slate-700">
+              {locationSyncing ? 'Syncing location...' : locationMessage}
+            </p>
+            <p className="mt-0.5 text-[11px] text-slate-500">{getLastKnownTimeLabel()}</p>
+            {!hasDefaultLocation && (
+              <p className="mt-0.5 text-[11px] text-slate-500">
+                Set default location only when you are at your regular service base.
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Right: Actions */}

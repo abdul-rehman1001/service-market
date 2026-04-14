@@ -6,6 +6,7 @@ import { setTokenCookie } from '@/lib/cookies';
 import { sendEmail } from '@/lib/email';
 import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
+import { geocodeAddress } from '@/lib/geocoding';
 
 export async function POST(req: NextRequest) {
   const { name, email, password, role, profileImage, phone, address } = await req.json();
@@ -44,8 +45,23 @@ export async function POST(req: NextRequest) {
   const firstName = nameParts[0];
   const lastName = nameParts.slice(1).join(' ') || '';
 
-  const defaultLongitude = new Prisma.Decimal(0);
-  const defaultLatitude = new Prisma.Decimal(0);
+  let resolvedAddress = normalizedAddress;
+  let resolvedLongitude = 0;
+  let resolvedLatitude = 0;
+
+  if (role === 'PROVIDER') {
+    try {
+      const geocodeData = await geocodeAddress(normalizedAddress);
+      resolvedAddress = geocodeData.formatted_address;
+      resolvedLongitude = geocodeData.longitude;
+      resolvedLatitude = geocodeData.latitude;
+    } catch (error: any) {
+      return NextResponse.json(
+        { error: error?.message || 'Unable to geocode provider address' },
+        { status: 400 }
+      );
+    }
+  }
 
   // Create user with UNVERIFIED status (stays UNVERIFIED until all verifications done)
   const user = await prisma.user.create({
@@ -57,9 +73,9 @@ export async function POST(req: NextRequest) {
       role,
       profileImage: profileImage || null,
       phone,
-      address: normalizedAddress,
-      longitude: defaultLongitude,
-      latitude: defaultLatitude,
+      address: resolvedAddress,
+      longitude: new Prisma.Decimal(resolvedLongitude),
+      latitude: new Prisma.Decimal(resolvedLatitude),
       status: 'UNVERIFIED', // Will be set to ACTIVE after email + phone verification
     },
   });
@@ -72,9 +88,9 @@ export async function POST(req: NextRequest) {
         yearsOfExperience: 0,
         cnic: null,
         verificationStatus: 'PENDING',
-        baseAddress: normalizedAddress,
-        longitude: defaultLongitude,
-        latitude: defaultLatitude,
+        baseAddress: resolvedAddress,
+        longitude: new Prisma.Decimal(resolvedLongitude),
+        latitude: new Prisma.Decimal(resolvedLatitude),
       };
 
       await prisma.serviceProvider.create({

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
+import { geocodeAddress } from '@/lib/geocoding';
 
 // GET - Fetch current user profile
 export async function GET(req: NextRequest) {
@@ -79,36 +81,83 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Update user profile (excluding email and phone - these cannot be updated)
-    const updatedUser = await prisma.user.update({
-      where: { id: decoded.userId },
-      data: {
+    const normalizedAddress = typeof address === 'string' ? address.trim() : '';
+    let resolvedAddress = normalizedAddress;
+    let resolvedLongitude: number | null = null;
+    let resolvedLatitude: number | null = null;
+
+    if (decoded.role === 'PROVIDER') {
+      if (!normalizedAddress) {
+        return NextResponse.json(
+          { error: 'Address is required for providers' },
+          { status: 400 }
+        );
+      }
+
+      try {
+        const geocodeData = await geocodeAddress(normalizedAddress);
+        resolvedAddress = geocodeData.formatted_address;
+        resolvedLongitude = geocodeData.longitude;
+        resolvedLatitude = geocodeData.latitude;
+      } catch (error: any) {
+        return NextResponse.json(
+          { error: error?.message || 'Unable to geocode provider address' },
+          { status: 400 }
+        );
+      }
+    }
+
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      const userData: any = {
         firstName,
         lastName,
         city: city || null,
-        address: address || null,
+        address: resolvedAddress || null,
         bio: bio || null,
         profileImage: profileImage || null,
-      },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        phone: true,
-        role: true,
-        status: true,
-        city: true,
-        address: true,
-        profileImage: true,
-        bio: true,
-        emailVerified: true,
-        emailVerifiedAt: true,
-        phoneVerified: true,
-        phoneVerifiedAt: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      };
+
+      if (decoded.role === 'PROVIDER' && resolvedLongitude !== null && resolvedLatitude !== null) {
+        userData.longitude = new Prisma.Decimal(resolvedLongitude);
+        userData.latitude = new Prisma.Decimal(resolvedLatitude);
+      }
+
+      const user = await tx.user.update({
+        where: { id: decoded.userId },
+        data: userData,
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          phone: true,
+          role: true,
+          status: true,
+          city: true,
+          address: true,
+          profileImage: true,
+          bio: true,
+          emailVerified: true,
+          emailVerifiedAt: true,
+          phoneVerified: true,
+          phoneVerifiedAt: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      if (decoded.role === 'PROVIDER' && resolvedLongitude !== null && resolvedLatitude !== null) {
+        await tx.serviceProvider.updateMany({
+          where: { userId: decoded.userId },
+          data: {
+            baseAddress: resolvedAddress,
+            longitude: new Prisma.Decimal(resolvedLongitude),
+            latitude: new Prisma.Decimal(resolvedLatitude),
+          },
+        });
+      }
+
+      return user;
     });
 
     return NextResponse.json(
