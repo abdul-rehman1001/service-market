@@ -11,6 +11,7 @@ interface UserData {
   firstName: string;
   lastName: string;
   profileImage?: string;
+  role?: string;
 }
 
 export default function Header() {
@@ -32,6 +33,7 @@ export default function Header() {
             firstName: data.user.firstName,
             lastName: data.user.lastName,
             profileImage: data.user.profileImage,
+            role: data.user.role,
           });
         }
       })
@@ -49,12 +51,20 @@ export default function Header() {
     }
   };
 
-  const navItems = [
-    { label: "Home", href: "/home" },
-    { label: "Services", href: "/services" },
-    { label: "My Bookings", href: "/bookings" },
-    { label: "Messages", href: "/messages" },
-  ];
+  const navItems =
+    user?.role === 'PROVIDER'
+      ? [
+          { label: 'Home', href: '/home' },
+          { label: 'Services', href: '/services' },
+          { label: 'Messages', href: '/messages' },
+          { label: 'Dashboard', href: '/provider/dashboard' },
+        ]
+      : [
+          { label: 'Home', href: '/home' },
+          { label: 'Services', href: '/services' },
+          { label: 'My Bookings', href: '/bookings' },
+          { label: 'Messages', href: '/messages' },
+        ];
 
   return (
     <header className="w-full bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">

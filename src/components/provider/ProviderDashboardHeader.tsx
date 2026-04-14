@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Bell, MessageCircle, User, LogOut, Settings, LocateFixed, Navigation } from 'lucide-react';
+import { Bell, MessageCircle, User, LogOut, Settings, LocateFixed, Navigation, House } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useNotifications } from '@/hooks/useNotifications';
 
@@ -27,7 +27,13 @@ interface LocationState {
 const LOCATION_MODE_STORAGE_KEY = 'provider-location-mode';
 const LOCATION_SYNC_INTERVAL_MS = 15000;
 
-export const ProviderDashboardHeader: React.FC = () => {
+interface ProviderDashboardHeaderProps {
+  onOpenMessages?: () => void;
+}
+
+export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = ({
+  onOpenMessages,
+}) => {
   const router = useRouter();
   const [provider, setProvider] = useState<ProviderData | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -362,6 +368,15 @@ export const ProviderDashboardHeader: React.FC = () => {
     router.push('/notifications');
   };
 
+  const handleMessagesClick = () => {
+    if (onOpenMessages) {
+      onOpenMessages();
+      return;
+    }
+
+    router.push('/messages');
+  };
+
   const getNotificationMessage = (notification: any) => {
     const type = notification.type;
     const booking = notification.booking;
@@ -451,6 +466,15 @@ export const ProviderDashboardHeader: React.FC = () => {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-4">
+          <Link
+            href="/home"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors sm:px-3"
+            title="Open marketplace home"
+          >
+            <House className="w-4 h-4" />
+            <span className="hidden sm:inline">Home</span>
+          </Link>
+
           {/* Notification Bell */}
           <div className="relative" ref={notificationRef}>
             <button
@@ -514,13 +538,14 @@ export const ProviderDashboardHeader: React.FC = () => {
           </div>
 
           {/* Messages/Chat */}
-          <Link
-            href="/messages"
+          <button
+            onClick={handleMessagesClick}
             className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
             title="Messages"
+            type="button"
           >
             <MessageCircle className="w-5 h-5 text-slate-600" />
-          </Link>
+          </button>
 
           {/* Profile Dropdown */}
           <div className="relative" ref={profileMenuRef}>

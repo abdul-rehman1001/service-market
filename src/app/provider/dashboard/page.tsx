@@ -10,18 +10,27 @@ import { ReviewsPanel } from '@/components/provider/ReviewsPanel';
 import { AvailabilityPanel } from '@/components/provider/AvailabilityPanel';
 import { BookingRequestsPanel } from '@/components/provider/BookingRequestsPanel';
 import { DocumentManagementPanel } from '@/components/provider/DocumentManagementPanel';
+import { ChatPanel } from '@/components/provider/ChatPanel';
+
+type ProviderDashboardTab =
+  | 'services'
+  | 'analytics'
+  | 'work-history'
+  | 'reviews'
+  | 'availability'
+  | 'bookings'
+  | 'documents'
+  | 'messages';
 
 export default function ProviderDashboardPage() {
-  const [activeTab, setActiveTab] = useState<
-    'services' | 'analytics' | 'work-history' | 'reviews' | 'availability' | 'bookings' | 'documents'
-  >('services');
+  const [activeTab, setActiveTab] = useState<ProviderDashboardTab>('services');
 
   
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Header */}
-      <ProviderDashboardHeader />
+      <ProviderDashboardHeader onOpenMessages={() => setActiveTab('messages')} />
       
       {/* Main Dashboard */}
       <div className="flex flex-1">
@@ -35,6 +44,7 @@ export default function ProviderDashboardPage() {
           {activeTab === 'availability' && <AvailabilityPanel />}
           {activeTab === 'bookings' && <BookingRequestsPanel />}
           {activeTab === 'documents' && <DocumentManagementPanel />}
+          {activeTab === 'messages' && <ChatPanel />}
         </main>
       </div>
     </div>

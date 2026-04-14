@@ -2,7 +2,7 @@
 
 interface DashboardSidebarProps {
   activeTab: string;
-  setActiveTab: (tab: any) => void;
+  setActiveTab: (tab: string) => void;
 }
 
 export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
@@ -16,6 +16,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     { key: 'reviews', label: 'Reviews' },
     { key: 'availability', label: 'Availability' },
     { key: 'bookings', label: 'Booking Requests' },
+    { key: 'messages', label: 'Messages' },
     { key: 'documents', label: 'Documents' },
   ];
 
