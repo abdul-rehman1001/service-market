@@ -5,6 +5,7 @@ import SearchSection from "@/components/home/SearchSection";
 import Categories from "@/components/home/Categories";
 import FeaturedProviders from "@/components/home/providers/FeaturedProviders";
 import Footer from "@/components/layout/Footer";
+import { useUserLocation } from "@/hooks/useUserLocation";
 
 type AiFilterState = {
   active: boolean;
@@ -20,6 +21,8 @@ export default function HomePage() {
     categoryId: null,
     categoryName: null,
   });
+
+  const { location, status, error } = useUserLocation({ requestOnMount: true });
 
   // Auto-scroll to providers section whenever a provider filter is applied.
   useEffect(() => {
@@ -106,11 +109,19 @@ export default function HomePage() {
         );
       }} />
 
+      {(status === "denied" || status === "error" || status === "unsupported") && (
+        <div className="mx-auto mt-4 max-w-7xl px-6">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {error || "Location is unavailable. Nearby ranking may be less accurate."}
+          </div>
+        </div>
+      )}
+
       {/* Hide Categories when AI search is driving the filter */}
       {!aiFilter.active && <Categories />}
 
       <div id="providers-section">
-        <FeaturedProviders />
+        <FeaturedProviders userLocation={location ? { lat: location.lat, lng: location.lng } : null} />
       </div>
       
       <Footer />

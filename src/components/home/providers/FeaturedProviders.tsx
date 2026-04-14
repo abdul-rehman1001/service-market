@@ -6,6 +6,10 @@ import ProvidersHeader from "./ProvidersHeader";
 import ProvidersGrid from "./ProvidersGrid";
 import ProvidersEmptyState from "./ProvidersEmptyState";
 import { Provider } from "./types";
+import {
+  appendUserCoordinatesToParams,
+  getStoredUserCoordinates,
+} from "@/lib/location/clientLocation";
 
 type Pagination = {
   page: number;
@@ -14,12 +18,16 @@ type Pagination = {
   hasMore: boolean;
 };
 
-export default function FeaturedProviders() {
+interface FeaturedProvidersProps {
+  userLocation?: { lat: number; lng: number } | null;
+}
+
+export default function FeaturedProviders({ userLocation }: FeaturedProvidersProps) {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [fallbackLocation, setFallbackLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const [active, setActive] = useState<{
     category: string | null;
@@ -42,6 +50,8 @@ export default function FeaturedProviders() {
     hasMore: false,
   });
 
+  const effectiveLocation = userLocation || fallbackLocation;
+
   const fetchProviders = async (opts?: {
     page?: number;
     categoryId?: string | null;
@@ -63,10 +73,7 @@ export default function FeaturedProviders() {
       // Only AI-driven searches use combined scoring (price + distance + rating + experience)
       if (source === "ai") {
         params.set("sort", "combined");
-        if (userLocation) {
-          params.set("userLat", String(userLocation.lat));
-          params.set("userLng", String(userLocation.lng));
-        }
+        appendUserCoordinatesToParams(params, effectiveLocation);
       }
 
       const response = await fetch(`/api/providers/top-rated?${params.toString()}`);
@@ -95,28 +102,22 @@ export default function FeaturedProviders() {
   };
 
   useEffect(() => {
-    // Capture user location for distance-based ranking (used only for AI search)
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-      },
-      () => {
-        // Ignore location errors; ranking will fall back without distance.
-      },
-      { enableHighAccuracy: false, maximumAge: 60_000, timeout: 8_000 }
-    );
+    // Use cached coordinates if available while waiting for home page location hook.
+    const cached = getStoredUserCoordinates(30 * 60_000);
+    if (cached) {
+      setFallbackLocation({ lat: cached.lat, lng: cached.lng });
+    }
   }, []);
 
   // If AI filtering is active and location arrives after the initial fetch,
   // refetch so distance participates in the combined ranking.
   useEffect(() => {
-    if (!userLocation) return;
+    if (!effectiveLocation) return;
     if (active.source !== "ai") return;
     if (!active.categoryId) return;
     fetchProviders({ page: pagination.page || 1, categoryId: active.categoryId, source: "ai" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userLocation?.lat, userLocation?.lng]);
+  }, [effectiveLocation?.lat, effectiveLocation?.lng]);
 
   useEffect(() => {
     // Initial load (unfiltered)
