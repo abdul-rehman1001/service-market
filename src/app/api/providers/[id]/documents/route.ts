@@ -133,6 +133,17 @@ export async function POST(
     const validatedDocumentType = documentType as typeof VALID_DOCUMENT_TYPES[number];
     const validatedStatus = 'PENDING' as typeof VALID_DOCUMENT_STATUS[number];
 
+    // Enforce CNIC as a paired verification request.
+    if (validatedDocumentType === 'CNIC_FRONT' || validatedDocumentType === 'CNIC_BACK') {
+      return NextResponse.json(
+        {
+          error:
+            'Submit CNIC front and back together using the CNIC verification request form.',
+        },
+        { status: 400 }
+      );
+    }
+
     // Validate file size limit (5MB for all images)
     const maxSize = 5 * 1024 * 1024; // 5MB
 
@@ -182,29 +193,10 @@ export async function POST(
 
     // ========== CNIC VALIDATION ==========
 
-    if (
-      (validatedDocumentType === 'CNIC_FRONT' || validatedDocumentType === 'CNIC_BACK') &&
-      cnicNumber
-    ) {
+    if (cnicNumber) {
       const cnicValidation = validateCNIC(cnicNumber);
       if (!cnicValidation.isValid) {
-        return NextResponse.json(
-          { error: cnicValidation.error },
-          { status: 400 }
-        );
-      }
-
-      // Update provider CNIC if different
-      if (provider.cnic !== cnicNumber) {
-        try {
-          await prisma.serviceProvider.update({
-            where: { id: providerId },
-            data: { cnic: cnicNumber },
-          });
-        } catch (err) {
-          console.error('Error updating CNIC:', err);
-          // Continue anyway - document can still be saved
-        }
+        return NextResponse.json({ error: cnicValidation.error }, { status: 400 });
       }
     }
 
@@ -252,19 +244,7 @@ export async function POST(
       );
     }
 
-    // ========== UPDATE VERIFICATION STATUS ==========
-
-    try {
-      await prisma.serviceProvider.update({
-        where: { id: providerId },
-        data: {
-          verificationStatus: 'PENDING',
-        },
-      });
-    } catch (err) {
-      console.error('Error updating verification status:', err);
-      // Continue anyway - document was already saved
-    }
+    // Supporting docs do not alter provider verification status.
 
     return NextResponse.json(
       {

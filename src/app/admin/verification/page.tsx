@@ -22,6 +22,7 @@ interface VerificationRequest {
   userId: string;
   businessName?: string;
   cnic: string;
+  cnicRequestReady: boolean;
   yearsOfExperience: number;
   verificationStatus: string;
   createdAt: string;
@@ -350,10 +351,17 @@ export default function VerificationRequestsPage() {
 
                 {/* Action Buttons */}
                 {request.verificationStatus === 'PENDING' && (
-                  <div className="flex gap-4 mt-6 pt-6 border-t border-gray-200">
+                  <div className="mt-6 pt-6 border-t border-gray-200 space-y-3">
+                    {!request.cnicRequestReady && (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                        Approval is disabled until provider submits both CNIC Front and CNIC Back in pending status.
+                      </div>
+                    )}
+
+                    <div className="flex gap-4">
                     <button
                       onClick={() => handleApprove(request.id)}
-                      disabled={processing === request.id}
+                      disabled={processing === request.id || !request.cnicRequestReady}
                       className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
                     >
                       {processing === request.id ? (
@@ -371,6 +379,7 @@ export default function VerificationRequestsPage() {
                       <XCircle className="w-5 h-5" />
                       Reject
                     </button>
+                    </div>
                   </div>
                 )}
               </div>

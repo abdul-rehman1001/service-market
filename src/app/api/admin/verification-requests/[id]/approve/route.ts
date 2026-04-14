@@ -52,6 +52,23 @@ export async function POST(
       );
     }
 
+    const pendingCnicFront = provider.documents.find(
+      (doc) => doc.documentType === 'CNIC_FRONT' && doc.status === 'PENDING'
+    );
+    const pendingCnicBack = provider.documents.find(
+      (doc) => doc.documentType === 'CNIC_BACK' && doc.status === 'PENDING'
+    );
+
+    if (!pendingCnicFront || !pendingCnicBack) {
+      return NextResponse.json(
+        {
+          error:
+            'Cannot approve provider verification until both CNIC front and CNIC back are submitted in pending status.',
+        },
+        { status: 400 }
+      );
+    }
+
     // Update provider verification status
     await prisma.serviceProvider.update({
       where: { id: providerId },

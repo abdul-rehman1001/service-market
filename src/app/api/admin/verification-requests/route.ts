@@ -55,17 +55,27 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(
       {
-        verificationRequests: verificationRequests.map((provider) => ({
-          id: provider.id,
-          userId: provider.userId,
-          businessName: provider.businessName,
-          cnic: provider.cnic,
-          yearsOfExperience: provider.yearsOfExperience,
-          verificationStatus: provider.verificationStatus,
-          createdAt: provider.createdAt,
-          user: provider.user,
-          documents: provider.documents,
-        })),
+        verificationRequests: verificationRequests.map((provider) => {
+          const hasPendingCnicFront = provider.documents.some(
+            (doc) => doc.documentType === 'CNIC_FRONT' && doc.status === 'PENDING'
+          );
+          const hasPendingCnicBack = provider.documents.some(
+            (doc) => doc.documentType === 'CNIC_BACK' && doc.status === 'PENDING'
+          );
+
+          return {
+            id: provider.id,
+            userId: provider.userId,
+            businessName: provider.businessName,
+            cnic: provider.cnic,
+            yearsOfExperience: provider.yearsOfExperience,
+            verificationStatus: provider.verificationStatus,
+            createdAt: provider.createdAt,
+            user: provider.user,
+            documents: provider.documents,
+            cnicRequestReady: hasPendingCnicFront && hasPendingCnicBack,
+          };
+        }),
       },
       { status: 200 }
     );
