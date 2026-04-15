@@ -2,11 +2,19 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Button from "../../ui/Button";
 import { ArrowRight, Menu, Sparkles, X } from "lucide-react";
 
 export default function LandingHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+
+  const isInfoPage =
+    pathname === "/landing/about" ||
+    pathname === "/landing/faq" ||
+    pathname === "/landing/terms" ||
+    pathname === "/landing/privacy";
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
@@ -23,11 +31,13 @@ export default function LandingHeader() {
           </div>
         </Link>
 
-        <nav className="hidden items-center gap-7 text-sm font-medium text-slate-600 md:flex">
-          <Link href="/landing#features" className="transition hover:text-emerald-700">Features</Link>
-          <Link href="/landing#how-it-works" className="transition hover:text-emerald-700">How It Works</Link>
-          <Link href="/landing#testimonials" className="transition hover:text-emerald-700">Testimonials</Link>
-        </nav>
+        {!isInfoPage && (
+          <nav className="hidden items-center gap-7 text-sm font-medium text-slate-600 md:flex">
+            <Link href="/landing#features" className="transition hover:text-emerald-700">Features</Link>
+            <Link href="/landing#how-it-works" className="transition hover:text-emerald-700">How It Works</Link>
+            <Link href="/landing#testimonials" className="transition hover:text-emerald-700">Testimonials</Link>
+          </nav>
+        )}
 
         <div className="hidden items-center gap-3 md:flex">
           <Button
@@ -46,17 +56,19 @@ export default function LandingHeader() {
           </Button>
         </div>
 
-        <button
-          type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 transition hover:bg-slate-100 md:hidden"
-          aria-label={mobileOpen ? "Close menu" : "Open menu"}
-          onClick={() => setMobileOpen((prev) => !prev)}
-        >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        {!isInfoPage && (
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 transition hover:bg-slate-100 md:hidden"
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            onClick={() => setMobileOpen((prev) => !prev)}
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        )}
       </div>
 
-      {mobileOpen && (
+      {!isInfoPage && mobileOpen && (
         <div className="border-t border-slate-200 bg-white md:hidden">
           <nav className="mx-auto max-w-7xl space-y-1 px-4 py-4 sm:px-6">
             <Link href="/landing#features" onClick={() => setMobileOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Features</Link>

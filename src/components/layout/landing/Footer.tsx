@@ -34,8 +34,8 @@ export default function LandingFooter() {
           <div>
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">Company</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link href="/about" className="text-slate-400 transition hover:text-emerald-300">About</Link></li>
-              <li><Link href="/faq" className="text-slate-400 transition hover:text-emerald-300">FAQ</Link></li>
+              <li><Link href="/landing/about" className="text-slate-400 transition hover:text-emerald-300">About</Link></li>
+              <li><Link href="/landing/faq" className="text-slate-400 transition hover:text-emerald-300">FAQ</Link></li>
               <li><Link href="/login" className="text-slate-400 transition hover:text-emerald-300">Login</Link></li>
               <li><Link href="/register" className="text-slate-400 transition hover:text-emerald-300">Create Account</Link></li>
             </ul>
@@ -44,8 +44,8 @@ export default function LandingFooter() {
           <div>
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">Legal</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link href="/terms" className="text-slate-400 transition hover:text-emerald-300">Terms of Service</Link></li>
-              <li><Link href="/privacy" className="text-slate-400 transition hover:text-emerald-300">Privacy Policy</Link></li>
+              <li><Link href="/landing/terms" className="text-slate-400 transition hover:text-emerald-300">Terms of Service</Link></li>
+              <li><Link href="/landing/privacy" className="text-slate-400 transition hover:text-emerald-300">Privacy Policy</Link></li>
               <li><Link href="/landing#testimonials" className="text-slate-400 transition hover:text-emerald-300">Customer Stories</Link></li>
             </ul>
           </div>
