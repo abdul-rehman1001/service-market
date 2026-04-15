@@ -7,6 +7,15 @@ import AuthCard from '@/components/auth/AuthCard';
 import Input from '@/components/auth/Input';
 import PasswordInput from '@/components/auth/PasswordInput';
 import ImageUploader from '@/components/auth/ImageUploader';
+import {
+  getPasswordRuleStatus,
+  validateEmail,
+  validatePassword,
+} from '@/lib/validation/authValidation';
+
+type AuthField = 'email' | 'password';
+type FieldErrors = Partial<Record<AuthField, string>>;
+type TouchedFields = Record<AuthField, boolean>;
 
 export default function RegisterProvider() {
   const router = useRouter();
@@ -20,9 +29,62 @@ export default function RegisterProvider() {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [touchedFields, setTouchedFields] = useState<TouchedFields>({
+    email: false,
+    password: false,
+  });
+
+  const validateEmailField = (emailValue: string, showRequired: boolean): string => {
+    const trimmedEmail = emailValue.trim();
+
+    if (!trimmedEmail && !showRequired) {
+      return '';
+    }
+
+    const validation = validateEmail(trimmedEmail);
+    return validation.isValid ? '' : validation.error || 'Enter a valid email address';
+  };
+
+  const validatePasswordField = (passwordValue: string, showRequired: boolean): string => {
+    if (!passwordValue && !showRequired) {
+      return '';
+    }
+
+    const validation = validatePassword(passwordValue);
+    return validation.isValid
+      ? ''
+      : validation.error || 'Please choose a stronger password';
+  };
+
+  const updateFieldValidation = (field: AuthField, value: string, showRequired: boolean) => {
+    const nextError =
+      field === 'email'
+        ? validateEmailField(value, showRequired)
+        : validatePasswordField(value, showRequired);
+
+    setFieldErrors((prev) => ({ ...prev, [field]: nextError }));
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setForm({ ...form, [name]: value });
+
+    if (name === 'email' || name === 'password') {
+      updateFieldValidation(name, value, touchedFields[name]);
+    }
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    if (name !== 'email' && name !== 'password') {
+      return;
+    }
+
+    setTouchedFields((prev) => ({ ...prev, [name]: true }));
+    updateFieldValidation(name, value, true);
   };
 
   const handleImageUpload = (imageUrl: string) => {
@@ -32,6 +94,20 @@ export default function RegisterProvider() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const nextFieldErrors: FieldErrors = {
+      email: validateEmailField(form.email, true),
+      password: validatePasswordField(form.password, true),
+    };
+
+    setTouchedFields({ email: true, password: true });
+    setFieldErrors(nextFieldErrors);
+
+    if (nextFieldErrors.email || nextFieldErrors.password) {
+      setError('Please fix the highlighted fields before creating your account.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -66,7 +142,7 @@ export default function RegisterProvider() {
 
       // Redirect to email verification page with userId only
       router.push(`/verify-email-registration?userId=${data.user.id}`);
-    } catch (err) {
+    } catch {
       setError('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
@@ -97,8 +173,14 @@ export default function RegisterProvider() {
             type="email"
             value={form.email}
             onChange={handleChange}
+            onBlur={handleBlur}
+            autoComplete="email"
+            aria-invalid={Boolean(fieldErrors.email)}
             required
           />
+          {fieldErrors.email && (
+            <p className="-mt-2 text-sm text-red-600">{fieldErrors.email}</p>
+          )}
           <Input
             placeholder="Phone Number (e.g., +92300123456)"
             name="phone"
@@ -119,8 +201,35 @@ export default function RegisterProvider() {
             name="password"
             value={form.password}
             onChange={handleChange}
+            onBlur={handleBlur}
+            autoComplete="new-password"
+            aria-invalid={Boolean(fieldErrors.password)}
             required
           />
+          {fieldErrors.password && (
+            <p className="-mt-2 text-sm text-red-600">{fieldErrors.password}</p>
+          )}
+
+          <div className="rounded-xl border border-gray-200 bg-white p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">
+              Password requirements
+            </p>
+            <ul className="mt-2 space-y-1 text-xs">
+              {getPasswordRuleStatus(form.password).map((rule) => (
+                <li
+                  key={rule.key}
+                  className={rule.passed ? 'text-emerald-600' : 'text-gray-500'}
+                >
+                  <span
+                    className={`mr-2 inline-block h-1.5 w-1.5 rounded-full ${
+                      rule.passed ? 'bg-emerald-600' : 'bg-gray-400'
+                    }`}
+                  />
+                  {rule.label}
+                </li>
+              ))}
+            </ul>
+          </div>
 
           <button
             type="submit"

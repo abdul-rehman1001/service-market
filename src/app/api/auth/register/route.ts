@@ -7,12 +7,49 @@ import { sendEmail } from '@/lib/email';
 import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
 import { geocodeAddress } from '@/lib/geocoding';
+import {
+  normalizeEmail,
+  validateEmail,
+  validatePassword,
+} from '@/lib/validation/authValidation';
 
 export async function POST(req: NextRequest) {
-  const { name, email, password, role, profileImage, phone, address } = await req.json();
+  const body = await req.json();
+  const name = String(body.name ?? '').trim();
+  const email = normalizeEmail(String(body.email ?? ''));
+  const password = String(body.password ?? '');
+  const role = String(body.role ?? '').trim();
+  const profileImage = body.profileImage;
+  const phone = String(body.phone ?? '').trim();
+  const address = String(body.address ?? '').trim();
 
   if (!name || !email || !password || !role || !phone || !address) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  }
+
+  const emailValidation = validateEmail(email);
+  if (!emailValidation.isValid) {
+    return NextResponse.json(
+      { error: emailValidation.error || 'Invalid email address' },
+      { status: 400 }
+    );
+  }
+
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.isValid) {
+    return NextResponse.json(
+      { error: passwordValidation.error || 'Invalid password' },
+      { status: 400 }
+    );
+  }
+
+  // Validate role
+  const validRoles = ['SEEKER', 'PROVIDER'];
+  if (!validRoles.includes(role)) {
+    return NextResponse.json(
+      { error: 'Invalid role. Must be SEEKER or PROVIDER' },
+      { status: 400 }
+    );
   }
 
   const normalizedAddress = String(address).trim();
@@ -55,9 +92,14 @@ export async function POST(req: NextRequest) {
       resolvedAddress = geocodeData.formatted_address;
       resolvedLongitude = geocodeData.longitude;
       resolvedLatitude = geocodeData.latitude;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const geocodeErrorMessage =
+        error instanceof Error && error.message
+          ? error.message
+          : 'Unable to geocode provider address';
+
       return NextResponse.json(
-        { error: error?.message || 'Unable to geocode provider address' },
+        { error: geocodeErrorMessage },
         { status: 400 }
       );
     }
@@ -70,7 +112,7 @@ export async function POST(req: NextRequest) {
       lastName,
       email,
       password: hashedPassword,
-      role,
+      role: role as 'SEEKER' | 'PROVIDER',
       profileImage: profileImage || null,
       phone,
       address: resolvedAddress,
