@@ -1,9 +1,16 @@
 import admin from 'firebase-admin';
-import serviceAccount from './firebase-adminsdk.json';
 
-const projectId = process.env.FIREBASE_PROJECT_ID || serviceAccount.project_id;
-const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || serviceAccount.client_email;
-const privateKey = (process.env.FIREBASE_PRIVATE_KEY || serviceAccount.private_key).replace(/\\n/g, '\n');
+function getRequiredEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+const projectId = getRequiredEnv('FIREBASE_PROJECT_ID');
+const clientEmail = getRequiredEnv('FIREBASE_CLIENT_EMAIL');
+const privateKey = getRequiredEnv('FIREBASE_PRIVATE_KEY').replace(/\\n/g, '\n');
 
 
 const credential = admin.credential.cert({

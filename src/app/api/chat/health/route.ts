@@ -1,9 +1,49 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import admin from '@/lib/firebaseAdmin';
 
-export async function GET(req: NextRequest) {
+type HealthTestResult = {
+  status: 'OK' | 'FAIL';
+  [key: string]: unknown;
+};
+
+type HealthDiagnostics = {
+  timestamp: string;
+  tests: Record<string, HealthTestResult>;
+  serviceAccount?: {
+    source: 'environment-variables';
+    projectId: string | null;
+    clientEmail: string | null;
+    hasPrivateKey: boolean;
+  };
+  overallStatus?: 'HEALTHY' | 'UNHEALTHY';
+  failedTests?: string[];
+};
+
+function getErrorDetails(error: unknown): {
+  message: string;
+  code?: string;
+  details?: unknown;
+  stack?: string;
+} {
+  if (error instanceof Error) {
+    const possibleError = error as Error & { code?: string; details?: unknown };
+    return {
+      message: error.message,
+      code: possibleError.code,
+      details: possibleError.details,
+      stack: error.stack,
+    };
+  }
+
+  return {
+    message: 'Unknown error',
+    details: error,
+  };
+}
+
+export async function GET() {
   try {
-    const diagnostics: Record<string, any> = {
+    const diagnostics: HealthDiagnostics = {
       timestamp: new Date().toISOString(),
       tests: {},
     };
@@ -15,25 +55,27 @@ export async function GET(req: NextRequest) {
         status: 'OK',
         projectId: app.options.projectId,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorDetails = getErrorDetails(err);
       diagnostics.tests.adminInitialized = {
         status: 'FAIL',
-        error: err.message,
+        error: errorDetails.message,
       };
       return NextResponse.json(diagnostics, { status: 500 });
     }
 
     // Test 2: Get Firestore instance
-    let db;
+    let db: FirebaseFirestore.Firestore;
     try {
       db = admin.firestore();
       diagnostics.tests.firestoreInstance = {
         status: 'OK',
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorDetails = getErrorDetails(err);
       diagnostics.tests.firestoreInstance = {
         status: 'FAIL',
-        error: err.message,
+        error: errorDetails.message,
       };
       return NextResponse.json(diagnostics, { status: 500 });
     }
@@ -46,12 +88,13 @@ export async function GET(req: NextRequest) {
         status: 'OK',
         docExists: doc.exists,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorDetails = getErrorDetails(err);
       diagnostics.tests.firestoreRead = {
         status: 'FAIL',
-        error: err.message,
-        code: err.code,
-        details: err.details,
+        error: errorDetails.message,
+        code: errorDetails.code,
+        details: errorDetails.details,
       };
     }
 
@@ -68,12 +111,13 @@ export async function GET(req: NextRequest) {
       diagnostics.tests.firestoreWrite = {
         status: 'OK',
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorDetails = getErrorDetails(err);
       diagnostics.tests.firestoreWrite = {
         status: 'FAIL',
-        error: err.message,
-        code: err.code,
-        details: err.details,
+        error: errorDetails.message,
+        code: errorDetails.code,
+        details: errorDetails.details,
       };
     }
 
@@ -85,32 +129,26 @@ export async function GET(req: NextRequest) {
         collectionsFound: collections.length,
         collections: collections.map((c: FirebaseFirestore.CollectionReference) => c.id),
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorDetails = getErrorDetails(err);
       diagnostics.tests.firestoreListCollections = {
         status: 'FAIL',
-        error: err.message,
-        code: err.code,
+        error: errorDetails.message,
+        code: errorDetails.code,
       };
     }
 
-    // Test 6: Check service account from config
-    try {
-      const serviceAccount = require('@/lib/firebase-adminsdk.json');
-      diagnostics.serviceAccount = {
-        projectId: serviceAccount.project_id,
-        clientEmail: serviceAccount.client_email,
-        hasPrivateKey: !!serviceAccount.private_key,
-      };
-    } catch (err: any) {
-      diagnostics.serviceAccount = {
-        status: 'FAIL',
-        error: 'Could not load service account JSON',
-      };
-    }
+    // Test 6: Check required Firebase env config
+    diagnostics.serviceAccount = {
+      source: 'environment-variables',
+      projectId: process.env.FIREBASE_PROJECT_ID || null,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL || null,
+      hasPrivateKey: Boolean(process.env.FIREBASE_PRIVATE_KEY),
+    };
 
     // Determine overall status
     const failedTests = Object.entries(diagnostics.tests)
-      .filter(([, v]) => (v as any).status === 'FAIL')
+      .filter(([, test]) => test.status === 'FAIL')
       .map(([k]) => k);
 
     diagnostics.overallStatus = failedTests.length === 0 ? 'HEALTHY' : 'UNHEALTHY';
@@ -118,12 +156,13 @@ export async function GET(req: NextRequest) {
 
     const statusCode = failedTests.length === 0 ? 200 : 500;
     return NextResponse.json(diagnostics, { status: statusCode });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorDetails = getErrorDetails(error);
     return NextResponse.json(
       {
         status: 'ERROR',
-        error: error.message,
-        stack: error.stack,
+        error: errorDetails.message,
+        stack: errorDetails.stack,
       },
       { status: 500 }
     );
