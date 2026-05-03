@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { DashboardSidebar } from '@/components/provider/DashboardSidebar';
+import { DashboardSidebar, type ProviderDashboardTab } from '@/components/provider/DashboardSidebar';
 import { ProviderDashboardHeader } from '@/components/provider/ProviderDashboardHeader';
 import { ServicesPanel } from '@/components/provider/ServicesPanel';
 import { AnalyticsPanel } from '@/components/provider/AnalyticsPanel';
@@ -11,16 +11,6 @@ import { AvailabilityPanel } from '@/components/provider/AvailabilityPanel';
 import { BookingRequestsPanel } from '@/components/provider/BookingRequestsPanel';
 import { DocumentManagementPanel } from '@/components/provider/DocumentManagementPanel';
 import { ChatPanel } from '@/components/provider/ChatPanel';
-
-type ProviderDashboardTab =
-  | 'services'
-  | 'analytics'
-  | 'work-history'
-  | 'reviews'
-  | 'availability'
-  | 'bookings'
-  | 'documents'
-  | 'messages';
 
 export default function ProviderDashboardPage() {
   const [activeTab, setActiveTab] = useState<ProviderDashboardTab>('services');

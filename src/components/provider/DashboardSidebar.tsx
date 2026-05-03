@@ -1,15 +1,27 @@
 'use client';
 
+import type { Dispatch, SetStateAction } from 'react';
+
+export type ProviderDashboardTab =
+  | 'services'
+  | 'analytics'
+  | 'work-history'
+  | 'reviews'
+  | 'availability'
+  | 'bookings'
+  | 'documents'
+  | 'messages';
+
 interface DashboardSidebarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  activeTab: ProviderDashboardTab;
+  setActiveTab: Dispatch<SetStateAction<ProviderDashboardTab>>;
 }
 
 export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   activeTab,
   setActiveTab,
 }) => {
-  const tabs = [
+  const tabs: Array<{ key: ProviderDashboardTab; label: string }> = [
     { key: 'services', label: 'My Services' },
     { key: 'analytics', label: 'Analytics' },
     { key: 'work-history', label: 'Work History' },

@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Create user with UNVERIFIED status (stays UNVERIFIED until all verifications done)
+  // Create user with UNVERIFIED status (becomes ACTIVE after email verification)
   const user = await prisma.user.create({
     data: {
       firstName,
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
       address: resolvedAddress,
       longitude: new Prisma.Decimal(resolvedLongitude),
       latitude: new Prisma.Decimal(resolvedLatitude),
-      status: 'UNVERIFIED', // Will be set to ACTIVE after email + phone verification
+      status: 'UNVERIFIED', // Will be set to ACTIVE after email verification
     },
   });
 
@@ -197,7 +197,7 @@ export async function POST(req: NextRequest) {
       emailVerified: user.emailVerified,
       phoneVerified: user.phoneVerified,
     },
-    message: 'Registration successful. Please verify your email and phone.',
+    message: 'Registration successful. Please verify your email.',
   });
 
   setTokenCookie(res, token);

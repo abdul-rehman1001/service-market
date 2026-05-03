@@ -25,14 +25,18 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  // Mark email as verified
+  // Mark email as verified.
+  // Phone OTP verification has been removed, so activation should not depend on phoneVerified.
+  const nextStatus = user.status === 'SUSPENDED' || user.status === 'DELETED'
+    ? user.status
+    : 'ACTIVE';
+
   const updatedUser = await prisma.user.update({
     where: { id: existingToken.userId },
     data: {
       emailVerified: true,
       emailVerifiedAt: new Date(),
-      // Set status to ACTIVE only if phone is also verified
-      status: user.phoneVerified ? "ACTIVE" : "UNVERIFIED",
+      status: nextStatus,
     },
   });
 

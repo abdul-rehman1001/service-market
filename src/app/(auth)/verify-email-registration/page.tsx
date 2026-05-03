@@ -52,7 +52,7 @@ function VerifyEmailContent() {
         if (data.user.emailVerified) {
           setEmailStatus('verified');
           setTimeout(() => {
-            router.push(`/verify-otp-registration?userId=${userId}`);
+            router.push('/login');
           }, 2000);
           return;
         }
@@ -91,7 +91,7 @@ function VerifyEmailContent() {
 
       setEmailStatus('verified');
       setTimeout(() => {
-        router.push(`/verify-otp-registration?userId=${userId}`);
+        router.push('/login');
       }, 2000);
     } catch (err) {
       console.error(err);
@@ -135,7 +135,7 @@ function VerifyEmailContent() {
         <div className="text-center">
           <Mail size={48} className="mx-auto text-emerald-600 mb-4" />
           <h2 className="text-3xl font-bold mb-2">Verify Your Email</h2>
-          <p className="text-gray-500 text-sm">Step 1 of 2</p>
+          <p className="text-gray-500 text-sm">Step 1 of 1</p>
         </div>
 
         <div className="mt-8 space-y-4">
@@ -173,7 +173,7 @@ function VerifyEmailContent() {
             <div className="text-center space-y-4">
               <CheckCircle size={48} className="text-green-600 mx-auto" />
               <h3 className="font-bold text-green-700 text-lg">Email Verified!</h3>
-              <p className="text-gray-600 text-sm">Redirecting to phone verification...</p>
+              <p className="text-gray-600 text-sm">Redirecting to login...</p>
             </div>
           )}
 
@@ -204,7 +204,7 @@ function VerifyEmailLoading() {
         <div className="text-center">
           <Mail size={48} className="mx-auto text-emerald-600 mb-4" />
           <h2 className="text-3xl font-bold mb-2">Verify Your Email</h2>
-          <p className="text-gray-500 text-sm">Step 1 of 2</p>
+          <p className="text-gray-500 text-sm">Step 1 of 1</p>
         </div>
         <div className="mt-8 text-center space-y-4">
           <div className="flex justify-center">
