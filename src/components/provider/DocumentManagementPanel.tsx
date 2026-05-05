@@ -472,11 +472,18 @@ export const DocumentManagementPanel: React.FC = () => {
             Upload optional supporting documents such as certificates.
           </p>
 
+          {provider?.verificationStatus !== 'APPROVED' && (
+            <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+              Supporting document requests are available after your CNIC verification is approved.
+            </div>
+          )}
+
           <form onSubmit={handleSupportingUpload} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Document Type *</label>
               <select
                 value={supportingForm.documentType}
+                disabled={provider?.verificationStatus !== 'APPROVED'}
                 onChange={(e) =>
                   setSupportingForm({
                     documentType: e.target.value as 'CERTIFICATE' | 'OTHER',
@@ -501,6 +508,7 @@ export const DocumentManagementPanel: React.FC = () => {
                 onChange={handleSupportingFilesChange}
                 accept="image/jpeg,image/png,image/jpg"
                 multiple={supportingForm.documentType === 'CERTIFICATE'}
+                disabled={provider?.verificationStatus !== 'APPROVED'}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 required
               />
@@ -530,7 +538,11 @@ export const DocumentManagementPanel: React.FC = () => {
 
             <button
               type="submit"
-              disabled={uploadingSupporting || supportingForm.files.length === 0}
+              disabled={
+                uploadingSupporting ||
+                supportingForm.files.length === 0 ||
+                provider?.verificationStatus !== 'APPROVED'
+              }
               className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {uploadingSupporting ? (

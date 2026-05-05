@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
 
+const CNIC_DOCUMENT_TYPES = ['CNIC_FRONT', 'CNIC_BACK'] as const;
+const SUPPORTING_DOCUMENT_TYPES = ['CERTIFICATE', 'OTHER'] as const;
+
 // GET - Fetch all verification requests
 export async function GET(req: NextRequest) {
   try {
@@ -28,12 +31,27 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Fetch all providers with pending verification
+    // Fetch providers that either need CNIC verification review or have pending supporting documents.
     const verificationRequests = await prisma.serviceProvider.findMany({
       where: {
-        verificationStatus: {
-          in: ['PENDING', 'REJECTED'],
-        },
+        OR: [
+          {
+            verificationStatus: {
+              in: ['PENDING', 'REJECTED'],
+            },
+          },
+          {
+            verificationStatus: 'APPROVED',
+            documents: {
+              some: {
+                status: 'PENDING',
+                documentType: {
+                  in: [...SUPPORTING_DOCUMENT_TYPES],
+                },
+              },
+            },
+          },
+        ],
       },
       include: {
         user: {
@@ -55,27 +73,44 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(
       {
-        verificationRequests: verificationRequests.map((provider) => {
-          const hasPendingCnicFront = provider.documents.some(
-            (doc) => doc.documentType === 'CNIC_FRONT' && doc.status === 'PENDING'
-          );
-          const hasPendingCnicBack = provider.documents.some(
-            (doc) => doc.documentType === 'CNIC_BACK' && doc.status === 'PENDING'
-          );
+        verificationRequests: verificationRequests
+          .map((provider) => {
+            const hasPendingCnicFront = provider.documents.some(
+              (doc) => doc.documentType === 'CNIC_FRONT' && doc.status === 'PENDING'
+            );
+            const hasPendingCnicBack = provider.documents.some(
+              (doc) => doc.documentType === 'CNIC_BACK' && doc.status === 'PENDING'
+            );
+            const pendingSupportingDocuments = provider.documents.filter(
+              (doc) =>
+                doc.status === 'PENDING' &&
+                SUPPORTING_DOCUMENT_TYPES.includes(doc.documentType as (typeof SUPPORTING_DOCUMENT_TYPES)[number])
+            );
 
-          return {
-            id: provider.id,
-            userId: provider.userId,
-            businessName: provider.businessName,
-            cnic: provider.cnic,
-            yearsOfExperience: provider.yearsOfExperience,
-            verificationStatus: provider.verificationStatus,
-            createdAt: provider.createdAt,
-            user: provider.user,
-            documents: provider.documents,
-            cnicRequestReady: hasPendingCnicFront && hasPendingCnicBack,
-          };
-        }),
+            const cnicRequestReady = hasPendingCnicFront && hasPendingCnicBack;
+            const supportingDocumentsReady =
+              provider.verificationStatus === 'APPROVED' && pendingSupportingDocuments.length > 0;
+
+            if (!cnicRequestReady && !supportingDocumentsReady) {
+              return null;
+            }
+
+            return {
+              id: provider.id,
+              userId: provider.userId,
+              businessName: provider.businessName,
+              cnic: provider.cnic,
+              yearsOfExperience: provider.yearsOfExperience,
+              verificationStatus: provider.verificationStatus,
+              createdAt: provider.createdAt,
+              user: provider.user,
+              documents: provider.documents,
+              cnicRequestReady,
+              supportingDocumentsReady,
+              pendingSupportingDocumentCount: pendingSupportingDocuments.length,
+            };
+          })
+          .filter(Boolean),
       },
       { status: 200 }
     );

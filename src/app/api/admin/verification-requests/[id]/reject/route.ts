@@ -4,6 +4,8 @@ import { verifyToken } from '@/lib/jwt';
 import { sendEmail } from '@/lib/email';
 import { sendNotification } from '@/lib/notifications';
 
+const SUPPORTING_DOCUMENT_TYPES = ['CERTIFICATE', 'OTHER'] as const;
+
 export async function POST(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -49,7 +51,7 @@ export async function POST(
     // Get provider
     const provider = await prisma.serviceProvider.findUnique({
       where: { id: providerId },
-      include: { user: true },
+      include: { user: true, documents: true },
     });
 
     if (!provider) {
@@ -66,35 +68,81 @@ export async function POST(
       );
     }
 
-    // ✅ Single update (removed duplicate)
-    await prisma.serviceProvider.update({
-      where: { id: providerId },
-      data: {
-        verificationStatus: 'REJECTED',
-      },
-    });
+    const pendingCnicDocuments = provider.documents?.filter(
+      (doc) =>
+        doc.status === 'PENDING' &&
+        (doc.documentType === 'CNIC_FRONT' || doc.documentType === 'CNIC_BACK')
+    ) || [];
 
-    // Update documents
-    await prisma.providerDocument.updateMany({
-      where: {
-        providerId,
-        status: 'PENDING',
-      },
-      data: {
-        status: 'REJECTED',
-      },
-    });
+    const pendingSupportingDocuments = provider.documents?.filter(
+      (doc) =>
+        doc.status === 'PENDING' &&
+        SUPPORTING_DOCUMENT_TYPES.includes(doc.documentType as (typeof SUPPORTING_DOCUMENT_TYPES)[number])
+    ) || [];
+
+    const rejectVerification = pendingCnicDocuments.length > 0;
+    const rejectSupportingDocuments =
+      provider.verificationStatus === 'APPROVED' && pendingSupportingDocuments.length > 0 && !rejectVerification;
+
+    if (!rejectVerification && !rejectSupportingDocuments) {
+      return NextResponse.json(
+        { error: 'No pending verification or supporting documents were found to reject' },
+        { status: 400 }
+      );
+    }
+
+    if (rejectVerification) {
+      await prisma.serviceProvider.update({
+        where: { id: providerId },
+        data: {
+          verificationStatus: 'REJECTED',
+        },
+      });
+
+      await prisma.providerDocument.updateMany({
+        where: {
+          providerId,
+          documentType: {
+            in: ['CNIC_FRONT', 'CNIC_BACK'],
+          },
+          status: 'PENDING',
+        },
+        data: {
+          status: 'REJECTED',
+          rejectionReason: reason,
+        },
+      });
+    } else {
+      await prisma.providerDocument.updateMany({
+        where: {
+          providerId,
+          documentType: {
+            in: [...SUPPORTING_DOCUMENT_TYPES],
+          },
+          status: 'PENDING',
+        },
+        data: {
+          status: 'REJECTED',
+          rejectionReason: reason,
+        },
+      });
+    }
 
     // ✅ Email (wrapped to prevent crash)
     try {
-      const emailHtml = `
+      const emailHtml = rejectVerification
+        ? `
         <h2>Verification Update Required</h2>
+        <p>Reason: ${reason}</p>
+      `
+        : `
+        <h2>Supporting Documents Rejected</h2>
         <p>Reason: ${reason}</p>
       `;
 
       await sendEmail(
         provider.user.email,
-        'Verification Update Required',
+        rejectVerification ? 'Verification Update Required' : 'Supporting Documents Update Required',
         emailHtml
       );
     } catch (emailError) {
@@ -105,14 +153,15 @@ export async function POST(
     // Send push notification
     sendNotification({
       userId: provider.userId,
-      type: 'VERIFICATION_STATUS_CHANGED',
+      type: rejectVerification ? 'VERIFICATION_STATUS_CHANGED' : 'SYSTEM_UPDATE',
       data: {
         status: 'REJECTED',
+        kind: rejectVerification ? 'VERIFICATION' : 'SUPPORTING_DOCUMENTS',
       },
     });
 
     return NextResponse.json(
-      { message: 'Provider rejected successfully' },
+      { message: rejectVerification ? 'Provider rejected successfully' : 'Supporting documents rejected successfully' },
       { status: 200 }
     );
 

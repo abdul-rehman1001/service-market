@@ -380,8 +380,12 @@ export default function DocumentsPage() {
                 >
                   <option value="CNIC_FRONT">CNIC Front</option>
                   <option value="CNIC_BACK">CNIC Back</option>
-                  <option value="CERTIFICATE">Certificate (Multiple Images)</option>
-                  <option value="OTHER">Other</option>
+                  <option value="CERTIFICATE" disabled={provider?.verificationStatus !== 'APPROVED'}>
+                    Certificate (Multiple Images)
+                  </option>
+                  <option value="OTHER" disabled={provider?.verificationStatus !== 'APPROVED'}>
+                    Other
+                  </option>
                 </select>
               </div>
 
@@ -418,12 +422,12 @@ export default function DocumentsPage() {
                   type="file"
                   onChange={handleFileChange}
                   accept="image/jpeg,image/png,image/jpg"
-                  multiple={uploadForm.documentType === 'CERTIFICATE'}
+                  multiple={uploadForm.documentType === 'CERTIFICATE' && provider?.verificationStatus === 'APPROVED'}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  {uploadForm.documentType === 'CERTIFICATE'
+                  {uploadForm.documentType === 'CERTIFICATE' && provider?.verificationStatus === 'APPROVED'
                     ? 'JPEG or PNG only, max 5MB each. You can select multiple images.'
                     : 'JPEG or PNG only, max 5MB'}
                 </p>

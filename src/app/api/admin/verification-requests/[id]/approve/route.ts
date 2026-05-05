@@ -4,6 +4,8 @@ import { verifyToken } from '@/lib/jwt';
 import { sendEmail } from '@/lib/email';
 import { sendNotification } from '@/lib/notifications';
 
+const SUPPORTING_DOCUMENT_TYPES = ['CERTIFICATE', 'OTHER'] as const;
+
 export async function POST(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -59,37 +61,49 @@ export async function POST(
       (doc) => doc.documentType === 'CNIC_BACK' && doc.status === 'PENDING'
     );
 
-    if (!pendingCnicFront || !pendingCnicBack) {
+    const pendingSupportingDocuments = provider.documents.filter(
+      (doc) =>
+        doc.status === 'PENDING' &&
+        SUPPORTING_DOCUMENT_TYPES.includes(doc.documentType as (typeof SUPPORTING_DOCUMENT_TYPES)[number])
+    );
+
+    const canApproveVerification = Boolean(pendingCnicFront && pendingCnicBack);
+    const canApproveSupportingDocuments =
+      provider.verificationStatus === 'APPROVED' && pendingSupportingDocuments.length > 0;
+
+    if (!canApproveVerification && !canApproveSupportingDocuments) {
       return NextResponse.json(
         {
           error:
-            'Cannot approve provider verification until both CNIC front and CNIC back are submitted in pending status.',
+            'No pending verification or supporting documents were found for approval.',
         },
         { status: 400 }
       );
     }
 
-    // Update provider verification status
-    await prisma.serviceProvider.update({
-      where: { id: providerId },
-      data: {
-        verificationStatus: 'APPROVED',
-      },
-    });
+    if (canApproveVerification) {
+      // Update provider verification status only after CNIC front and back are approved.
+      await prisma.serviceProvider.update({
+        where: { id: providerId },
+        data: {
+          verificationStatus: 'APPROVED',
+        },
+      });
 
-    // Update all documents to APPROVED
-    await prisma.providerDocument.updateMany({
-      where: {
-        providerId,
-        status: 'PENDING',
-      },
-      data: {
-        status: 'APPROVED',
-      },
-    });
+      await prisma.providerDocument.updateMany({
+        where: {
+          providerId,
+          documentType: {
+            in: ['CNIC_FRONT', 'CNIC_BACK'],
+          },
+          status: 'PENDING',
+        },
+        data: {
+          status: 'APPROVED',
+        },
+      });
 
-    // Send approval email to provider
-    const emailHtml = `
+      const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #059669;">Verification Approved! 🎉</h2>
         <p>Hello ${provider.user.firstName},</p>
@@ -117,24 +131,70 @@ export async function POST(
       </div>
     `;
 
-    await sendEmail(
-      provider.user.email,
-      'Verification Approved - Service Market',
-      emailHtml
-    );
+      await sendEmail(
+        provider.user.email,
+        'Verification Approved - Service Market',
+        emailHtml
+      );
 
-    // Send push notification
-    sendNotification({
-      userId: provider.userId,
-      type: 'VERIFICATION_STATUS_CHANGED',
+      sendNotification({
+        userId: provider.userId,
+        type: 'VERIFICATION_STATUS_CHANGED',
+        data: {
+          status: 'APPROVED',
+        },
+      });
+
+      return NextResponse.json(
+        {
+          message: 'Provider verification approved successfully',
+        },
+        { status: 200 }
+      );
+    }
+
+    await prisma.providerDocument.updateMany({
+      where: {
+        providerId,
+        documentType: {
+          in: [...SUPPORTING_DOCUMENT_TYPES],
+        },
+        status: 'PENDING',
+      },
       data: {
         status: 'APPROVED',
       },
     });
 
+    const supportingEmailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #059669;">Supporting Documents Approved</h2>
+        <p>Hello ${provider.user.firstName},</p>
+        <p>Your submitted supporting documents have been <strong>approved</strong>.</p>
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+          Service Market - Your trusted service marketplace
+        </p>
+      </div>
+    `;
+
+    await sendEmail(
+      provider.user.email,
+      'Supporting Documents Approved - Service Market',
+      supportingEmailHtml
+    );
+
+    sendNotification({
+      userId: provider.userId,
+      type: 'SYSTEM_UPDATE',
+      data: {
+        status: 'APPROVED',
+        kind: 'SUPPORTING_DOCUMENTS',
+      },
+    });
+
     return NextResponse.json(
       {
-        message: 'Provider verification approved successfully',
+        message: 'Supporting documents approved successfully',
       },
       { status: 200 }
     );

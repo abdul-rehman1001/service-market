@@ -54,7 +54,9 @@ async function getProviderData(providerId: string): Promise<ProviderProfileType 
         },
         documents: {
           where: {
-            documentType: 'CERTIFICATE',
+            documentType: {
+              in: ['CERTIFICATE', 'OTHER'],
+            },
             status: 'APPROVED',
           },
         },

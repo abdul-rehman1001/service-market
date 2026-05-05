@@ -22,9 +22,9 @@ export default function ProviderDetailPage({ provider }: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Get only CERTIFICATE documents that are APPROVED
-  const certificates = provider.documents.filter(
-    doc => doc.documentType === 'CERTIFICATE' && doc.status === 'APPROVED'
+  // Show all approved supporting documents in the certificates tab.
+  const supportingDocuments = provider.documents.filter(
+    doc => doc.status === 'APPROVED' && (doc.documentType === 'CERTIFICATE' || doc.documentType === 'OTHER')
   );
 
   const handleBack = () => {
@@ -64,7 +64,7 @@ export default function ProviderDetailPage({ provider }: Props) {
             {activeTab === 'services' && <ProviderServices provider={provider} />}
             {activeTab === 'certificates' && (
               <ProviderCertificates 
-                certificates={certificates}
+                certificates={supportingDocuments}
                 providerName={`${provider.user.firstName} ${provider.user.lastName}`}
               />
             )}

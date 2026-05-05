@@ -22,6 +22,8 @@ interface VerificationRequest {
   businessName?: string;
   cnic: string;
   cnicRequestReady: boolean;
+  supportingDocumentsReady?: boolean;
+  pendingSupportingDocumentCount?: number;
   yearsOfExperience: number;
   verificationStatus: string;
   createdAt: string;
@@ -287,6 +289,12 @@ export default function VerificationRequestsPage() {
                         {request.verificationStatus}
                       </span>
                     </div>
+
+                    {request.supportingDocumentsReady && (
+                      <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                        {request.pendingSupportingDocumentCount} supporting document{request.pendingSupportingDocumentCount === 1 ? '' : 's'} are waiting for review.
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -346,18 +354,25 @@ export default function VerificationRequestsPage() {
                 </div>
 
                 {/* Action Buttons */}
-                {request.verificationStatus === 'PENDING' && (
+                {(request.cnicRequestReady || request.supportingDocumentsReady) && (
                   <div className="mt-6 pt-6 border-t border-gray-200 space-y-3">
-                    {!request.cnicRequestReady && (
-                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-                        Approval is disabled until provider submits both CNIC Front and CNIC Back in pending status.
+                    {request.supportingDocumentsReady ? (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                        Provider verification is already approved. Review and approve supporting documents separately.
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-800">
+                        CNIC front and back are ready for verification review.
                       </div>
                     )}
 
                     <div className="flex gap-4">
                     <button
                       onClick={() => handleApprove(request.id)}
-                      disabled={processing === request.id || !request.cnicRequestReady}
+                      disabled={
+                        processing === request.id ||
+                        (!request.cnicRequestReady && !request.supportingDocumentsReady)
+                      }
                       className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
                     >
                       {processing === request.id ? (
@@ -365,7 +380,9 @@ export default function VerificationRequestsPage() {
                       ) : (
                         <CheckCircle className="w-5 h-5" />
                       )}
-                      Approve
+                      {request.supportingDocumentsReady && !request.cnicRequestReady
+                        ? 'Approve Documents'
+                        : 'Approve Verification'}
                     </button>
                     <button
                       onClick={() => handleRejectClick(request)}

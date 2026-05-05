@@ -11,6 +11,17 @@ interface Props {
 export default function ProviderCertificates({ certificates, providerName }: Props) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  const getDocumentLabel = (documentType: string) => {
+    switch (documentType) {
+      case 'CERTIFICATE':
+        return 'Certificate';
+      case 'OTHER':
+        return 'Supporting Document';
+      default:
+        return documentType.replace(/_/g, ' ');
+    }
+  };
+
   if (certificates.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-12 text-center">
@@ -31,10 +42,10 @@ export default function ProviderCertificates({ certificates, providerName }: Pro
         <div className="mb-6">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Award className="w-5 h-5 text-blue-600" />
-            Verified Certificates
+            Verified Supporting Documents
           </h3>
           <p className="text-gray-600 text-sm mt-1">
-            All certificates have been verified and approved
+            All uploaded documents shown here have been verified and approved
           </p>
         </div>
 
@@ -61,13 +72,16 @@ export default function ProviderCertificates({ certificates, providerName }: Pro
               <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1.5">
                 <Award className="w-4 h-4" />
               </div>
+              <div className="absolute bottom-2 left-2 bg-black/70 text-white text-[11px] font-medium px-2 py-1 rounded-md">
+                {getDocumentLabel(cert.documentType)}
+              </div>
             </div>
           ))}
         </div>
 
         {/* Certificate Count */}
         <div className="mt-6 pt-6 border-t text-center text-sm text-gray-600">
-          {certificates.length} {certificates.length === 1 ? 'Verified Certificate' : 'Verified Certificates'}
+          {certificates.length} {certificates.length === 1 ? 'Verified Document' : 'Verified Documents'}
         </div>
       </div>
 
