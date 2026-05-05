@@ -14,7 +14,14 @@ import {
 } from '@/lib/validation/authValidation';
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  try {
   const name = String(body.name ?? '').trim();
   const email = normalizeEmail(String(body.email ?? ''));
   const password = String(body.password ?? '');
@@ -202,4 +209,33 @@ export async function POST(req: NextRequest) {
 
   setTokenCookie(res, token);
   return res;
+  } catch (error: unknown) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        const target = Array.isArray((error.meta as any)?.target)
+          ? ((error.meta as any).target as string[])
+          : [];
+        const message = target.includes('email')
+          ? 'Email already registered'
+          : target.includes('phone')
+            ? 'Phone number already registered'
+            : 'Unique constraint failed';
+
+        return NextResponse.json({ error: message }, { status: 409 });
+      }
+    }
+
+    console.error('Register error:', error);
+    const details =
+      process.env.NODE_ENV !== 'production'
+        ? error instanceof Error
+          ? error.message
+          : String(error)
+        : undefined;
+
+    return NextResponse.json(
+      details ? { error: 'Registration failed', details } : { error: 'Registration failed' },
+      { status: 500 },
+    );
+  }
 }
