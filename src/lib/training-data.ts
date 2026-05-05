@@ -7,8 +7,17 @@ export type AICategoryCatalogItem = {
   examples: string[];
 };
 
+export type AICategoryLabeledQuery = {
+  id: number;
+  query: string;
+  category_key: string;
+  category_name?: string;
+  matched_keyword?: string;
+};
+
 type AICategoriesCatalog = {
   categories: AICategoryCatalogItem[];
+  data?: AICategoryLabeledQuery[];
 };
 
 const catalog = aiCategoriesCatalog as AICategoriesCatalog;
@@ -32,3 +41,9 @@ export const categoryKeywords: Record<string, string[]> = Object.fromEntries(
 export const trainingData: Record<string, string[]> = Object.fromEntries(
   aiCategories.map((category) => [category.key, category.examples])
 );
+
+/**
+ * Optional labeled query dataset.
+ * Used by the embedding sync script to create a larger embedding store.
+ */
+export const aiCategoryQueries: AICategoryLabeledQuery[] = catalog.data ?? [];

@@ -1,5 +1,4 @@
 import prisma from '../prisma';
-import crypto from 'crypto';
 
 export type EmbeddingSourceType = 'CATEGORY' | 'EXAMPLE';
 
@@ -21,6 +20,16 @@ export interface NewCategoryEmbedding {
 }
 
 export interface CategoryEmbeddingStore {
+  /**
+   * Upserts embeddings by unique key (categoryKey, sourceType, sourceText).
+   * Safe for large catalogs because it does not delete existing data.
+   */
+  upsertMany(records: NewCategoryEmbedding[]): Promise<void>;
+
+  /**
+   * Legacy API; prefer upsertMany.
+   * Note: current implementation is equivalent to upsertMany (no delete).
+   */
   replaceAll(records: NewCategoryEmbedding[]): Promise<void>;
   getAll(): Promise<StoredCategoryEmbedding[]>;
 }
@@ -30,30 +39,39 @@ export interface CategoryEmbeddingStore {
  * Keep classifier logic store-agnostic so this can be swapped to pgvector later.
  */
 export class PrismaCategoryEmbeddingStore implements CategoryEmbeddingStore {
-  async replaceAll(records: NewCategoryEmbedding[]): Promise<void> {
-    await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`DELETE FROM "AiCategoryEmbedding"`;
+  async upsertMany(records: NewCategoryEmbedding[]): Promise<void> {
+    if (records.length === 0) return;
 
-      if (records.length > 0) {
-        for (const record of records) {
-          await tx.$executeRaw`
-            INSERT INTO "AiCategoryEmbedding"
-              ("id", "categoryKey", "categoryName", "sourceType", "sourceText", "embedding", "createdAt", "updatedAt")
-            VALUES
-              (
-                ${crypto.randomUUID()},
-                ${record.categoryKey},
-                ${record.categoryName},
-                ${record.sourceType}::"EmbeddingSourceType",
-                ${record.sourceText},
-                ${record.embedding},
-                NOW(),
-                NOW()
-              )
-          `;
-        }
-      }
-    });
+    await prisma.$transaction(
+      records.map((record) =>
+        prisma.aiCategoryEmbedding.upsert({
+          where: {
+            categoryKey_sourceType_sourceText: {
+              categoryKey: record.categoryKey,
+              sourceType: record.sourceType,
+              sourceText: record.sourceText,
+            },
+          },
+          create: {
+            categoryKey: record.categoryKey,
+            categoryName: record.categoryName,
+            sourceType: record.sourceType,
+            sourceText: record.sourceText,
+            embedding: record.embedding,
+          },
+          update: {
+            categoryName: record.categoryName,
+            embedding: record.embedding,
+          },
+        })
+      )
+    );
+  }
+
+  async replaceAll(records: NewCategoryEmbedding[]): Promise<void> {
+    // For safety with large catalogs, we no longer delete everything.
+    // This preserves existing embeddings if a sync is interrupted.
+    await this.upsertMany(records);
   }
 
   async getAll(): Promise<StoredCategoryEmbedding[]> {

@@ -1,8 +1,17 @@
 import { PrismaClient } from '@prisma/client'
 
 const prismaClientSingleton = () => {
+  const enableQueryLog =
+    process.env.PRISMA_LOG_QUERIES === '1' ||
+    process.env.PRISMA_LOG_QUERIES?.toLowerCase() === 'true'
+
   const prisma = new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    log:
+      process.env.NODE_ENV === 'development'
+        ? enableQueryLog
+          ? ['query', 'error', 'warn']
+          : ['error', 'warn']
+        : ['error'],
   })
 
   if (process.env.NODE_ENV !== 'production') {
