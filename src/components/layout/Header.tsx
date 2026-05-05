@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -73,9 +74,15 @@ export default function Header() {
         {/* Logo */}
         <Link
           href="/"
-          className="text-2xl font-bold text-emerald-600 hover:opacity-80 transition-all"
+          className="hover:opacity-80 transition-all"
         >
-          Servizo
+          <Image
+            src="/images/Servizo.jpeg"
+            alt="Servizo Logo"
+            width={40}
+            height={40}
+            className="h-10 w-auto"
+          />
         </Link>
 
         {/* Navigation */}

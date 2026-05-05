@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Button from "../../ui/Button";
@@ -19,14 +20,15 @@ export default function LandingHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
-        <Link href="/landing" className="group flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 shadow-lg shadow-slate-200 transition-transform group-hover:scale-105">
-            <Sparkles className="h-5 w-5 text-emerald-300" />
-          </div>
+        <Link href="/landing" className="group flex items-center gap-3 hover:opacity-80 transition-all">
+          <Image
+            src="/images/Servizo.jpeg"
+            alt="Servizo Logo"
+            width={50}
+            height={50}
+            className="h-12 w-auto"
+          />
           <div>
-            <span className="block text-2xl font-black text-slate-950">
-              Servizo
-            </span>
             <span className="text-xs font-medium uppercase tracking-[0.24em] text-slate-400">Service marketplace</span>
           </div>
         </Link>
