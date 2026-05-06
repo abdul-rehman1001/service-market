@@ -48,15 +48,14 @@ export default function Hero() {
               variants={revealItem}
               className="mt-6 max-w-3xl text-4xl font-extrabold leading-tight text-slate-900 sm:text-5xl lg:text-6xl"
             >
-              Find verified service providers near you, instantly.
+              Book trusted services near you with confidence.
             </motion.h1>
 
             <motion.p
               variants={revealItem}
               className="mt-4 max-w-2xl text-lg text-slate-600"
             >
-              Describe your problem in plain words. Get matched with verified professionals.
-              Book with confidence using real-time availability and authentic reviews.
+              Tell us what you need, compare nearby providers, and book the right professional without any hassle.
             </motion.p>
 
             <motion.div variants={revealItem} className="mt-8 flex flex-wrap gap-4">
@@ -85,8 +84,8 @@ export default function Hero() {
               className="mt-8 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3"
             >
               <StatCard value="4.9/5" label="Average provider rating" />
-              <StatCard value="500+" label="Verified service providers" />
-              <StatCard value="24/7" label="Fast search & booking" />
+              <StatCard value="500+" label="Local providers available" />
+              <StatCard value="24/7" label="Search and booking access" />
             </motion.div>
 
             {/* trust features */}
@@ -95,7 +94,7 @@ export default function Hero() {
               className="mt-6 flex flex-wrap items-center gap-6 text-sm text-slate-700"
             >
               <Feature icon={<ShieldCheck className="h-4 w-4 text-emerald-600" />} text="Verified profiles" />
-              <Feature icon={<MapPin className="h-4 w-4 text-emerald-600" />} text="Location-aware matching" />
+              <Feature icon={<MapPin className="h-4 w-4 text-emerald-600" />} text="Find Providers near you" />
               <Feature icon={<Star className="h-4 w-4 text-emerald-500" />} text="Rated by real customers" />
             </motion.div>
           </motion.div>
@@ -120,8 +119,8 @@ export default function Hero() {
               {/* header */}
               <div className="flex items-center justify-between rounded-2xl bg-emerald-800 px-5 py-3 text-white">
                 <div>
-                  <div className="text-xs uppercase tracking-widest text-emerald-200">AI Smart Matching</div>
-                  <div className="mt-1 text-sm font-semibold">"My house wiring needs repair"</div>
+                  <div className="text-xs uppercase tracking-widest text-emerald-200">Quick service match</div>
+                  <div className="mt-1 text-sm font-semibold">Need wiring repair at home</div>
                 </div>
                 <div className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium">Matched</div>
               </div>
@@ -132,7 +131,7 @@ export default function Hero() {
                   <div className="mb-3 flex items-center justify-between">
                     <div>
                       <div className="text-sm font-semibold text-slate-900">Top Match</div>
-                      <div className="text-sm text-slate-500">Based on rating, location & availability</div>
+                      <div className="text-sm text-slate-500">Selected using your request, location, and availability</div>
                     </div>
                     <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Best Match</div>
                   </div>
@@ -164,15 +163,15 @@ export default function Hero() {
                     <ul className="mt-3 space-y-2 text-sm text-slate-600">
                       <li className="flex items-start gap-3">
                         <ShieldCheck className="mt-0.5 h-4 w-4 text-emerald-600" />
-                        CNIC verified providers only
+                        Verified providers only
                       </li>
                       <li className="flex items-start gap-3">
                         <Sparkles className="mt-0.5 h-4 w-4 text-emerald-600" />
-                        AI understands your problem
+                        Matches based on your request
                       </li>
                       <li className="flex items-start gap-3">
                         <MapPin className="mt-0.5 h-4 w-4 text-emerald-600" />
-                        Search by location radius
+                        Find providers near you
                       </li>
                     </ul>
                   </div>
