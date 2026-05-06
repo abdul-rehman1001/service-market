@@ -38,7 +38,7 @@ export default function Features() {
       icon: <BrainCircuit className="h-6 w-6 text-emerald-600" />,
       title: "AI-Powered Search",
       description:
-        "Describe your problem in plain English. Our AI automatically identifies the right service category and matches you with qualified providers.",
+        "Describe your problem in plain English. Our AI automatically identifies the right service category and show you providers.",
     },
     {
       icon: <ShieldCheck className="h-6 w-6 text-emerald-600" />,
@@ -50,7 +50,7 @@ export default function Features() {
       icon: <CalendarClock className="h-6 w-6 text-emerald-600" />,
       title: "Real-Time Booking",
       description:
-        "View provider availability instantly, select your preferred time slot, and book services directly. No back-and-forth needed.",
+        "View provider availability instantly, select your preferred time slot, and book services directly.",
     },
     {
       icon: <Users className="h-6 w-6 text-emerald-600" />,
@@ -68,7 +68,7 @@ export default function Features() {
       icon: <CircleCheckBig className="h-6 w-6 text-emerald-600" />,
       title: "Real-Time Chat",
       description:
-        "Chat directly with service providers before and during the job. Get instant clarification and updates on job status.",
+        "Chat directly with service providers. Get instant clarification and updates on job status.",
     },
   ];
 
