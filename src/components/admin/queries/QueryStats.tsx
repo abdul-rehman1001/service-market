@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageSquare, Clock, CheckCircle, XCircle, AlertCircle, Timer } from "lucide-react";
+import { MessageSquare, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import type { QueryStatistics } from "@/app/admin/queries/page";
 
 interface QueryStatsProps {
@@ -38,14 +38,6 @@ export default function QueryStats({ statistics }: QueryStatsProps) {
       value: statistics.closed,
       icon: XCircle,
       color: "bg-slate-100 text-slate-600",
-    },
-    {
-      label: "Avg Response Time",
-      value: statistics.avgResponseTimeHours > 0
-        ? `${statistics.avgResponseTimeHours}h`
-        : "N/A",
-      icon: Timer,
-      color: "bg-purple-100 text-purple-700",
     },
   ];
 
