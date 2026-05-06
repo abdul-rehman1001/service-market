@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { ProviderProfileType } from '@/types/provider';
 import StarRating from './StarRating';
 import { MapPin, Award, Briefcase, CheckCircle, Clock } from 'lucide-react';
+import { formatPKR } from '@/lib/utils';
 
 interface Props {
   provider: ProviderProfileType;
@@ -79,8 +80,8 @@ export default function ProviderHeader({ provider }: Props) {
           </div>
           {minPrice > 0 && (
             <div className="flex items-center gap-2 text-gray-700">
-              <span className="text-purple-500 font-bold">$</span>
-              <span>From ${minPrice}</span>
+              <span className="text-purple-500 font-bold">Rs</span>
+              <span>From {formatPKR(minPrice)}</span>
             </div>
           )}
         </div>

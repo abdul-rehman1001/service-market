@@ -26,3 +26,16 @@ export function cosineSimilarity(a: number[], b: number[]): number {
 export function normalizeText(text: string): string {
   return text.toLowerCase().trim();
 }
+
+export function formatPKR(value: number | string, decimals = 2): string {
+  const numeric = typeof value === 'number' ? value : Number(value);
+
+  if (!Number.isFinite(numeric)) {
+    return 'Rs 0';
+  }
+
+  return `Rs ${numeric.toLocaleString('en-PK', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  })}`;
+}

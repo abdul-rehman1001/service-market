@@ -17,6 +17,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { formatPKR } from '@/lib/utils';
 
 interface BookingData {
   id: string;
@@ -221,7 +222,7 @@ export const AnalyticsPanel: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-purple-700 font-medium">Total Revenue</p>
-                  <p className="text-3xl font-bold text-purple-900 mt-1">${stats.totalRevenue}</p>
+                  <p className="text-3xl font-bold text-purple-900 mt-1">{formatPKR(stats.totalRevenue)}</p>
                 </div>
                 <DollarSign className="w-10 h-10 text-purple-600 opacity-50" />
               </div>

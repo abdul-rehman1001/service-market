@@ -2,6 +2,7 @@
 'use client';
 import React from 'react';
 import { Service } from '@/types';
+import { formatPKR } from '@/lib/utils';
 
 export const ServiceCard: React.FC<{ service: Service }> = ({ service }) => {
   return (
@@ -12,7 +13,7 @@ export const ServiceCard: React.FC<{ service: Service }> = ({ service }) => {
 
       <div className="flex-1">
         <h3 className="text-lg font-semibold text-gray-900">{service.title}</h3>
-        <p className="text-sm text-gray-500 mt-1">{service.durationMin} min • ${service.price ?? '—'}</p>
+        <p className="text-sm text-gray-500 mt-1">{service.durationMin} min • {service.price != null ? formatPKR(service.price) : '—'}</p>
       </div>
 
       <div className="mt-4 flex items-center justify-between">

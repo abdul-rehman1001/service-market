@@ -22,6 +22,7 @@ import {
   X,
   Image as ImageIcon,
 } from "lucide-react";
+import { formatPKR } from "@/lib/utils";
 
 interface ServiceDetailData {
   id: string;
@@ -210,7 +211,7 @@ export default function ServiceDetails({ serviceId }: Props) {
   };
 
   const formatPrice = (price: string) => {
-    return `Rs. ${Number(price).toLocaleString()}`;
+    return formatPKR(price, 0);
   };
 
   const formatDate = (dateStr: string) => {

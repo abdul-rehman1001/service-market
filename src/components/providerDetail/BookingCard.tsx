@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Clock, DollarSign } from 'lucide-react';
+import { Clock, Tag } from 'lucide-react';
+import { formatPKR } from '@/lib/utils';
 import { ProviderProfileType } from '@/types/provider';
 import { CountdownTimer } from '@/components/bookings/CountdownTimer';
 
@@ -203,9 +204,9 @@ export default function BookingCard({ provider }: Props) {
 
       {minPrice > 0 && (
         <div className="flex items-center gap-2 text-emerald-600">
-          <DollarSign className="w-5 h-5" />
+          <Tag className="w-5 h-5" />
           <div>
-            <p className="text-2xl font-bold">${minPrice.toFixed(2)}</p>
+            <p className="text-2xl font-bold">{formatPKR(minPrice)}</p>
             <p className="text-xs text-gray-500">Starting from</p>
           </div>
         </div>
@@ -222,7 +223,7 @@ export default function BookingCard({ provider }: Props) {
             <option value="">Choose a service</option>
             {provider.services.map((service) => (
               <option key={service.id} value={service.id}>
-                {service.name} - ${Number(service.minPrice).toFixed(2)}
+                {service.name} - {formatPKR(service.minPrice)}
               </option>
             ))}
           </select>

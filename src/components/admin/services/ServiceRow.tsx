@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Trash2, Eye, ToggleLeft, ToggleRight } from "lucide-react";
+import { formatPKR } from "@/lib/utils";
 
 interface ServiceRowProps {
   service: {
@@ -42,7 +43,7 @@ export default function ServiceRow({ service, onDelete, onToggleStatus }: Servic
     || `${service.provider.user.firstName} ${service.provider.user.lastName}`;
 
   const formatPrice = (price: string) => {
-    return `Rs. ${Number(price).toLocaleString()}`;
+    return formatPKR(price, 0);
   };
 
   return (

@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { ProviderProfileType } from '@/types/provider';
 import { Clock, Tag } from 'lucide-react';
+import { formatPKR } from '@/lib/utils';
 
 interface Props {
   provider: ProviderProfileType;
@@ -57,9 +58,9 @@ export default function ProviderServices({ provider }: Props) {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-emerald-600">
-                  ${Number(service.minPrice).toFixed(2)}
+                  {formatPKR(service.minPrice)}
                   {Number(service.minPrice) !== Number(service.maxPrice) && (
-                    <span> - ${Number(service.maxPrice).toFixed(2)}</span>
+                    <span> - {formatPKR(service.maxPrice)}</span>
                   )}
                 </div>
                 <span className="text-xs text-gray-500">Price range</span>

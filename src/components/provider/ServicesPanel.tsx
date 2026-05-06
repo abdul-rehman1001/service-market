@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, Plus, Edit, Trash2, DollarSign, Clock } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, Tag, Clock } from 'lucide-react';
 import ServiceFormModal from './ServiceFormModal';
+import { formatPKR } from '@/lib/utils';
 
 interface Service {
   id: string;
@@ -213,9 +214,9 @@ export const ServicesPanel: React.FC = () => {
               {/* Details */}
               <div className="space-y-1.5 mb-4">
                 <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <DollarSign className="w-4 h-4 text-emerald-600" />
+                  <Tag className="w-4 h-4 text-emerald-600" />
                   <span>
-                    ${service.minPrice} - ${service.maxPrice}
+                    {formatPKR(service.minPrice)} - {formatPKR(service.maxPrice)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-600">
