@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import {
   MapPin,
   Star,
-  DollarSign,
   Users,
   ArrowDownUp,
   Search,
@@ -136,7 +135,7 @@ export default function SearchFilters({
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Price</label>
           <div className="relative">
-            <DollarSign className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-600" />
+            <span aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600 text-sm font-medium">Rs</span>
             <select
               value={`${filters.priceRange[0]}-${filters.priceRange[1]}`}
               onChange={(e) => {
