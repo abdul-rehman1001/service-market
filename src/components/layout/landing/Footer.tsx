@@ -44,7 +44,6 @@ export default function LandingFooter() {
           <div>
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">Support</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link href="/landing/contact" className="text-slate-400 transition hover:text-emerald-300">Contact Us</Link></li>
               <li><Link href="/login" className="text-slate-400 transition hover:text-emerald-300">Login</Link></li>
               <li><Link href="/register" className="text-slate-400 transition hover:text-emerald-300">Create Account</Link></li>
               <li><Link href="/register/provider" className="text-slate-400 transition hover:text-emerald-300">Become a Provider</Link></li>
