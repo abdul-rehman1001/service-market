@@ -250,7 +250,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
               <motion.div 
                 className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600"
                 animate={{ rotate: loading ? 360 : 0 }}
-                transition={{ duration: 2, repeat: loading ? Infinity : 0, ease: "linear" }}
+                transition={{ duration: 2, repeat: loading ? Infinity : 0 }}
               >
                 <Search className="w-5 h-5 text-white" />
               </motion.div>
@@ -434,7 +434,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                transition={{ duration: 0.3 }}
                 className="mt-6 text-left"
               >
                 <motion.div
@@ -449,8 +449,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                     }}
                     transition={{
                       duration: 5,
-                      repeat: Infinity,
-                      ease: "linear"
+                      repeat: Infinity
                     }}
                     style={{ backgroundSize: '200% 200%' }}
                   />
@@ -461,7 +460,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                         <motion.div 
                           className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg"
                           animate={{ rotate: [0, 360] }}
-                          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                          transition={{ duration: 20, repeat: Infinity }}
                         >
                           <Sparkles className="w-6 h-6 text-white" />
                         </motion.div>
@@ -502,7 +501,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                               className="h-full bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full"
                               initial={{ width: 0 }}
                               animate={{ width: `${result.confidence * 100}%` }}
-                              transition={{ duration: 1, ease: "easeOut" }}
+                              transition={{ duration: 1 }}
                             />
                           </div>
                           <motion.span 

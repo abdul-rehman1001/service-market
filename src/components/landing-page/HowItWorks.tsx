@@ -24,7 +24,7 @@ export default function HowItWorks() {
     ? undefined
     : {
         hidden: { opacity: 0, y: 16 },
-        show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+        show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
       };
 
   const seekers: Step[] = [
@@ -124,7 +124,7 @@ export default function HowItWorks() {
           whileInView={
             reduceMotion
               ? undefined
-              : { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut" } }
+              : { opacity: 1, y: 0, transition: { duration: 0.55 } }
           }
           viewport={reduceMotion ? undefined : { once: true, amount: 0.6 }}
         >
@@ -142,7 +142,7 @@ export default function HowItWorks() {
             className="rounded-[2rem] border border-emerald-100 bg-white/90 p-8 shadow-xl shadow-slate-100"
             initial={reduceMotion ? false : { opacity: 0, y: 18 }}
             whileInView={
-              reduceMotion ? undefined : { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut" } }
+              reduceMotion ? undefined : { opacity: 1, y: 0, transition: { duration: 0.55 } }
             }
             viewport={reduceMotion ? undefined : { once: true, amount: 0.25 }}
             whileHover={reduceMotion ? undefined : { y: -4 }}
@@ -166,7 +166,7 @@ export default function HowItWorks() {
             whileInView={
               reduceMotion
                 ? undefined
-                : { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut", delay: 0.05 } }
+                : { opacity: 1, y: 0, transition: { duration: 0.55, delay: 0.05 } }
             }
             viewport={reduceMotion ? undefined : { once: true, amount: 0.25 }}
             whileHover={reduceMotion ? undefined : { y: -4 }}
