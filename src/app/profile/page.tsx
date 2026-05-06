@@ -412,10 +412,8 @@ export default function ProfilePage() {
                         <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
                       )}
                     </div>
-                    {user.phoneVerified ? (
+                    {user.phoneVerified && (
                       <p className="text-xs text-green-600 mt-1">✓ Verified</p>
-                    ) : (
-                      <p className="text-xs text-yellow-600 mt-1">⚠ Not verified</p>
                     )}
                   </div>
 
