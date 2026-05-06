@@ -133,6 +133,7 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
   const lastFetchedRef = useRef<number>(initialLastFetched);
   const refreshTimeoutRef = useRef<number | null>(null);
   const initialBookingHandledRef = useRef<string | null>(null);
+  const serverPollIntervalRef = useRef<number | null>(null);
 
   const selectConversation = useCallback((conversationId: string) => {
     setActiveConversationId(conversationId);
@@ -287,34 +288,83 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
     const messagesRef = collection(db, 'conversations', activeConversationId, 'messages');
     const q = query(messagesRef, orderBy('timestamp', 'asc'));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const nextMessages: Message[] = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        let timestamp = '';
-        if (data.timestamp instanceof Timestamp) {
-          timestamp = data.timestamp.toDate().toISOString();
-        } else if (data.timestamp) {
-          timestamp = data.timestamp;
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const nextMessages: Message[] = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          let timestamp = '';
+          if (data.timestamp instanceof Timestamp) {
+            timestamp = data.timestamp.toDate().toISOString();
+          } else if (data.timestamp) {
+            timestamp = data.timestamp;
+          } else {
+            timestamp = new Date().toISOString();
+          }
+
+          return {
+            id: doc.id,
+            senderId: data.senderId,
+            receiverId: data.receiverId,
+            content: data.content,
+            timestamp,
+            read: data.read || false,
+            bookingId: data.bookingId || fallbackBookingId,
+          };
+        });
+
+        setMessages(nextMessages);
+        writeJSON(storage, messagesKey(activeConversationId), nextMessages);
+      },
+      (err) => {
+        const code = (err as any)?.code || (err as any)?.message || '';
+        const isPermissionDenied = String(code).includes('permission-denied');
+        if (isPermissionDenied) {
+          // Quietly warn for expected permission-denied errors (server fallback handles messages)
+          console.warn('Realtime messages permission denied — falling back to server polling.');
+          setError('Missing or insufficient permissions to read messages. Falling back to server polling.');
         } else {
-          timestamp = new Date().toISOString();
+          console.error('Realtime messages error:', err);
+          setError('Realtime error loading messages');
         }
 
-        return {
-          id: doc.id,
-          senderId: data.senderId,
-          receiverId: data.receiverId,
-          content: data.content,
-          timestamp,
-          read: data.read || false,
-          bookingId: data.bookingId || fallbackBookingId,
-        };
-      });
+        // Fallback: if permission-denied, fetch messages from the server and poll periodically
+        if (isPermissionDenied) {
+          const fetchServerMessages = async () => {
+            try {
+              const res = await fetch(`/api/chat/messages?conversationId=${activeConversationId}`);
+              if (!res.ok) {
+                console.error('Server messages fetch failed', res.status);
+                return;
+              }
+              const data = await res.json();
+              setMessages(data.messages || []);
+              writeJSON(storage, messagesKey(activeConversationId), data.messages || []);
+            } catch (fetchErr) {
+              console.error('Server messages fetch error:', fetchErr);
+            }
+          };
 
-      setMessages(nextMessages);
-      writeJSON(storage, messagesKey(activeConversationId), nextMessages);
-    });
+          // initial fetch
+          void fetchServerMessages();
 
-    return () => unsubscribe();
+          // start polling every 5s
+          if (serverPollIntervalRef.current === null && isBrowser()) {
+            serverPollIntervalRef.current = window.setInterval(() => {
+              void fetchServerMessages();
+            }, 5000) as unknown as number;
+          }
+        }
+      }
+    );
+
+    return () => {
+      unsubscribe();
+      if (serverPollIntervalRef.current !== null && isBrowser()) {
+        window.clearInterval(serverPollIntervalRef.current);
+        serverPollIntervalRef.current = null;
+      }
+    };
   }, [activeConversationId, conversations, storage]);
 
   // Mark conversation as read when opened

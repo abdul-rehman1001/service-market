@@ -160,3 +160,45 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+// GET /api/chat/messages?conversationId=... — fetch messages for a conversation (server-side)
+export async function GET(req: NextRequest) {
+  try {
+    const token = req.cookies.get('token')?.value;
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const decoded = verifyToken(token) as { userId: string; role: string } | null;
+    if (!decoded?.userId) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+
+    const url = new URL(req.url);
+    const conversationId = url.searchParams.get('conversationId');
+    if (!conversationId) return NextResponse.json({ error: 'conversationId is required' }, { status: 400 });
+
+    const conversationRef = adminDb.collection('conversations').doc(conversationId);
+    const conversationSnapshot = await conversationRef.get();
+    if (!conversationSnapshot.exists) return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+
+    const conversation = conversationSnapshot.data();
+    const isParticipant = conversation?.seekerId === decoded.userId || conversation?.providerId === decoded.userId;
+    if (!isParticipant) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+    const messagesSnapshot = await conversationRef.collection('messages').orderBy('timestamp', 'asc').get();
+    const items = messagesSnapshot.docs.map((doc) => {
+      const data: any = doc.data();
+      return {
+        id: doc.id,
+        senderId: data.senderId,
+        receiverId: data.receiverId,
+        content: data.content,
+        timestamp: data.timestamp ? (data.timestamp.toDate ? data.timestamp.toDate().toISOString() : data.timestamp) : null,
+        read: data.read || false,
+        bookingId: data.bookingId || null,
+      };
+    });
+
+    return NextResponse.json({ messages: items }, { status: 200 });
+  } catch (error) {
+    console.error('Chat messages GET error:', error);
+    return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
+  }
+}
