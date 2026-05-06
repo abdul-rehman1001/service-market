@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader, AlertCircle, TrendingUp, Calendar, DollarSign, Star } from 'lucide-react';
+import { Loader, AlertCircle, TrendingUp, Calendar, Star } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -218,15 +218,7 @@ export const AnalyticsPanel: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-purple-700 font-medium">Total Revenue</p>
-                  <p className="text-3xl font-bold text-purple-900 mt-1">{formatPKR(stats.totalRevenue)}</p>
-                </div>
-                <DollarSign className="w-10 h-10 text-purple-600 opacity-50" />
-              </div>
-            </div>
+
           </div>
 
           {/* Charts Section */}
@@ -297,31 +289,7 @@ export const AnalyticsPanel: React.FC = () => {
               )}
             </div>
 
-            {/* Revenue Over Time */}
-            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm lg:col-span-2">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4">Revenue Trend</h3>
-              {revenueOverTime.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={revenueOverTime}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="month" stroke="#64748b" style={{ fontSize: '12px' }} />
-                    <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: '#fff', 
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '8px',
-                      }} 
-                      formatter={(value) => [`$${value}`, 'Revenue']}
-                    />
-                    <Legend />
-                    <Bar dataKey="revenue" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-center text-slate-500 py-12">No revenue data available</p>
-              )}
-            </div>
+
           </div>
         </>
       )}
