@@ -58,6 +58,7 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-3">Support</h3>
             <ul className="space-y-2 text-sm">
+              <li><Link href="/contact" className="transition hover:text-emerald-500">Contact Us</Link></li>
               <li><Link href="/login" className="transition hover:text-emerald-500">Login</Link></li>
               <li><Link href="/register" className="transition hover:text-emerald-500">Create Account</Link></li>
               <li><Link href="/register/provider" className="transition hover:text-emerald-500">Become a Provider</Link></li>
