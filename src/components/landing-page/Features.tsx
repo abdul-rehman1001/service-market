@@ -1,3 +1,6 @@
+"use client";
+
+import { motion, useReducedMotion } from "framer-motion";
 import {
   BrainCircuit,
   CalendarClock,
@@ -14,6 +17,22 @@ type Feature = {
 };
 
 export default function Features() {
+  const reduceMotion = useReducedMotion();
+
+  const container = reduceMotion
+    ? undefined
+    : {
+        hidden: {},
+        show: { transition: { staggerChildren: 0.08 } },
+      };
+
+  const item = reduceMotion
+    ? undefined
+    : {
+        hidden: { opacity: 0, y: 18 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut" } },
+      };
+
   const features: Feature[] = [
     {
       icon: <BrainCircuit className="h-6 w-6 text-emerald-600" />,
@@ -54,10 +73,16 @@ export default function Features() {
   ];
 
   return (
-    <section className="relative bg-white py-20 md:py-28">
+    <motion.section
+      className="relative bg-white py-20 md:py-28"
+      variants={container}
+      initial={reduceMotion ? false : "hidden"}
+      whileInView={reduceMotion ? undefined : "show"}
+      viewport={reduceMotion ? undefined : { once: true, amount: 0.2 }}
+    >
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         {/* Section Header */}
-        <div className="mx-auto max-w-3xl text-center">
+        <motion.div variants={item} className="mx-auto max-w-3xl text-center">
           <div className="text-sm font-semibold uppercase tracking-widest text-emerald-600">
             Key Features
           </div>
@@ -70,14 +95,17 @@ export default function Features() {
             From AI-powered search to verified providers, real-time booking to authentic reviews.
             We've built features that make finding services simple and reliable.
           </p>
-        </div>
+        </motion.div>
 
         {/* Features Grid */}
         <div className="mt-16 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
           {features.map((feature, idx) => (
-            <div
+            <motion.div
               key={idx}
               className="group rounded-2xl border border-slate-100 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md"
+              variants={item}
+              whileHover={reduceMotion ? undefined : { y: -6 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
             >
               {/* Icon */}
               <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50">
@@ -93,10 +121,10 @@ export default function Features() {
               <p className="mt-3 text-sm leading-relaxed text-slate-600">
                 {feature.description}
               </p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }

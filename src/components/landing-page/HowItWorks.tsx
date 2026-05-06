@@ -1,3 +1,6 @@
+"use client";
+
+import { motion, useReducedMotion } from "framer-motion";
 import { BellRing, CalendarCheck2, CheckCircle2, Search, UserRoundPlus, WalletCards } from "lucide-react";
 
 interface Step {
@@ -8,6 +11,22 @@ interface Step {
 }
 
 export default function HowItWorks() {
+  const reduceMotion = useReducedMotion();
+
+  const stepsContainer = reduceMotion
+    ? undefined
+    : {
+        hidden: {},
+        show: { transition: { staggerChildren: 0.08 } },
+      };
+
+  const stepItem = reduceMotion
+    ? undefined
+    : {
+        hidden: { opacity: 0, y: 16 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+      };
+
   const seekers: Step[] = [
     {
       icon: <Search className="h-5 w-5 text-emerald-700" />,
@@ -56,9 +75,15 @@ export default function HowItWorks() {
     accentBg: string,
     lineColor: string
   ) => (
-    <div className="flex w-full flex-col gap-0">
+    <motion.div
+      className="flex w-full flex-col gap-0"
+      variants={stepsContainer}
+      initial={reduceMotion ? false : "hidden"}
+      whileInView={reduceMotion ? undefined : "show"}
+      viewport={reduceMotion ? undefined : { once: true, amount: 0.25 }}
+    >
       {steps.map((step, idx) => (
-        <div key={idx} className="relative flex items-start gap-5">
+        <motion.div key={idx} variants={stepItem} className="relative flex items-start gap-5">
           <div className="flex flex-col items-center">
             <div
               className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-full border-2 ${accentBg} ${accentColor}`}
@@ -77,17 +102,32 @@ export default function HowItWorks() {
             <h4 className="text-lg font-bold text-slate-950">{step.title}</h4>
             <p className="mt-1 text-sm leading-7 text-slate-600">{step.desc}</p>
           </div>
-        </div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 
   return (
-    <section id="how-it-works" className="relative overflow-hidden bg-white py-20 md:py-28">
+    <motion.section
+      id="how-it-works"
+      className="relative overflow-hidden bg-white py-20 md:py-28"
+      initial={reduceMotion ? false : { opacity: 0 }}
+      whileInView={reduceMotion ? undefined : { opacity: 1, transition: { duration: 0.35 } }}
+      viewport={reduceMotion ? undefined : { once: true, amount: 0.1 }}
+    >
       <div className="pointer-events-none absolute left-0 top-20 h-80 w-80 rounded-full bg-emerald-100/50 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 right-0 h-96 w-96 rounded-full bg-emerald-100/40 blur-3xl" />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl text-center">
+        <motion.div
+          className="mx-auto max-w-3xl text-center"
+          initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+          whileInView={
+            reduceMotion
+              ? undefined
+              : { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut" } }
+          }
+          viewport={reduceMotion ? undefined : { once: true, amount: 0.6 }}
+        >
           <div className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700">How It Works</div>
           <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-950 md:text-5xl">
             Three simple steps for seekers and providers
@@ -95,10 +135,19 @@ export default function HowItWorks() {
           <p className="mt-5 text-base leading-8 text-slate-600 md:text-lg">
             Whether you need a service or provide one, our platform makes the entire process straightforward and secure.
           </p>
-        </div>
+        </motion.div>
 
         <div className="mt-14 grid gap-8 lg:grid-cols-2 lg:gap-12">
-          <div className="rounded-[2rem] border border-emerald-100 bg-white/90 p-8 shadow-xl shadow-slate-100">
+          <motion.div
+            className="rounded-[2rem] border border-emerald-100 bg-white/90 p-8 shadow-xl shadow-slate-100"
+            initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+            whileInView={
+              reduceMotion ? undefined : { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut" } }
+            }
+            viewport={reduceMotion ? undefined : { once: true, amount: 0.25 }}
+            whileHover={reduceMotion ? undefined : { y: -4 }}
+            transition={{ type: "spring", stiffness: 260, damping: 24 }}
+          >
             <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-800">
               <Search className="h-4 w-4" />
               For customers
@@ -109,9 +158,20 @@ export default function HowItWorks() {
               "bg-emerald-50",
               "bg-emerald-200"
             )}
-          </div>
+          </motion.div>
 
-          <div className="rounded-[2rem] border border-emerald-100 bg-white/90 p-8 shadow-xl shadow-slate-100">
+          <motion.div
+            className="rounded-[2rem] border border-emerald-100 bg-white/90 p-8 shadow-xl shadow-slate-100"
+            initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+            whileInView={
+              reduceMotion
+                ? undefined
+                : { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut", delay: 0.05 } }
+            }
+            viewport={reduceMotion ? undefined : { once: true, amount: 0.25 }}
+            whileHover={reduceMotion ? undefined : { y: -4 }}
+            transition={{ type: "spring", stiffness: 260, damping: 24 }}
+          >
             <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-800">
               <UserRoundPlus className="h-4 w-4" />
               For providers
@@ -122,9 +182,9 @@ export default function HowItWorks() {
               "bg-emerald-50",
               "bg-emerald-200"
             )}
-          </div>
+          </motion.div>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }

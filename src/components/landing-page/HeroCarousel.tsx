@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Button from "../ui/Button";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, BadgeDollarSign, Clock3, ShieldCheck } from "lucide-react";
 
 interface CarouselItem {
@@ -38,12 +41,38 @@ const carouselItems: CarouselItem[] = [
 ];
 
 export default function HeroCarousel() {
+  const reduceMotion = useReducedMotion();
+
+  const container = reduceMotion
+    ? undefined
+    : {
+        hidden: {},
+        show: { transition: { staggerChildren: 0.08 } },
+      };
+
+  const item = reduceMotion
+    ? undefined
+    : {
+        hidden: { opacity: 0, y: 18 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut" } },
+      };
+
   return (
-    <section id="features" className="relative bg-white py-20 md:py-28">
+    <motion.section
+      id="features"
+      className="relative bg-white py-20 md:py-28"
+      variants={container}
+      initial={reduceMotion ? false : "hidden"}
+      whileInView={reduceMotion ? undefined : "show"}
+      viewport={reduceMotion ? undefined : { once: true, amount: 0.2 }}
+    >
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
 
         {/* Section Header */}
-        <div className="mb-14 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <motion.div
+          variants={item}
+          className="mb-14 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between"
+        >
           <div>
             <div className="text-sm font-semibold uppercase tracking-widest text-emerald-600">
               How It Works
@@ -55,7 +84,11 @@ export default function HeroCarousel() {
           </div>
 
           {/* Feature indicators */}
-          <div className="grid gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:grid-cols-3">
+          <motion.div
+            className="grid gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:grid-cols-3"
+            whileHover={reduceMotion ? undefined : { y: -3 }}
+            transition={{ type: "spring", stiffness: 260, damping: 24 }}
+          >
             <div className="flex items-center gap-2 text-sm text-slate-700">
               <ShieldCheck className="h-4 w-4 text-emerald-600" />
               Approved providers
@@ -70,15 +103,18 @@ export default function HeroCarousel() {
               <BadgeDollarSign className="h-4 w-4 text-emerald-600" />
               Transparent pricing
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Cards */}
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {carouselItems.map((item, index) => (
-            <article
+            <motion.article
               key={item.id}
               className="group overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+              variants={item}
+              whileHover={reduceMotion ? undefined : { y: -6 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
             >
               {/* Image */}
               <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
@@ -107,12 +143,12 @@ export default function HeroCarousel() {
                   {item.subtitle}
                 </p>
               </div>
-            </article>
+            </motion.article>
           ))}
         </div>
 
         {/* CTA */}
-        <div className="mt-14 flex justify-center">
+        <motion.div variants={item} className="mt-14 flex justify-center">
           <Button
             href="/register"
             aria-label="Start using Servizo"
@@ -121,8 +157,8 @@ export default function HeroCarousel() {
             Start with Servizo
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Button>
-        </div>
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 }

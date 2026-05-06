@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Button from "../ui/Button";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
   BadgeCheck,
@@ -10,6 +13,22 @@ import {
 } from "lucide-react";
 
 export default function Hero() {
+  const reduceMotion = useReducedMotion();
+
+  const revealParent = reduceMotion
+    ? undefined
+    : {
+        hidden: {},
+        show: { transition: { staggerChildren: 0.08 } },
+      };
+
+  const revealItem = reduceMotion
+    ? undefined
+    : {
+        hidden: { opacity: 0, y: 18 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut" } },
+      };
+
   return (
     <section className="relative overflow-hidden bg-white py-16 md:py-24">
       {/* subtle decorative shapes (purely presentational) */}
@@ -19,19 +38,28 @@ export default function Hero() {
       <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] items-center">
           {/* LEFT: Headline + CTAs */}
-          <div className="animate-slide-up-fade">
-           
-
-            <h1 className="mt-6 max-w-3xl text-4xl font-extrabold leading-tight text-slate-900 sm:text-5xl lg:text-6xl">
+          <motion.div
+            variants={revealParent}
+            initial={reduceMotion ? false : "hidden"}
+            whileInView={reduceMotion ? undefined : "show"}
+            viewport={reduceMotion ? undefined : { once: true, amount: 0.25 }}
+          >
+            <motion.h1
+              variants={revealItem}
+              className="mt-6 max-w-3xl text-4xl font-extrabold leading-tight text-slate-900 sm:text-5xl lg:text-6xl"
+            >
               Find verified service providers near you, instantly.
-            </h1>
+            </motion.h1>
 
-            <p className="mt-4 max-w-2xl text-lg text-slate-600">
+            <motion.p
+              variants={revealItem}
+              className="mt-4 max-w-2xl text-lg text-slate-600"
+            >
               Describe your problem in plain words. Get matched with verified professionals.
               Book with confidence using real-time availability and authentic reviews.
-            </p>
+            </motion.p>
 
-            <div className="mt-8 flex flex-wrap gap-4">
+            <motion.div variants={revealItem} className="mt-8 flex flex-wrap gap-4">
               <Button
                 href="/register/seeker"
                 className="group inline-flex items-center gap-3 rounded-2xl bg-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-emerald-200"
@@ -49,36 +77,46 @@ export default function Hero() {
                 Become a provider
                 <BadgeCheck className="h-4 w-4" />
               </Button>
-            </div>
+            </motion.div>
 
             {/* Key metrics */}
-            <div className="mt-8 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
-              <StatCard
-                value="4.9/5"
-                label="Average provider rating"
-              />
-              <StatCard
-                value="500+"
-                label="Verified service providers"
-              />
-              <StatCard
-                value="24/7"
-                label="Fast search & booking"
-              />
-            </div>
+            <motion.div
+              variants={revealItem}
+              className="mt-8 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3"
+            >
+              <StatCard value="4.9/5" label="Average provider rating" />
+              <StatCard value="500+" label="Verified service providers" />
+              <StatCard value="24/7" label="Fast search & booking" />
+            </motion.div>
 
             {/* trust features */}
-            <div className="mt-6 flex flex-wrap items-center gap-6 text-sm text-slate-700">
+            <motion.div
+              variants={revealItem}
+              className="mt-6 flex flex-wrap items-center gap-6 text-sm text-slate-700"
+            >
               <Feature icon={<ShieldCheck className="h-4 w-4 text-emerald-600" />} text="Verified profiles" />
               <Feature icon={<MapPin className="h-4 w-4 text-emerald-600" />} text="Location-aware matching" />
               <Feature icon={<Star className="h-4 w-4 text-emerald-500" />} text="Rated by real customers" />
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* RIGHT: Live match preview card */}
-          <div className="relative animate-slide-up-fade [animation-delay:160ms]">
+          <motion.div
+            className="relative"
+            initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+            whileInView={
+              reduceMotion
+                ? undefined
+                : { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut", delay: 0.08 } }
+            }
+            viewport={reduceMotion ? undefined : { once: true, amount: 0.25 }}
+          >
             <div className="absolute -inset-6 rounded-3xl bg-emerald-50/50 blur-2xl" />
-            <div className="relative overflow-hidden rounded-3xl border border-white bg-white p-5 shadow-[0_20px_60px_-20px_rgba(2,6,23,0.35)]">
+            <motion.div
+              className="relative overflow-hidden rounded-3xl border border-white bg-white p-5 shadow-[0_20px_60px_-20px_rgba(2,6,23,0.35)]"
+              whileHover={reduceMotion ? undefined : { y: -4 }}
+              transition={{ type: "spring", stiffness: 260, damping: 24 }}
+            >
               {/* header */}
               <div className="flex items-center justify-between rounded-2xl bg-emerald-800 px-5 py-3 text-white">
                 <div>
@@ -140,8 +178,8 @@ export default function Hero() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </div> {/* /container */}
     </section>
@@ -151,11 +189,16 @@ export default function Hero() {
 /* -- small presentational subcomponents (keeps main component focused) -- */
 
 function StatCard({ value, label }: { value: string; label: string }) {
+  const reduceMotion = useReducedMotion();
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+    <motion.div
+      className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
+      whileHover={reduceMotion ? undefined : { y: -3 }}
+      transition={{ type: "spring", stiffness: 260, damping: 22 }}
+    >
       <div className="text-2xl font-extrabold text-slate-900">{value}</div>
       <div className="mt-1 text-sm text-slate-600">{label}</div>
-    </div>
+    </motion.div>
   );
 }
 
