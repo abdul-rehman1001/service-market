@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Bell, MessageCircle, User, LogOut, Settings, LocateFixed, Navigation, House } from 'lucide-react';
+import { Bell, MessageCircle, User, LogOut, LocateFixed, Navigation, House } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useNotifications } from '@/hooks/useNotifications';
 
@@ -36,7 +36,6 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
 }) => {
   const router = useRouter();
   const [provider, setProvider] = useState<ProviderData | null>(null);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [locationMode, setLocationMode] = useState<LocationMode>('current');
   const [locationModeHydrated, setLocationModeHydrated] = useState(false);
@@ -45,7 +44,6 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
   const [locationMessage, setLocationMessage] = useState('Location sync idle');
   const [locationSyncing, setLocationSyncing] = useState(false);
   const { notifications, markAsRead } = useNotifications();
-  const profileMenuRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
   const watchIdRef = useRef<number | null>(null);
   const lastSyncRef = useRef<number>(0);
@@ -110,12 +108,9 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
     void applyDefaultLocation();
   }, [locationMode, hasDefaultLocation, locationModeHydrated]);
 
-  // Close dropdowns when clicking outside
+  // Close notification dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
-        setShowProfileMenu(false);
-      }
       if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
         setShowNotifications(false);
       }
@@ -547,68 +542,38 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
             <MessageCircle className="w-5 h-5 text-slate-600" />
           </button>
 
-          {/* Profile Dropdown */}
-          <div className="relative" ref={profileMenuRef}>
-            <button
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 transition-colors"
-            >
-              {provider?.user?.profileImage ? (
-                <img
-                  src={provider.user.profileImage}
-                  alt={`${provider.user.firstName} ${provider.user.lastName}`}
-                  className="w-8 h-8 rounded-full object-cover border-2 border-slate-200"
-                />
-              ) : provider?.user ? (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-semibold text-sm border-2 border-slate-200">
-                  {provider.user.firstName[0]}{provider.user.lastName[0]}
-                </div>
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-white font-semibold text-sm border-2 border-slate-200">
-                  <User className="w-4 h-4" />
-                </div>
-              )}
-            </button>
-
-            {/* Profile Dropdown Menu */}
-            {showProfileMenu && provider?.user && (
-              <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden">
-                <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
-                  <p className="font-semibold text-slate-800">
-                    {provider.user.firstName} {provider.user.lastName}
-                  </p>
-                  {provider.businessName && (
-                    <p className="text-xs text-slate-500 mt-1">{provider.businessName}</p>
-                  )}
-                </div>
-                <div className="py-2">
-                  <Link
-                    href="/profile"
-                    className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    <User className="w-4 h-4" />
-                    View Profile
-                  </Link>
-                  <Link
-                    href="/profile/settings"
-                    className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    <Settings className="w-4 h-4" />
-                    Settings
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Logout
-                  </button>
-                </div>
+          {/* Profile Button */}
+          <Link
+            href="/profile"
+            className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 transition-colors"
+            title="View Profile"
+          >
+            {provider?.user?.profileImage ? (
+              <img
+                src={provider.user.profileImage}
+                alt={`${provider.user.firstName} ${provider.user.lastName}`}
+                className="w-8 h-8 rounded-full object-cover border-2 border-slate-200"
+              />
+            ) : provider?.user ? (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-semibold text-sm border-2 border-slate-200">
+                {provider.user.firstName[0]}{provider.user.lastName[0]}
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-white font-semibold text-sm border-2 border-slate-200">
+                <User className="w-4 h-4" />
               </div>
             )}
-          </div>
+          </Link>
+
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 text-white px-3 py-2 text-sm font-semibold hover:bg-emerald-700 transition-colors"
+            title="Logout"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline">Logout</span>
+          </button>
         </div>
       </div>
     </header>
