@@ -82,20 +82,16 @@ export default function ServicesPageClient() {
 
   // Reorder providers to show selected provider at the top
   const orderedProviders = useMemo(() => {
-    if (!selectedProvider || !paginatedItems.some(p => p.id === selectedProvider.id)) {
-      return paginatedItems;
-    }
-    
-    const selectedIndex = paginatedItems.findIndex(p => p.id === selectedProvider.id);
-    if (selectedIndex === -1 || selectedIndex === 0) {
-      return paginatedItems;
-    }
-    
-    // Move selected provider to the top
+    const selectedId = selectedProvider?.id as string | undefined;
+    if (!selectedId) return paginatedItems;
+
+    const selectedIndex = paginatedItems.findIndex((p) => p.id === selectedId);
+    if (selectedIndex <= 0) return paginatedItems;
+
     const reordered = [...paginatedItems];
     const [selected] = reordered.splice(selectedIndex, 1);
     return [selected, ...reordered];
-  }, [paginatedItems, selectedProvider]);
+  }, [paginatedItems, selectedProvider?.id]);
 
   // Fetch all providers for initial unfiltered view
   useEffect(() => {
@@ -253,7 +249,21 @@ export default function ServicesPageClient() {
   };
 
   const handleProviderSelect = (provider: any) => {
-    setSelectedProvider(provider);
+    const providerId = provider?.id as string | undefined;
+    const fullProvider = providerId
+      ? filteredProviders.find((p) => p.id === providerId) ?? provider
+      : provider;
+    setSelectedProvider(fullProvider);
+
+    // If the provider is not on the current 6-item page, jump to the correct page
+    // so the card exists in the list and can be highlighted.
+    if (providerId) {
+      const indexInFiltered = filteredProviders.findIndex((p) => p.id === providerId);
+      if (indexInFiltered >= 0) {
+        const targetPage = Math.floor(indexInFiltered / 6) + 1;
+        if (targetPage !== currentPage) goTo(targetPage);
+      }
+    }
   };
 
   return (
