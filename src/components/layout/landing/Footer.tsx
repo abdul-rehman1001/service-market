@@ -34,19 +34,20 @@ export default function LandingFooter() {
           <div>
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">Company</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link href="/landing/about" className="text-slate-400 transition hover:text-emerald-300">About</Link></li>
-              <li><Link href="/landing/faq" className="text-slate-400 transition hover:text-emerald-300">FAQ</Link></li>
-              <li><Link href="/login" className="text-slate-400 transition hover:text-emerald-300">Login</Link></li>
-              <li><Link href="/register" className="text-slate-400 transition hover:text-emerald-300">Create Account</Link></li>
+              <li><Link href="/landing/about" className="text-slate-400 transition hover:text-emerald-300">About Us</Link></li>
+              <li><Link href="/landing/faq" className="text-slate-400 transition hover:text-emerald-300">FAQs</Link></li>
+              <li><Link href="/landing/privacy" className="text-slate-400 transition hover:text-emerald-300">Privacy Policy</Link></li>
+              <li><Link href="/landing/terms" className="text-slate-400 transition hover:text-emerald-300">Terms & Conditions</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">Legal</h4>
+            <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">Support</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link href="/landing/terms" className="text-slate-400 transition hover:text-emerald-300">Terms of Service</Link></li>
-              <li><Link href="/landing/privacy" className="text-slate-400 transition hover:text-emerald-300">Privacy Policy</Link></li>
-              <li><Link href="/landing#testimonials" className="text-slate-400 transition hover:text-emerald-300">Customer Stories</Link></li>
+              <li><Link href="/login" className="text-slate-400 transition hover:text-emerald-300">Login</Link></li>
+              <li><Link href="/register" className="text-slate-400 transition hover:text-emerald-300">Create Account</Link></li>
+              <li><Link href="/register/provider" className="text-slate-400 transition hover:text-emerald-300">Become a Provider</Link></li>
+              <li><Link href="/register/seeker" className="text-slate-400 transition hover:text-emerald-300">Find Services</Link></li>
             </ul>
           </div>
         </div>
