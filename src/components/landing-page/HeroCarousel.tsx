@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Button from "../ui/Button";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, BadgeDollarSign, Clock3, ShieldCheck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 interface CarouselItem {
   id: number;
@@ -17,9 +17,9 @@ const carouselItems: CarouselItem[] = [
   {
     id: 1,
     eyebrow: "For Service Seekers",
-    title: "Find trusted professionals for plumbing, electrical, cleaning & more.",
+    title: "Find professionals for car repair and home appliance repair.",
     subtitle:
-      "Describe your problem, get matched with verified providers, view portfolios, check reviews, and book instantly.",
+      "Describe your need, get matched with verified providers, check reviews, and book instantly.",
     image: "/images/service1.png",
   },
   {
@@ -27,13 +27,13 @@ const carouselItems: CarouselItem[] = [
     eyebrow: "For Service Providers",
     title: "Grow your business with verified credentials and real bookings.",
     subtitle:
-      "Upload certifications, showcase your portfolio, manage availability, and connect with customers actively looking for your services.",
+      "Upload certifications, manage availability, and connect with customers actively looking for your services.",
     image: "/images/service2.png",
   },
   {
     id: 3,
     eyebrow: "Smart & Simple",
-    title: "Everything happens in one place - search, chat, book, and review.",
+    title: "Everything happens in one place search, chat, book, and review.",
     subtitle:
       "No phone calls, no confusion. Track booking status, chat with providers in real-time, and leave reviews after job completion.",
     image: "/images/service3.png",
@@ -50,7 +50,7 @@ export default function HeroCarousel() {
         show: { transition: { staggerChildren: 0.08 } },
       };
 
-  const item = reduceMotion
+  const cardVariant = reduceMotion
     ? undefined
     : {
         hidden: { opacity: 0, y: 18 },
@@ -69,41 +69,18 @@ export default function HeroCarousel() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
 
         {/* Section Header */}
-        <motion.div
-          variants={item}
-          className="mb-14 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between"
-        >
-          <div>
-            <div className="text-sm font-semibold uppercase tracking-widest text-emerald-600">
-              How It Works
-            </div>
-
-            <h2 className="mt-3 max-w-3xl text-3xl font-extrabold text-slate-900 md:text-5xl">
-              Simple, fast, and secure service booking
-            </h2>
+        <motion.div variants={cardVariant} className="mx-auto mb-14 max-w-3xl text-center">
+          <div className="text-sm font-semibold uppercase tracking-widest text-emerald-600">
+            How it works
           </div>
 
-          {/* Feature indicators */}
-          <motion.div
-            className="grid gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:grid-cols-3"
-            whileHover={reduceMotion ? undefined : { y: -3 }}
-            transition={{ type: "spring", stiffness: 260, damping: 24 }}
-          >
-            <div className="flex items-center gap-2 text-sm text-slate-700">
-              <ShieldCheck className="h-4 w-4 text-emerald-600" />
-              Approved providers
-            </div>
+          <h2 className="mt-3 text-3xl font-extrabold text-slate-900 md:text-5xl">
+            Simple, fast, and secure service booking
+          </h2>
 
-            <div className="flex items-center gap-2 text-sm text-slate-700">
-              <Clock3 className="h-4 w-4 text-emerald-600" />
-              Faster discovery
-            </div>
-
-            <div className="flex items-center gap-2 text-sm text-slate-700">
-              <BadgeDollarSign className="h-4 w-4 text-emerald-600" />
-              Transparent pricing
-            </div>
-          </motion.div>
+          <p className="mt-4 text-base leading-8 text-slate-600 md:text-lg">
+            Compare trusted providers, check availability, and book the service you need in one place.
+          </p>
         </motion.div>
 
         {/* Cards */}
@@ -112,7 +89,7 @@ export default function HeroCarousel() {
             <motion.article
               key={item.id}
               className="group overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-              variants={item}
+              variants={cardVariant}
               whileHover={reduceMotion ? undefined : { y: -6 }}
               transition={{ type: "spring", stiffness: 260, damping: 22 }}
             >
@@ -148,7 +125,7 @@ export default function HeroCarousel() {
         </div>
 
         {/* CTA */}
-        <motion.div variants={item} className="mt-14 flex justify-center">
+        <motion.div variants={cardVariant} className="mt-14 flex justify-center">
           <Button
             href="/register"
             aria-label="Start using Servizo"
