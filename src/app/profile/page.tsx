@@ -384,15 +384,7 @@ export default function ProfilePage() {
                         className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
                       />
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      {user.emailVerified && (
-                        <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
-                      )}
                     </div>
-                    {user.emailVerified ? (
-                      <p className="text-xs text-green-600 mt-1">✓ Verified</p>
-                    ) : (
-                      <p className="text-xs text-yellow-600 mt-1">⚠ Not verified</p>
-                    )}
                   </div>
 
                   {/* Phone - Read Only */}
@@ -408,13 +400,7 @@ export default function ProfilePage() {
                         className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
                       />
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      {user.phoneVerified && (
-                        <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
-                      )}
                     </div>
-                    {user.phoneVerified && (
-                      <p className="text-xs text-green-600 mt-1">✓ Verified</p>
-                    )}
                   </div>
 
                   <div>
