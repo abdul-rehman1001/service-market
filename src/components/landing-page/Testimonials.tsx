@@ -38,12 +38,12 @@ export default function Testimonials() {
       metric: "Fast response from provider",
     },
     {
-      text: "Booking a house cleaner was quick and easy. He arrived on time and provided an excellent, reliable service.",
-      name: "Ali",
+      text: "The AC repair technician arrived the same day and fixed the issue quickly. Very professional and thorough.",
+      name: "Sana",
       role: "Homeowner",
-      initials: "A",
+      initials: "S",
       bg: "bg-emerald-100 text-emerald-700",
-      metric: "Smooth booking experience",
+      metric: "AC repaired same day",
     },
   ];
 
@@ -57,12 +57,9 @@ export default function Testimonials() {
       viewport={reduceMotion ? undefined : { once: true, amount: 0.2 }}
     >
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div
-          variants={item}
-          className="mb-14 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between"
-        >
-          <div className="max-w-3xl">
-            <div className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700">Customer Reviews</div>
+        <motion.div variants={item} className="mb-14 text-center">
+          <div className="mx-auto max-w-3xl">
+            <div className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700">Customer reviews</div>
             <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-950 md:text-5xl">
               Trusted by customers across Pakistan
             </h2>
@@ -70,24 +67,6 @@ export default function Testimonials() {
               Real experiences from people who found the right professionals for their needs. Fast, reliable, and verified.
             </p>
           </div>
-          <motion.div
-            className="grid gap-4 rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5 shadow-sm sm:grid-cols-3"
-            whileHover={reduceMotion ? undefined : { y: -3 }}
-            transition={{ type: "spring", stiffness: 260, damping: 24 }}
-          >
-            <div>
-              <div className="text-2xl font-black text-slate-950">92%</div>
-              <div className="text-sm text-slate-600">Users report faster discovery</div>
-            </div>
-            <div>
-              <div className="text-2xl font-black text-slate-950">4.9</div>
-              <div className="text-sm text-slate-600">Average satisfaction rating</div>
-            </div>
-            <div>
-              <div className="text-2xl font-black text-slate-950">500+</div>
-              <div className="text-sm text-slate-600">Verified providers listed</div>
-            </div>
-          </motion.div>
         </motion.div>
 
         <div className="grid gap-8 md:grid-cols-3">

@@ -37,7 +37,7 @@ export default function HowItWorks() {
     {
       icon: <CheckCircle2 className="h-5 w-5 text-emerald-700" />,
       title: "Compare verified providers",
-      desc: "View profiles, portfolios, ratings, prices, and real-time availability. Filter by location, price, or experience.",
+      desc: "View profiles, ratings, prices, and real-time availability. Filter by location, price, or experience.",
       step: 2,
     },
     {
@@ -52,13 +52,13 @@ export default function HowItWorks() {
     {
       icon: <UserRoundPlus className="h-5 w-5 text-emerald-700" />,
       title: "Register and verify",
-      desc: "Complete registration, upload CNIC for verification, add certifications, and showcase your portfolio with work images.",
+      desc: "Complete registration, upload CNIC for verification, add certifications.",
       step: 1,
     },
     {
       icon: <BellRing className="h-5 w-5 text-emerald-700" />,
       title: "Receive booking requests",
-      desc: "Get notified when customers book your services. Accept, reject, or suggest alternate times within 30 minutes.",
+      desc: "Get notified when customers book your services. Accept, reject,  within 30 minutes.",
       step: 2,
     },
     {
