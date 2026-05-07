@@ -47,7 +47,7 @@ export default function CTA() {
               variants={item}
               className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-emerald-300 backdrop-blur"
             >
-              <Sparkles className="h-4 w-4 text-emerald-400" />
+              
               Join our growing community
             </motion.div>
 
