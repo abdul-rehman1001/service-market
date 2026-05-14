@@ -1,5 +1,15 @@
 import { PrismaClient } from '@prisma/client'
 
+const appEnv = process.env.APP_ENV?.toLowerCase()
+const localUrl = process.env.DATABASE_URL_LOCAL
+const productionUrl = process.env.DATABASE_URL_PRODUCTION
+
+if (appEnv === 'production' && productionUrl) {
+  process.env.DATABASE_URL = productionUrl
+} else if (appEnv === 'local' && localUrl) {
+  process.env.DATABASE_URL = localUrl
+}
+
 const prismaClientSingleton = () => {
   const enableQueryLog =
     process.env.PRISMA_LOG_QUERIES === '1' ||

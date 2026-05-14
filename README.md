@@ -20,6 +20,17 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Environment Setup
+
+1. Copy `.env.example` to `.env.local`.
+2. Fill in the required values.
+3. For local dev, keep `APP_ENV=local` and set `DATABASE_URL_LOCAL`.
+4. For production, set `APP_ENV=production` and `DATABASE_URL_PRODUCTION`.
+
+Notes:
+- Prisma CLI uses `DATABASE_URL` for local migrations.
+- Vercel should use `DATABASE_URL_PRODUCTION` with `APP_ENV=production`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
