@@ -2,7 +2,12 @@ import { getMessaging, getToken, onMessage, MessagePayload } from 'firebase/mess
 import { getApps, initializeApp } from 'firebase/app';
 import { firebaseConfig } from './firebaseConfig';
 
-const VAPID_KEY = 'BExUFPHYyHy_viI1PvoY17qKE6NH84dUv3aPkzh_79yYu0rqs4Wq1gbxTtmjcA_EwxdGlF5Tk36DmzKuBjlACjs';
+function requirePublicEnv(value: string | undefined, name: string): string {
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
 
 function getFirebaseApp() {
   return getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
@@ -12,21 +17,27 @@ export async function requestNotificationPermission(): Promise<string | null> {
   if (typeof window === 'undefined') return null;
 
   try {
+    const vapidKey = requirePublicEnv(
+      process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+      'NEXT_PUBLIC_FIREBASE_VAPID_KEY'
+    );
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
       console.warn('Notification permission denied');
       return null;
     }
 
-    // Register the service worker
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    // Register the service worker (served by API route for env-backed config)
+    const registration = await navigator.serviceWorker.register('/api/firebase-messaging-sw', {
+      scope: '/',
+    });
     await navigator.serviceWorker.ready;
 
     const app = getFirebaseApp();
     const messaging = getMessaging(app);
 
     const token = await getToken(messaging, {
-      vapidKey: VAPID_KEY,
+      vapidKey,
       serviceWorkerRegistration: registration,
     });
 

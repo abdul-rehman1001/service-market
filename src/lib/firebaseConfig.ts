@@ -1,19 +1,30 @@
-// Import the functions you need from the SDKs you need
+function requirePublicEnv(name: string, value: string | undefined): string {
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
 
+const firebaseApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+const firebaseAuthDomain = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
+const firebaseProjectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+const firebaseStorageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+const firebaseMessagingSenderId = process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID;
+const firebaseAppId = process.env.NEXT_PUBLIC_FIREBASE_APP_ID;
+const firebaseMeasurementId = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID;
 
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Firebase web config (public values, still sourced from env for deployments)
 export const firebaseConfig = {
-  apiKey: "AIzaSyDWpIzMvAiqKgXHeAUh1PadeFSFO1i2_-U",
-  authDomain: "service-app-b89b3.firebaseapp.com",
-  projectId: "service-app-b89b3",
-  storageBucket: "service-app-b89b3.firebasestorage.app",
-  messagingSenderId: "1091116913641",
-  appId: "1:1091116913641:web:f5f5b9e8bf2c355548b178",
-  measurementId: "G-R40H0C63TP"
+  apiKey: requirePublicEnv('NEXT_PUBLIC_FIREBASE_API_KEY', firebaseApiKey),
+  authDomain: requirePublicEnv('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN', firebaseAuthDomain),
+  projectId: requirePublicEnv('NEXT_PUBLIC_FIREBASE_PROJECT_ID', firebaseProjectId),
+  storageBucket: requirePublicEnv('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET', firebaseStorageBucket),
+  messagingSenderId: requirePublicEnv(
+    'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
+    firebaseMessagingSenderId
+  ),
+  appId: requirePublicEnv('NEXT_PUBLIC_FIREBASE_APP_ID', firebaseAppId),
+  ...(firebaseMeasurementId ? { measurementId: firebaseMeasurementId } : {}),
 };
 
 

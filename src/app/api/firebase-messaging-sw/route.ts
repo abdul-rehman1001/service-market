@@ -1,17 +1,37 @@
-/* eslint-disable no-undef */
+import { NextResponse } from 'next/server';
+
+function getRequiredPublicEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+export async function GET() {
+  const measurementId = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID;
+
+  const config = {
+    apiKey: getRequiredPublicEnv('NEXT_PUBLIC_FIREBASE_API_KEY'),
+    authDomain: getRequiredPublicEnv('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'),
+    projectId: getRequiredPublicEnv('NEXT_PUBLIC_FIREBASE_PROJECT_ID'),
+    storageBucket: getRequiredPublicEnv('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'),
+    messagingSenderId: getRequiredPublicEnv('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'),
+    appId: getRequiredPublicEnv('NEXT_PUBLIC_FIREBASE_APP_ID'),
+    ...(measurementId ? { measurementId } : {}),
+  };
+
+  const swSource = `/* eslint-disable no-undef */
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
-firebase.initializeApp({
-  apiKey: "AIzaSyDWpIzMvAiqKgXHeAUh1PadeFSFO1i2_-U",
-  authDomain: "service-app-b89b3.firebaseapp.com",
-  projectId: "service-app-b89b3",
-  storageBucket: "service-app-b89b3.firebasestorage.app",
-  messagingSenderId: "1091116913641",
-  appId: "1:1091116913641:web:f5f5b9e8bf2c355548b178",
-});
+firebase.initializeApp(${JSON.stringify(config)});
 
 const messaging = firebase.messaging();
+
+  // Ensure event handlers are registered during initial evaluation
+  self.addEventListener('push', () => {});
+  self.addEventListener('pushsubscriptionchange', () => {});
 
 // Handle background push notifications (when tab is closed or in background)
 messaging.onBackgroundMessage((payload) => {
@@ -48,3 +68,13 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+`;
+
+  return new NextResponse(swSource, {
+    headers: {
+      'Content-Type': 'application/javascript; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'Service-Worker-Allowed': '/',
+    },
+  });
+}
