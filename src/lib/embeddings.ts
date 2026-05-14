@@ -1,5 +1,9 @@
 
-import { pipeline, FeatureExtractionPipeline } from '@xenova/transformers';
+import { env, pipeline, FeatureExtractionPipeline } from '@xenova/transformers';
+
+// Serverless environments need a writable cache directory
+env.cacheDir = process.env.TRANSFORMERS_CACHE || '/tmp/transformers';
+env.allowLocalModels = false;
 
 let embedder: FeatureExtractionPipeline | null = null;
 
