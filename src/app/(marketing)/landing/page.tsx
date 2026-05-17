@@ -7,13 +7,13 @@ import HeroCarousel from "@/components/landing-page/HeroCarousel";
 
 export default function LandingPage() {
   return (
-    <>
+    <main className="overflow-x-hidden bg-white text-slate-900">
       <Hero />
       <HeroCarousel />
       <Features />
       <HowItWorks />
       <Testimonials />
       <CTA />
-    </>
+    </main>
   );
 }

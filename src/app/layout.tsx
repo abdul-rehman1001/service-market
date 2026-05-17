@@ -1,6 +1,15 @@
 // src/app/layout.tsx
 import "./globals.css";
 import NotificationProvider from "@/components/layout/NotificationProvider";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'Servizo - Service Marketplace',
+  description: 'Find verified service providers and book services near you',
+  icons: {
+    icon: '/images/Servizo.jpeg',
+  },
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

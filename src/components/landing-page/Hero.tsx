@@ -2,219 +2,225 @@
 
 import Image from "next/image";
 import Button from "../ui/Button";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 import {
   ArrowRight,
   BadgeCheck,
   MapPin,
   ShieldCheck,
-  Sparkles,
   Star,
 } from "lucide-react";
+import { landingImages } from "@/lib/landing-images";
 
 export default function Hero() {
   const reduceMotion = useReducedMotion();
 
-  const revealParent = reduceMotion
+  const fade: Variants | undefined = reduceMotion
     ? undefined
     : {
-        hidden: {},
-        show: { transition: { staggerChildren: 0.08 } },
+        hidden: { opacity: 0, y: 24 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } },
       };
 
-  const revealItem = reduceMotion
+  const stagger: Variants | undefined = reduceMotion
+    ? undefined
+    : { hidden: {}, show: { transition: { staggerChildren: 0.1, delayChildren: 0.15 } } };
+
+  const floatCard: Variants | undefined = reduceMotion
     ? undefined
     : {
-        hidden: { opacity: 0, y: 18 },
-        show: { opacity: 1, y: 0, transition: { duration: 0.55 } },
+        hidden: { opacity: 0, y: 18, scale: 0.98 },
+        show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, ease: "easeOut" as const } },
       };
 
   return (
-    <section className="relative overflow-hidden bg-white py-16 md:py-24">
-      {/* subtle decorative shapes (purely presentational) */}
-      <div className="pointer-events-none absolute -left-20 top-8 h-72 w-72 rounded-full bg-emerald-100/40 blur-3xl animate-drift" />
-      <div className="pointer-events-none absolute right-8 top-0 h-80 w-80 rounded-full bg-emerald-50/40 blur-2xl animate-float-medium" />
-
-      <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] items-center">
-          {/* LEFT: Headline + CTAs */}
+    <section className="relative overflow-hidden bg-white py-12 sm:py-16 md:py-20 lg:py-24">
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
+        <div className="animate-float-slow absolute -left-24 top-16 h-72 w-72 rounded-full bg-emerald-100/50 blur-3xl" />
+        <div className="animate-float-medium absolute right-[-5rem] top-24 h-80 w-80 rounded-full bg-slate-100 blur-3xl" />
+        <div className="animate-float-slow absolute bottom-[-7rem] left-1/3 h-72 w-72 rounded-full bg-emerald-50 blur-3xl [animation-delay:1.5s]" />
+      </div>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+          {/* Left column */}
           <motion.div
-            variants={revealParent}
+            variants={stagger}
             initial={reduceMotion ? false : "hidden"}
-            whileInView={reduceMotion ? undefined : "show"}
-            viewport={reduceMotion ? undefined : { once: true, amount: 0.25 }}
+            animate={reduceMotion ? undefined : "show"}
+            className="order-2 lg:order-1 text-center md:text-left flex flex-col items-center md:items-start"
           >
+            <motion.div variants={fade}>
+              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-700">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Trusted by 500+ service seekers
+              </span>
+            </motion.div>
+
             <motion.h1
-              variants={revealItem}
-              className="mt-6 max-w-3xl text-4xl font-extrabold leading-tight text-slate-900 sm:text-5xl lg:text-6xl"
+              variants={fade}
+              className="mt-5 text-3xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-4xl md:text-5xl lg:text-[3.25rem] lg:leading-[1.15]"
             >
-              Book trusted services near you with confidence.
+              Book services
+              <br />
+              <span className="text-emerald-600">near you</span> with confidence.
             </motion.h1>
 
             <motion.p
-              variants={revealItem}
-              className="mt-4 max-w-2xl text-lg text-slate-600"
+              variants={fade}
+              className="mt-5 max-w-lg text-base leading-relaxed text-slate-600 sm:text-lg"
             >
-              Tell us what you need, compare nearby providers, and book the right professional without any hassle.
+              Tell us what you need, compare verified providers nearby, and book
+              the right professional, no hassle, no guesswork.
             </motion.p>
 
-            <motion.div variants={revealItem} className="mt-8 flex flex-wrap gap-4">
+            <motion.div
+              variants={fade}
+              className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center"
+            >
               <Button
                 href="/register/seeker"
-                className="group inline-flex items-center gap-3 rounded-2xl bg-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-emerald-200"
-                aria-label="Find a service"
+                className="group inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-7 py-3.5 text-base font-semibold text-white shadow-md transition-all duration-200 hover:bg-emerald-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 active:scale-[0.98] sm:w-auto w-full"
               >
                 Find a service
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
               </Button>
-
               <Button
                 href="/register/provider"
-                className="group inline-flex items-center gap-3 rounded-2xl border border-emerald-200 bg-white px-6 py-3 text-base font-semibold text-emerald-700 shadow-sm hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-emerald-100"
-                aria-label="Become a provider"
+                className="group inline-flex items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-7 py-3.5 text-base font-semibold text-slate-800 transition-all duration-200 hover:border-emerald-600 hover:text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 active:scale-[0.98] sm:w-auto w-full"
               >
                 Become a provider
                 <BadgeCheck className="h-4 w-4" />
               </Button>
             </motion.div>
 
-            {/* Key metrics */}
+            {/* Stats row */}
             <motion.div
-              variants={revealItem}
-              className="mt-8 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3"
+              variants={fade}
+              className="mt-10 grid grid-cols-3 gap-3 sm:gap-4 w-full"
             >
-              <StatCard value="4.9/5" label="Average provider rating" />
-              <StatCard value="500+" label="Local providers available" />
-              <StatCard value="24/7" label="Search and booking access" />
+              <StatCard icon={<Star className="h-4 w-4 text-emerald-600" />} value="4.9/5" label="Avg rating" />
+              <StatCard icon={<BadgeCheck className="h-4 w-4 text-emerald-600" />} value="500+" label="Verified pros" />
+              <StatCard icon={<MapPin className="h-4 w-4 text-emerald-600" />} value="24/7" label="Available" />
             </motion.div>
 
-            {/* trust features */}
+            {/* Trust chips */}
             <motion.div
-              variants={revealItem}
-              className="mt-6 flex flex-wrap items-center gap-6 text-sm text-slate-700"
+              variants={fade}
+              className="mt-6 flex flex-wrap items-center justify-center md:justify-start gap-3"
             >
-              <Feature icon={<ShieldCheck className="h-4 w-4 text-emerald-600" />} text="Verified profiles" />
-              <Feature icon={<MapPin className="h-4 w-4 text-emerald-600" />} text="Find Providers near you" />
-              <Feature icon={<Star className="h-4 w-4 text-emerald-500" />} text="Rated by real customers" />
+              <TrustChip icon={<ShieldCheck className="h-4 w-4 text-emerald-600" />} text="Verified profiles" />
+              <TrustChip icon={<MapPin className="h-4 w-4 text-emerald-600" />} text="Near-you matching" />
+              <TrustChip icon={<Star className="h-4 w-4 text-emerald-600" />} text="Real customer reviews" />
             </motion.div>
           </motion.div>
 
-          {/* RIGHT: Live match preview card */}
+          {/* Right column — preview card */}
           <motion.div
-            className="relative"
-            initial={reduceMotion ? false : { opacity: 0, y: 18 }}
-            whileInView={
-              reduceMotion
-                ? undefined
-                : { opacity: 1, y: 0, transition: { duration: 0.55, delay: 0.08 } }
-            }
-            viewport={reduceMotion ? undefined : { once: true, amount: 0.25 }}
+            variants={floatCard}
+            className="relative order-1 lg:order-2"
+            initial={reduceMotion ? false : "hidden"}
+            animate={reduceMotion ? undefined : "show"}
           >
-            <div className="absolute -inset-6 rounded-3xl bg-emerald-50/50 blur-2xl" />
-            <motion.div
-              className="relative overflow-hidden rounded-3xl border border-white bg-white p-5 shadow-[0_20px_60px_-20px_rgba(2,6,23,0.35)]"
-              whileHover={reduceMotion ? undefined : { y: -4 }}
-              transition={{ type: "spring", stiffness: 260, damping: 24 }}
-            >
-              {/* header */}
-              <div className="flex items-center justify-between rounded-2xl bg-emerald-800 px-5 py-3 text-white">
+            <div className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/70 sm:rounded-3xl">
+              {/* Card header */}
+              <div className="flex items-center justify-between bg-emerald-600 px-5 py-3.5 text-white sm:px-6">
                 <div>
-                  <div className="text-xs uppercase tracking-widest text-emerald-200">Quick service match</div>
-                  <div className="mt-1 text-sm font-semibold">Need wiring repair at home</div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-emerald-100">Quick match</p>
+                  <p className="mt-0.5 text-sm font-bold sm:text-base">Need wiring repair at home</p>
                 </div>
-                <div className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium">Matched</div>
+                <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold backdrop-blur-sm">
+                  Matched
+                </span>
               </div>
 
-              {/* content */}
-              <div className="mt-5 grid gap-4 lg:grid-cols-[1.06fr_0.94fr]">
-                <div className="overflow-hidden rounded-2xl border border-emerald-100 bg-slate-50 p-4">
-                  <div className="mb-3 flex items-center justify-between">
+              {/* Card body */}
+              <div className="grid gap-3 p-4 sm:p-5 lg:grid-cols-[1.1fr_0.9fr]">
+                {/* Image */}
+                <div className="overflow-hidden rounded-xl border border-slate-100 bg-slate-50 p-3">
+                  <div className="mb-2 flex items-center justify-between">
                     <div>
-                      <div className="text-sm font-semibold text-slate-900">Top Match</div>
-                      <div className="text-sm text-slate-500">Selected using your request, location, and availability</div>
+                      <p className="text-sm font-bold text-slate-900">Top Match</p>
                     </div>
-                    <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Best Match</div>
+                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">
+                      Best fit
+                    </span>
                   </div>
-
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-slate-100">
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-slate-100">
                     <Image
-                      src="/images/service2.png"
+                      src={landingImages.service2}
                       alt="Professional service provider"
                       fill
-                      style={{ objectFit: "cover" }}
+                      className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                       priority
-                      sizes="(min-width: 1024px) 560px, 100vw"
+                      sizes="(min-width: 1024px) 400px, 100vw"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="rounded-2xl border border-slate-100 bg-white p-4">
-                    <div className="text-sm font-semibold text-slate-900">Provider Details</div>
-                    <div className="mt-3 space-y-3 text-sm text-slate-600">
-                      <KeyValue label="Category" value="Electrician" />
-                      <KeyValue label="Available" value="Today" valueClass="text-emerald-700 font-semibold" />
-                      <KeyValue label="Response Time" value="Under 30 min" />
+                {/* Details */}
+                <div className="space-y-3">
+                  <div className="rounded-xl border border-slate-100 bg-white p-3.5">
+                    <p className="text-sm font-bold text-slate-900">Provider Details</p>
+                    <div className="mt-2.5 space-y-2">
+                      <DetailRow label="Category" value="Electrician" />
+                      <DetailRow label="Available" value="Today" highlight />
+                      <DetailRow label="Response" value="Under 30 min" />
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-emerald-100 bg-white p-4">
-                    <div className="text-sm font-semibold text-slate-900">Why Choose Us</div>
-                    <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                      <li className="flex items-start gap-3">
-                        <ShieldCheck className="mt-0.5 h-4 w-4 text-emerald-600" />
-                        Verified providers only
+                  <div className="rounded-xl border border-slate-100 bg-white p-3.5">
+                    <p className="text-sm font-bold text-slate-900">Why Servizo</p>
+                    <ul className="mt-2.5 space-y-2 text-sm text-slate-600">
+                      <li className="flex items-start gap-2">
+                        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                        Verified &amp; certified providers
                       </li>
-                      <li className="flex items-start gap-3">
-                        <Sparkles className="mt-0.5 h-4 w-4 text-emerald-600" />
-                        Matches based on your request
+                      <li className="flex items-start gap-2">
+                        <Star className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                        AI-matched to your request
                       </li>
-                      <li className="flex items-start gap-3">
-                        <MapPin className="mt-0.5 h-4 w-4 text-emerald-600" />
-                        Find providers near you
+                      <li className="flex items-start gap-2">
+                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                        Local providers nearby
                       </li>
                     </ul>
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </motion.div>
         </div>
-      </div> {/* /container */}
+      </div>
     </section>
   );
 }
 
-/* -- small presentational subcomponents (keeps main component focused) -- */
-
-function StatCard({ value, label }: { value: string; label: string }) {
-  const reduceMotion = useReducedMotion();
+function StatCard({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
   return (
-    <motion.div
-      className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
-      whileHover={reduceMotion ? undefined : { y: -3 }}
-      transition={{ type: "spring", stiffness: 260, damping: 22 }}
-    >
-      <div className="text-2xl font-extrabold text-slate-900">{value}</div>
-      <div className="mt-1 text-sm text-slate-600">{label}</div>
-    </motion.div>
-  );
-}
-
-function Feature({ icon, text }: { icon: React.ReactNode; text: string }) {
-  return (
-    <div className="flex items-center gap-2 text-sm">
-      {icon}
-      <span>{text}</span>
+    <div className="rounded-xl border border-slate-100 bg-white p-3.5 text-center shadow-sm transition-shadow duration-200 hover:shadow-md sm:p-4">
+      <div className="mx-auto mb-1.5 flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50">
+        {icon}
+      </div>
+      <p className="text-lg font-extrabold text-slate-900 sm:text-xl">{value}</p>
+      <p className="text-xs text-slate-500">{label}</p>
     </div>
   );
 }
 
-function KeyValue({ label, value, valueClass = "" }: { label: string; value: string; valueClass?: string }) {
+function TrustChip({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
-    <div className="flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-sm">
-      <span className="text-sm text-slate-600">{label}</span>
-      <span className={`text-sm ${valueClass} text-slate-900`}>{value}</span>
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-100 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700">
+      {icon}
+      {text}
+    </span>
+  );
+}
+
+function DetailRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+      <span className="text-sm text-slate-500">{label}</span>
+      <span className={`text-sm font-semibold ${highlight ? "text-emerald-600" : "text-slate-900"}`}>{value}</span>
     </div>
   );
 }

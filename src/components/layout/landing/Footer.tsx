@@ -5,20 +5,20 @@ export default function LandingFooter() {
   return (
     <footer className="border-t border-slate-200 bg-slate-950 pt-16 text-slate-300">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="grid grid-cols-1 gap-10 border-b border-white/10 pb-12 md:grid-cols-4">
-          <div className="md:col-span-1">
-            <div className="mb-4">
+        <div className="grid grid-cols-1 gap-10 border-b border-white/10 pb-12 md:grid-cols-4 text-center md:text-left">
+          <div className="md:col-span-1 md:text-left">
+            <div className="mb-4 flex flex-col items-center md:items-start">
               <div className="text-xl font-black text-white">Servizo</div>
               <p className="mt-2 text-sm leading-7 text-slate-400">
                 Find trusted service providers, compare options, and book with confidence across Pakistan.
               </p>
 
               <div className="mt-4 space-y-2 text-sm text-slate-400">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center md:justify-start gap-3">
                   <Mail className="h-4 w-4 text-slate-400" />
                   <a href="mailto:support@servizo.com" className="transition hover:text-emerald-300">support@servizo.com</a>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center md:justify-start gap-3">
                   <Phone className="h-4 w-4 text-slate-400" />
                   <a href="tel:+1234567890" className="transition hover:text-emerald-300">+1 234 567 890</a>
                 </div>

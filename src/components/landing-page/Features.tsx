@@ -1,127 +1,118 @@
 "use client";
 
+import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
-import {
-  BrainCircuit,
-  CalendarClock,
-  CircleCheckBig,
-  ShieldCheck,
-  SlidersHorizontal,
-  Users,
-} from "lucide-react";
+import { landingImages } from "@/lib/landing-images";
 
-type Feature = {
-  icon: React.ReactNode;
+type FeaturedService = {
+  id: string;
   title: string;
   description: string;
+  image: string;
+  badge: string;
+  wide?: boolean;
 };
+
+const services: FeaturedService[] = [
+  {
+    id: "plumber",
+    title: "Plumber",
+    description: "Professional plumbing repairs, installations, and maintenance from verified plumbers.",
+    image: landingImages.plumber,
+    badge: "Plumbing",
+  },
+  {
+    id: "electrical",
+    title: "Electrical Experts",
+    description: "Safe wiring, lighting, and repair services from verified electricians.",
+    image: landingImages.electrician,
+    badge: "Electrical",
+  },
+  {
+    id: "mechanic",
+    title: "Car Mechanic",
+    description: "Routine servicing, diagnostics, and auto repairs from trusted mechanics.",
+    image: landingImages.autoMechanic,
+    badge: "Automotive",
+    wide: true,
+  },
+];
 
 export default function Features() {
   const reduceMotion = useReducedMotion();
 
   const container = reduceMotion
     ? undefined
-    : {
-        hidden: {},
-        show: { transition: { staggerChildren: 0.08 } },
-      };
+    : { hidden: {}, show: { transition: { staggerChildren: 0.1 } } };
 
   const item = reduceMotion
     ? undefined
-    : {
-        hidden: { opacity: 0, y: 18 },
-        show: { opacity: 1, y: 0, transition: { duration: 0.55 } },
-      };
-
-  const features: Feature[] = [
-    {
-      icon: <BrainCircuit className="h-6 w-6 text-emerald-600" />,
-      title: "AI-Powered Search",
-      description:
-        "Describe your problem in plain English. Our AI automatically identifies the right service category and show you providers.",
-    },
-    {
-      icon: <ShieldCheck className="h-6 w-6 text-emerald-600" />,
-      title: "Verified Providers",
-      description:
-        "All service providers are verified with CNIC and undergo admin approval. Only trusted professionals are listed on our platform.",
-    },
-    {
-      icon: <CalendarClock className="h-6 w-6 text-emerald-600" />,
-      title: "Real-Time Booking",
-      description:
-        "View provider availability instantly, select your preferred time slot, and book services directly.",
-    },
-    {
-      icon: <Users className="h-6 w-6 text-emerald-600" />,
-      title: "Authentic Reviews",
-      description:
-        "Read real reviews from verified customers. Rate providers on professionalism, quality, punctuality, and communication.",
-    },
-    {
-      icon: <SlidersHorizontal className="h-6 w-6 text-emerald-600" />,
-      title: "Location-Based Search",
-      description:
-        "Find providers near you using our map search. Set your preferred radius (1-20 km) and see available providers in your area.",
-    },
-    {
-      icon: <CircleCheckBig className="h-6 w-6 text-emerald-600" />,
-      title: "Real-Time Chat",
-      description:
-        "Chat directly with service providers. Get instant clarification and updates on job status.",
-    },
-  ];
+    : { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
 
   return (
     <motion.section
-      className="relative bg-white py-20 md:py-28"
+      className="bg-white py-16 sm:py-20 md:py-24"
       variants={container}
       initial={reduceMotion ? false : "hidden"}
       whileInView={reduceMotion ? undefined : "show"}
-      viewport={reduceMotion ? undefined : { once: true, amount: 0.2 }}
+      viewport={{ once: true, amount: 0.12 }}
     >
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        {/* Section Header */}
-        <motion.div variants={item} className="mx-auto max-w-3xl text-center">
-          <div className="text-sm font-semibold uppercase tracking-widest text-emerald-600">
-            Key Features
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Section header */}
+        <motion.div
+          variants={item}
+          className="flex flex-col items-center text-center gap-4 md:text-left md:items-start"
+        >
+          <div className="max-w-2xl">
+            <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700">
+              Service categories
+            </span>
+            <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
+              Book top services
+            </h2>
+            <p className="mt-3 text-base leading-relaxed text-slate-600 sm:text-lg">
+              Plumbing, electrical, and auto service in one place.
+            </p>
           </div>
-
-          <h2 className="mt-4 text-3xl font-extrabold text-slate-900 md:text-5xl">
-            Everything you need to find and hire professionals
-          </h2>
-
-          <p className="mt-5 text-lg text-slate-600">
-            From AI-powered search to verified providers, real-time booking to authentic reviews.
-            We've built features that make finding services simple and reliable.
-          </p>
         </motion.div>
 
-        {/* Features Grid */}
-        <div className="mt-16 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
-          {features.map((feature, idx) => (
-            <motion.div
-              key={idx}
-              className="group rounded-2xl border border-slate-100 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md"
+        {/* Cards */}
+        <div className="mt-10 grid grid-cols-1 gap-5 sm:mt-12 sm:grid-cols-2">
+          {services.map((service) => (
+            <motion.article
+              key={service.id}
               variants={item}
-              whileHover={reduceMotion ? undefined : { y: -6 }}
-              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+              className={`group relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-900 shadow-lg ${
+                service.wide ? "sm:col-span-2" : ""
+              }`}
             >
-              {/* Icon */}
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50">
-                {feature.icon}
+              <div className="relative h-56 sm:h-64 md:h-72">
+                <Image
+                  src={service.image}
+                  alt={service.title}
+                  fill
+                  loading="lazy"
+                  className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                  sizes={service.wide ? "(min-width: 640px) 90vw, 100vw" : "(min-width: 640px) 50vw, 100vw"}
+                />
+                <div className="absolute inset-0 bg-slate-900/60" />
+
+                <div className="relative flex h-full flex-col justify-between p-5 sm:p-6 md:p-7">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-emerald-600 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white">
+                      {service.badge}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl font-bold text-white sm:text-2xl">{service.title}</h3>
+                    <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-200 sm:text-base">
+                      {service.description}
+                    </p>
+                  </div>
+                </div>
               </div>
-
-              {/* Title */}
-              <h3 className="text-lg font-semibold text-slate-900">
-                {feature.title}
-              </h3>
-
-              {/* Description */}
-              <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                {feature.description}
-              </p>
-            </motion.div>
+            </motion.article>
           ))}
         </div>
       </div>

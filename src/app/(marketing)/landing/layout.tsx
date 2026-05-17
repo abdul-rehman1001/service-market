@@ -5,11 +5,11 @@ import LandingFooter from "@/components/layout/landing/Footer";
 
 export default function LandingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col bg-[#f6f8f7] text-gray-800">
+    <div className="min-h-screen flex flex-col bg-white text-slate-900 antialiased">
       <LandingHeader />
-      <main className="flex-1">
+      <div className="flex-1">
         {children}
-      </main>
+      </div>
       <LandingFooter />
     </div>
   );

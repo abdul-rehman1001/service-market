@@ -6,6 +6,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Button from "../../ui/Button";
 import { ArrowRight, Menu, Sparkles, X } from "lucide-react";
+import { landingImages } from "@/lib/landing-images";
 
 export default function LandingHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -22,7 +23,7 @@ export default function LandingHeader() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
         <Link href="/landing" className="group flex items-center gap-3 hover:opacity-80 transition-all">
           <Image
-            src="/images/Servizo.jpeg"
+            src={landingImages.logo}
             alt="Servizo Logo"
             width={50}
             height={50}
@@ -72,7 +73,7 @@ export default function LandingHeader() {
 
       {!isInfoPage && mobileOpen && (
         <div className="border-t border-slate-200 bg-white md:hidden">
-          <nav className="mx-auto max-w-7xl space-y-1 px-4 py-4 sm:px-6">
+          <nav className="mx-auto max-w-7xl space-y-1 px-4 py-4 sm:px-6 text-center">
             <Link href="/landing#features" onClick={() => setMobileOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Features</Link>
             <Link href="/landing#how-it-works" onClick={() => setMobileOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">How It Works</Link>
             <Link href="/landing#testimonials" onClick={() => setMobileOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Testimonials</Link>
