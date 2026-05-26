@@ -3,8 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, LogOut } from "lucide-react";
+import { Menu, LogOut, X } from "lucide-react";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import NotificationBell from "./NotificationBell";
 
 interface UserData {
@@ -19,6 +20,25 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileOpen]);
 
   useEffect(() => {
     // Fetch current user profile for avatar
@@ -67,9 +87,78 @@ export default function Header() {
           { label: 'Messages', href: '/messages' },
         ];
 
+  const mobileMenu =
+    mobileOpen && mounted
+      ? createPortal(
+          <>
+            <button
+              type="button"
+              className="fixed inset-0 z-[100] bg-slate-900/50 lg:hidden"
+              aria-label="Close menu overlay"
+              onClick={() => setMobileOpen(false)}
+            />
+            <nav
+              className="fixed inset-y-0 right-0 z-[110] flex h-dvh w-[min(100%,20rem)] flex-col bg-white shadow-2xl lg:hidden"
+              aria-label="Mobile navigation"
+            >
+              <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-4 py-4">
+                <span className="text-base font-bold text-slate-900">Menu</span>
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-lg p-2 transition hover:bg-slate-100"
+                  aria-label="Close menu"
+                >
+                  <X className="h-5 w-5 text-slate-700" />
+                </button>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+                <ul className="space-y-1">
+                  {navItems.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          onClick={() => setMobileOpen(false)}
+                          className={`block rounded-xl px-4 py-3.5 text-base font-medium transition ${
+                            isActive
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "text-slate-800 hover:bg-slate-50 hover:text-emerald-600"
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                <div className="mt-6 border-t border-slate-100 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileOpen(false);
+                      handleLogout();
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3.5 text-base font-semibold text-white transition hover:bg-emerald-700"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </nav>
+          </>,
+          document.body
+        )
+      : null;
+
   return (
-    <header className="w-full bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <>
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
 
         {/* Logo */}
         <Link
@@ -81,12 +170,11 @@ export default function Header() {
             alt="Servizo Logo"
             width={40}
             height={40}
-            className="h-10 w-auto"
+            className="h-9 w-auto sm:h-10"
           />
         </Link>
 
-        {/* Navigation */}
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden items-center gap-6 lg:flex lg:gap-8">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -103,7 +191,7 @@ export default function Header() {
         </nav>
 
         {/* Right Icons / Buttons */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Notification Bell */}
           {user && <NotificationBell />}
 
@@ -131,20 +219,33 @@ export default function Header() {
           </Link>
 
           {/* Logout Button */}
-          <button 
+          <button
+            type="button"
             onClick={handleLogout}
-            className="flex items-center gap-2 text-white bg-emerald-600 px-3 py-2 rounded-md hover:bg-emerald-700 transition-all duration-200 shadow-sm"
+            className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 py-2 text-white shadow-sm transition hover:bg-emerald-700 sm:gap-2 sm:px-3"
+            aria-label="Logout"
           >
-            <LogOut className="w-4 h-4" />
-            Logout
+            <LogOut className="h-4 w-4" />
+            <span className="hidden text-sm font-medium sm:inline">Logout</span>
           </button>
 
-          {/* Mobile Menu */}
-          <button className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-all duration-200">
-            <Menu className="w-6 h-6 text-gray-600" />
+          <button
+            type="button"
+            onClick={() => setMobileOpen((open) => !open)}
+            className="rounded-lg p-2 transition hover:bg-slate-100 lg:hidden"
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? (
+              <X className="h-5 w-5 text-slate-700 sm:h-6 sm:w-6" />
+            ) : (
+              <Menu className="h-5 w-5 text-slate-600 sm:h-6 sm:w-6" />
+            )}
           </button>
         </div>
       </div>
     </header>
+    {mobileMenu}
+    </>
   );
 }

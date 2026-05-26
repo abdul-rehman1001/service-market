@@ -19,12 +19,17 @@ export default function ProvidersHeader({
   const heading = categoryName || "Featured Providers";
 
   return (
-    <div className="flex items-center justify-between mb-6">
-      <div>
-        <h2 className="text-3xl font-semibold">{heading}</h2>
+    <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600">
+          Providers
+        </p>
+        <h2 className="text-xl font-bold text-slate-900 sm:text-2xl lg:text-3xl">
+          {heading}
+        </h2>
 
         {category && !categoryName && (
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="mt-1 text-xs text-slate-600 sm:text-sm">
             Showing results for {format(category)}
             {subcategory && ` → ${format(subcategory)}`}
           </p>
@@ -33,11 +38,12 @@ export default function ProvidersHeader({
 
       {category && (
         <button
+          type="button"
           onClick={onClear}
-          className="px-4 py-2 bg-gray-100 rounded-lg text-sm flex items-center gap-2"
+          className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 sm:w-auto"
         >
-          <Filter className="w-4 h-4" />
-          Clear Filter
+          <Filter className="h-4 w-4" />
+          Clear filter
         </button>
       )}
     </div>

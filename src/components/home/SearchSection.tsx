@@ -221,19 +221,20 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="w-full bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/30 pt-10 pb-16"
+      className="w-full border-b border-emerald-100/80 bg-gradient-to-b from-white via-emerald-50/40 to-slate-50 pt-8 pb-10 sm:pt-12 sm:pb-14 lg:pt-14 lg:pb-16"
     >
-      <div className="max-w-5xl mx-auto px-6 text-center">
+      <div className="mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight">
-            Find the perfect service, <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">your way.</span>
+          <h1 className="text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+            Find the perfect service,{" "}
+            <span className="text-emerald-600">your way.</span>
           </h1>
-          <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
-            Describe the problem and our AI will suggest the best professional — or search manually.
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
+            Describe your problem and our AI will match you with the right professional.
           </p>
         </motion.div>
 
@@ -243,10 +244,10 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
-          className="mt-10 bg-white shadow-2xl rounded-2xl p-6 border border-emerald-100"
+          className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg shadow-slate-200/50 sm:mt-8 sm:p-5 lg:mt-10 lg:p-6"
         >
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-100 transition-all">
-            <div className="flex items-center gap-3 w-full">
+          <div className="flex w-full flex-col gap-3 rounded-xl border-2 border-slate-200 px-3 py-3 transition-all focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-100 sm:flex-row sm:items-center sm:px-4">
+            <div className="flex w-full min-w-0 items-center gap-2.5 sm:gap-3">
               <motion.div 
                 className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600"
                 animate={{ rotate: loading ? 360 : 0 }}
@@ -262,7 +263,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                 onKeyDown={handleKeyPress}
                 onFocus={() => isAuthenticated && searchHistory.length > 0 && setShowHistory(true)}
                 placeholder="Find providers"
-                className="flex-1 text-gray-700 bg-transparent outline-none placeholder:text-gray-400 text-sm sm:text-base"
+                className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400 sm:text-base"
                 disabled={loading}
                 aria-label="Search services"
               />
@@ -294,13 +295,13 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
               )}
             </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="flex w-full items-center sm:w-auto">
               <motion.button
                 onClick={handleSearch}
                 disabled={loading || !query.trim()}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-sm"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:w-auto sm:px-6"
                 aria-disabled={loading || !query.trim()}
               >
                 <AnimatePresence mode="wait" initial={false}>
@@ -343,10 +344,10 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                 transition={{ duration: 0.2 }}
                 className="mt-3 bg-white border-2 border-emerald-100 rounded-xl shadow-xl overflow-hidden"
               >
-                <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-100 bg-emerald-50 px-3 py-2.5 sm:px-4 sm:py-3">
                   <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-emerald-600" />
-                    <span className="text-sm font-bold text-gray-900">Recent Searches</span>
+                    <Clock className="h-4 w-4 text-emerald-600" />
+                    <span className="text-xs font-bold text-slate-900 sm:text-sm">Recent Searches</span>
                     <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
                       {searchHistory.length}
                     </span>
@@ -439,7 +440,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
               >
                 <motion.div
                   layout
-                  className="bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 border-2 border-emerald-300 rounded-2xl p-6 mb-4 shadow-lg relative overflow-hidden"
+                  className="relative mb-4 overflow-hidden rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-4 shadow-md sm:p-6"
                 >
                   {/* Animated Background */}
                   <motion.div
@@ -455,16 +456,16 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                   />
 
                   <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
+                    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-2.5 sm:gap-3">
                         <motion.div 
-                          className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg"
+                          className="rounded-xl bg-emerald-600 p-2 shadow-md"
                           animate={{ rotate: [0, 360] }}
                           transition={{ duration: 20, repeat: Infinity }}
                         >
-                          <Sparkles className="w-6 h-6 text-white" />
+                          <Sparkles className="h-5 w-5 text-white sm:h-6 sm:w-6" />
                         </motion.div>
-                        <h3 className="text-xl font-bold text-gray-900">AI Match Found!</h3>
+                        <h3 className="text-lg font-bold text-slate-900 sm:text-xl">AI Match Found!</h3>
                       </div>
                       <button
                         onClick={handleClear}
@@ -475,7 +476,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                       <motion.div 
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -520,7 +521,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                       onClick={() => handleFindProviders(result.category, result.categoryId, result.categoryName)}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 text-base"
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg sm:gap-3 sm:py-4 sm:text-base"
                     >
                       Find providers
                       <ArrowRight className="w-5 h-5" />
@@ -550,9 +551,9 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                           transition={{ delay: 0.3 + idx * 0.1 }}
                           whileHover={{ scale: 1.02, x: 4 }}
                           onClick={() => handleFindProviders(match.category, match.categoryId, match.categoryName)}
-                          className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border-2 border-gray-200 hover:border-emerald-400 hover:from-emerald-50 hover:to-teal-50 transition-all cursor-pointer group"
+                          className="group flex cursor-pointer flex-col gap-3 rounded-xl border-2 border-slate-200 bg-slate-50 p-3 transition-all hover:border-emerald-400 hover:bg-emerald-50 sm:flex-row sm:items-center sm:justify-between sm:p-4"
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex min-w-0 items-center gap-3">
                             <div className="w-8 h-8 bg-gradient-to-br from-gray-200 to-gray-300 group-hover:from-emerald-500 group-hover:to-teal-600 rounded-full flex items-center justify-center text-sm font-bold text-gray-600 group-hover:text-white transition-all">
                               {idx + 2}
                             </div>
@@ -584,17 +585,17 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="mt-5 text-sm text-gray-600 bg-gray-50 rounded-xl p-4 border border-gray-200"
+              className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left text-sm text-slate-600 sm:mt-5 sm:p-4"
             >
-              <p className="font-semibold text-gray-700 mb-2">💡 Try these examples:</p>
-              <div className="flex flex-wrap gap-2">
+              <p className="mb-2 text-xs font-semibold text-slate-700 sm:text-sm">Try these examples:</p>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {["sink is clogged", "install ceiling fan", "ac not cooling", "fix leaking tap"].map((example) => (
                   <button
                     key={example}
                     onClick={() => setQuery(example)}
-                    className="px-3 py-1 bg-white border border-gray-300 hover:border-emerald-500 hover:bg-emerald-50 rounded-lg text-gray-700 hover:text-emerald-700 transition font-medium"
+                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700 sm:px-3 sm:text-sm"
                   >
-                    "{example}"
+                    {example}
                   </button>
                 ))}
               </div>

@@ -202,8 +202,8 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
   };
 
   return (
-    <section className="py-12 bg-[#f5f7f8]">
-      <div className="max-w-7xl mx-auto px-6">
+    <section className="bg-slate-50 py-8 sm:py-10 lg:py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <ProvidersHeader
           category={active.category}
           categoryName={active.categoryName}
@@ -232,14 +232,29 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
         )}
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-r-transparent mb-4"></div>
-              <p className="text-gray-600">Loading featured providers...</p>
-            </div>
+          <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="animate-pulse rounded-2xl border border-slate-100 bg-white p-4 sm:p-5"
+              >
+                <div className="flex gap-3">
+                  <div className="h-14 w-14 shrink-0 rounded-full bg-slate-200 sm:h-16 sm:w-16" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-3/4 rounded bg-slate-200" />
+                    <div className="h-3 w-1/2 rounded bg-slate-100" />
+                  </div>
+                </div>
+                <div className="mt-4 space-y-2">
+                  <div className="h-3 w-full rounded bg-slate-100" />
+                  <div className="h-3 w-5/6 rounded bg-slate-100" />
+                </div>
+                <div className="mt-4 h-10 rounded-xl bg-slate-200" />
+              </div>
+            ))}
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 sm:text-base">
             {error}
           </div>
         ) : visibleProviders.length > 0 ? (
@@ -247,16 +262,18 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
             <ProvidersGrid providers={visibleProviders} />
 
             {active.categoryId && pagination.totalPages > 1 && (
-              <div className="mt-10 flex items-center justify-center gap-2">
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-1.5 sm:mt-10 sm:gap-2">
                 <button
+                  type="button"
                   onClick={() => handlePageChange(pagination.page - 1)}
                   disabled={pagination.page === 1}
-                  className="p-2 rounded-lg border-2 border-gray-200 hover:border-emerald-500 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-transparent transition"
+                  aria-label="Previous page"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white transition hover:border-emerald-400 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-10"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="h-5 w-5 text-slate-700" />
                 </button>
 
-                <div className="flex items-center gap-2">
+                <div className="flex max-w-[min(100%,16rem)] items-center gap-1 overflow-x-auto sm:max-w-none sm:gap-2">
                   {[...Array(pagination.totalPages)].map((_, i) => {
                     const pageNum = i + 1;
                     const showPage =
@@ -267,8 +284,8 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
                     if (!showPage) {
                       if (pageNum === 2 || pageNum === pagination.totalPages - 1) {
                         return (
-                          <span key={i} className="px-2 text-gray-400">
-                            ...
+                          <span key={i} className="px-1 text-slate-400 sm:px-2">
+                            …
                           </span>
                         );
                       }
@@ -278,11 +295,12 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
                     return (
                       <button
                         key={i}
+                        type="button"
                         onClick={() => handlePageChange(pageNum)}
-                        className={`w-10 h-10 rounded-lg font-semibold transition ${
+                        className={`flex h-9 min-w-9 items-center justify-center rounded-lg text-sm font-semibold transition sm:h-10 sm:min-w-10 ${
                           pagination.page === pageNum
-                            ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg"
-                            : "border-2 border-gray-200 hover:border-emerald-500 hover:bg-emerald-50 text-gray-700"
+                            ? "bg-emerald-600 text-white shadow-md"
+                            : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-400 hover:bg-emerald-50"
                         }`}
                       >
                         {pageNum}
@@ -292,19 +310,21 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => handlePageChange(pagination.page + 1)}
                   disabled={!pagination.hasMore}
-                  className="p-2 rounded-lg border-2 border-gray-200 hover:border-emerald-500 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-transparent transition"
+                  aria-label="Next page"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white transition hover:border-emerald-400 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-10"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="h-5 w-5 text-slate-700" />
                 </button>
               </div>
             )}
           </>
         ) : fetchedProviders.length > 0 && availability.isActive ? (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-8 text-center text-amber-900">
-            <p className="font-semibold">No providers available at that time</p>
-            <p className="mt-2 text-sm text-amber-800">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-8 text-center text-amber-900 sm:py-10">
+            <p className="text-sm font-semibold sm:text-base">No providers available at that time</p>
+            <p className="mt-2 text-xs text-amber-800 sm:text-sm">
               Try a different date or time, or clear the availability filter.
             </p>
           </div>
