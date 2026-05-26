@@ -47,7 +47,7 @@ export default function Hero() {
             variants={stagger}
             initial={reduceMotion ? false : "hidden"}
             animate={reduceMotion ? undefined : "show"}
-            className="order-2 lg:order-1 text-center md:text-left flex flex-col items-center md:items-start"
+            className="text-center md:text-left flex flex-col items-center md:items-start"
           >
             <motion.div variants={fade}>
               <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-700">
@@ -117,7 +117,7 @@ export default function Hero() {
           {/* Right column — preview card */}
           <motion.div
             variants={floatCard}
-            className="relative order-1 lg:order-2"
+            className="relative"
             initial={reduceMotion ? false : "hidden"}
             animate={reduceMotion ? undefined : "show"}
           >
