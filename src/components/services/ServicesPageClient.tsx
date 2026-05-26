@@ -1,15 +1,19 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { usePagination } from './hooks/usePagination';
 import SearchFilters from './SearchFilters';
 import ProvidersList from './ProvidersList';
 import Pagination from './Pagination';
 import SearchMap from './SearchMap/SearchMap';
+import AvailabilityFilter from '@/components/providers/AvailabilityFilter';
 import Footer from '@/components/layout/Footer';
 import Header from '@/components/layout/Header';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUserLocation } from '@/hooks/useUserLocation';
+import { useAvailabilityFilter } from '@/hooks/useAvailabilityFilter';
+import { toAvailabilityCheckItems } from '@/lib/provider-availability-input';
+import { formatAvailabilityLabel } from '@/lib/format-availability-label';
 
 interface Provider {
   id: string;
@@ -44,8 +48,8 @@ interface FiltersState {
 export default function ServicesPageClient() {
   const [searchQuery, setSearchQuery] = useState('');
   const [allProviders, setAllProviders] = useState<Provider[]>([]);
-  const [filteredProviders, setFilteredProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
+  const availability = useAvailabilityFilter();
   const [showMap, setShowMap] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<any>(null);
   const [filters, setFilters] = useState<FiltersState>({
@@ -55,9 +59,6 @@ export default function ServicesPageClient() {
     experience: null,
     sortBy: 'rating',
   });
-
-  const { currentPage, totalPages, paginatedItems, goNext, goPrev, goTo } =
-    usePagination(filteredProviders, 6);
 
   const {
     location: detectedLocation,
@@ -79,19 +80,6 @@ export default function ServicesPageClient() {
 
   const locationLat = userLocation?.lat;
   const locationLng = userLocation?.lng;
-
-  // Reorder providers to show selected provider at the top
-  const orderedProviders = useMemo(() => {
-    const selectedId = selectedProvider?.id as string | undefined;
-    if (!selectedId) return paginatedItems;
-
-    const selectedIndex = paginatedItems.findIndex((p) => p.id === selectedId);
-    if (selectedIndex <= 0) return paginatedItems;
-
-    const reordered = [...paginatedItems];
-    const [selected] = reordered.splice(selectedIndex, 1);
-    return [selected, ...reordered];
-  }, [paginatedItems, selectedProvider?.id]);
 
   // Fetch all providers for initial unfiltered view
   useEffect(() => {
@@ -228,10 +216,65 @@ export default function ServicesPageClient() {
     return filtered;
   };
 
+  const filteredProviders = useMemo(
+    () => applyFilters(allProviders, filters, searchQuery),
+    [allProviders, filters, searchQuery, userLocation]
+  );
+
+  const visibleProviders = useMemo(
+    () => availability.filterByAvailability(filteredProviders),
+    [
+      filteredProviders,
+      availability.filterByAvailability,
+      availability.availableIds,
+      availability.applied,
+    ]
+  );
+
+  const { currentPage, totalPages, paginatedItems, goNext, goPrev, goTo } =
+    usePagination(visibleProviders, 6);
+
+  const orderedProviders = useMemo(() => {
+    const selectedId = selectedProvider?.id as string | undefined;
+    if (!selectedId) return paginatedItems;
+
+    const selectedIndex = paginatedItems.findIndex((p) => p.id === selectedId);
+    if (selectedIndex <= 0) return paginatedItems;
+
+    const reordered = [...paginatedItems];
+    const [selected] = reordered.splice(selectedIndex, 1);
+    return [selected, ...reordered];
+  }, [paginatedItems, selectedProvider?.id]);
+
   useEffect(() => {
-    setFilteredProviders(applyFilters(allProviders, filters, searchQuery));
     setShowMap(filters.radius > 0 && Boolean(userLocation));
-  }, [allProviders, filters, searchQuery, locationLat, locationLng]);
+  }, [filters.radius, userLocation]);
+
+  const runAvailabilityCheck = useCallback(() => {
+    if (!availability.applied || !filteredProviders.length) {
+      return;
+    }
+    const items = toAvailabilityCheckItems(filteredProviders);
+    availability.runCheck(items, availability.applied);
+  }, [availability.applied, availability.runCheck, filteredProviders]);
+
+  useEffect(() => {
+    runAvailabilityCheck();
+  }, [runAvailabilityCheck]);
+
+  const handleAvailabilityApply = () => {
+    const nextFilter = availability.apply();
+    if (!nextFilter) {
+      return;
+    }
+    const items = toAvailabilityCheckItems(filteredProviders);
+    availability.runCheck(items, nextFilter);
+    goTo(1);
+  };
+
+  const appliedLabel = availability.applied
+    ? formatAvailabilityLabel(availability.applied.date, availability.applied.time)
+    : null;
 
   // Handle filters change
   const handleFiltersChange = (newFilters: FiltersState) => {
@@ -251,14 +294,14 @@ export default function ServicesPageClient() {
   const handleProviderSelect = (provider: any) => {
     const providerId = provider?.id as string | undefined;
     const fullProvider = providerId
-      ? filteredProviders.find((p) => p.id === providerId) ?? provider
+      ? visibleProviders.find((p) => p.id === providerId) ?? provider
       : provider;
     setSelectedProvider(fullProvider);
 
     // If the provider is not on the current 6-item page, jump to the correct page
     // so the card exists in the list and can be highlighted.
     if (providerId) {
-      const indexInFiltered = filteredProviders.findIndex((p) => p.id === providerId);
+      const indexInFiltered = visibleProviders.findIndex((p) => p.id === providerId);
       if (indexInFiltered >= 0) {
         const targetPage = Math.floor(indexInFiltered / 6) + 1;
         if (targetPage !== currentPage) goTo(targetPage);
@@ -284,6 +327,25 @@ export default function ServicesPageClient() {
             onRadiusChange={handleRadiusChange}
           />
 
+          <AvailabilityFilter
+            date={availability.draftDate}
+            time={availability.draftTime}
+            onDateChange={availability.setDraftDate}
+            onTimeChange={availability.setDraftTime}
+            onApply={handleAvailabilityApply}
+            onClear={() => {
+              availability.clear();
+              goTo(1);
+            }}
+            isActive={availability.isActive}
+            checking={availability.checking}
+            error={availability.error}
+            appliedLabel={appliedLabel}
+            resultCount={availability.isActive ? visibleProviders.length : undefined}
+            totalCount={filteredProviders.length}
+            disabled={loading || filteredProviders.length === 0}
+          />
+
           {/* Results Summary */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -294,7 +356,7 @@ export default function ServicesPageClient() {
               <p className="text-sm font-semibold text-gray-700">
                 Showing{' '}
                 <span className="text-emerald-600">
-                  {Math.min(6, paginatedItems.length)} of {filteredProviders.length}
+                  {Math.min(6, paginatedItems.length)} of {visibleProviders.length}
                 </span>{' '}
                 providers
               </p>
@@ -344,6 +406,20 @@ export default function ServicesPageClient() {
                   onProviderSelect={handleProviderSelect}
                 />
               </motion.div>
+            ) : filteredProviders.length > 0 && availability.isActive ? (
+              <motion.div
+                key="empty-availability"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12 bg-amber-50 rounded-xl border-2 border-dashed border-amber-200"
+              >
+                <p className="text-amber-900 font-semibold">
+                  No providers available at the selected date and time.
+                </p>
+                <p className="mt-2 text-sm text-amber-800">
+                  Try another slot or clear the availability filter.
+                </p>
+              </motion.div>
             ) : (
               <motion.div
                 key="empty"
@@ -359,7 +435,7 @@ export default function ServicesPageClient() {
           </AnimatePresence>
 
           {/* Pagination */}
-          {!loading && filteredProviders.length > 6 && (
+          {!loading && visibleProviders.length > 6 && (
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -380,7 +456,7 @@ export default function ServicesPageClient() {
           >
             <SearchMap
               location="Current Location"
-              providers={filteredProviders.map((p) => ({
+              providers={visibleProviders.map((p) => ({
                 id: p.id,
                 userId: p.userId,
                 name: p.name,

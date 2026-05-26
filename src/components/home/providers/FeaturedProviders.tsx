@@ -1,15 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProvidersHeader from "./ProvidersHeader";
 import ProvidersGrid from "./ProvidersGrid";
 import ProvidersEmptyState from "./ProvidersEmptyState";
+import AvailabilityFilter from "@/components/providers/AvailabilityFilter";
 import { Provider } from "./types";
+import { useAvailabilityFilter } from "@/hooks/useAvailabilityFilter";
+import { toAvailabilityCheckItems } from "@/lib/provider-availability-input";
 import {
   appendUserCoordinatesToParams,
   getStoredUserCoordinates,
 } from "@/lib/location/clientLocation";
+import { formatAvailabilityLabel } from "@/lib/format-availability-label";
 
 type Pagination = {
   page: number;
@@ -23,9 +27,11 @@ interface FeaturedProvidersProps {
 }
 
 export default function FeaturedProviders({ userLocation }: FeaturedProvidersProps) {
-  const [providers, setProviders] = useState<Provider[]>([]);
+  const [fetchedProviders, setFetchedProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const availability = useAvailabilityFilter();
 
   const [fallbackLocation, setFallbackLocation] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -83,7 +89,7 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
       }
 
       const data = await response.json();
-      setProviders(data.data || []);
+      setFetchedProviders(data.data || []);
 
       const p = data.pagination as Pagination | undefined;
       if (p) {
@@ -94,7 +100,7 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
     } catch (err) {
       console.error("Error fetching providers:", err);
       setError("Failed to load providers. Please try again later.");
-      setProviders([]);
+      setFetchedProviders([]);
       setPagination({ page: 1, totalPages: 0, total: 0, hasMore: false });
     } finally {
       setLoading(false);
@@ -135,6 +141,7 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
       const source = (detail.source ?? null) as "ai" | "category" | null;
 
       setActive({ category, subcategory, categoryId, categoryName, source });
+      availability.clear();
 
       // If cleared, show default (page 1)
       if (!categoryId) {
@@ -148,7 +155,37 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
 
     window.addEventListener("filterProviders", handler);
     return () => window.removeEventListener("filterProviders", handler);
-  }, []);
+  }, [availability.clear]);
+
+  const visibleProviders = useMemo(
+    () => availability.filterByAvailability(fetchedProviders),
+    [fetchedProviders, availability.filterByAvailability, availability.availableIds, availability.applied]
+  );
+
+  const runAvailabilityCheck = useCallback(() => {
+    if (!availability.applied || !fetchedProviders.length) {
+      return;
+    }
+    const items = toAvailabilityCheckItems(fetchedProviders);
+    availability.runCheck(items);
+  }, [availability.applied, availability.runCheck, fetchedProviders]);
+
+  useEffect(() => {
+    runAvailabilityCheck();
+  }, [runAvailabilityCheck]);
+
+  const handleAvailabilityApply = () => {
+    const nextFilter = availability.apply();
+    if (!nextFilter) {
+      return;
+    }
+    const items = toAvailabilityCheckItems(fetchedProviders);
+    availability.runCheck(items, nextFilter);
+  };
+
+  const appliedLabel = availability.applied
+    ? formatAvailabilityLabel(availability.applied.date, availability.applied.time)
+    : null;
 
   const clear = () => {
     window.dispatchEvent(
@@ -174,6 +211,26 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
           onClear={clear}
         />
 
+        {active.categoryId && (
+          <div className="mb-6">
+            <AvailabilityFilter
+              date={availability.draftDate}
+              time={availability.draftTime}
+              onDateChange={availability.setDraftDate}
+              onTimeChange={availability.setDraftTime}
+              onApply={handleAvailabilityApply}
+              onClear={availability.clear}
+              isActive={availability.isActive}
+              checking={availability.checking}
+              error={availability.error}
+              appliedLabel={appliedLabel}
+              resultCount={availability.isActive ? visibleProviders.length : undefined}
+              totalCount={fetchedProviders.length}
+              disabled={loading || fetchedProviders.length === 0}
+            />
+          </div>
+        )}
+
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
@@ -185,9 +242,9 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
             {error}
           </div>
-        ) : providers.length > 0 ? (
+        ) : visibleProviders.length > 0 ? (
           <>
-            <ProvidersGrid providers={providers} />
+            <ProvidersGrid providers={visibleProviders} />
 
             {active.categoryId && pagination.totalPages > 1 && (
               <div className="mt-10 flex items-center justify-center gap-2">
@@ -244,6 +301,13 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
               </div>
             )}
           </>
+        ) : fetchedProviders.length > 0 && availability.isActive ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-8 text-center text-amber-900">
+            <p className="font-semibold">No providers available at that time</p>
+            <p className="mt-2 text-sm text-amber-800">
+              Try a different date or time, or clear the availability filter.
+            </p>
+          </div>
         ) : (
           <ProvidersEmptyState />
         )}
