@@ -25,11 +25,23 @@ export function useNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const initialized = useRef(false);
+  const authBlocked = useRef(false);
 
   // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {
+    if (authBlocked.current) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/notifications');
+      if (res.status === 401) {
+        authBlocked.current = true;
+        setLoading(false);
+        return;
+      }
+
       if (!res.ok) return;
       const data = await res.json();
       setNotifications(data.notifications || []);
@@ -43,12 +55,18 @@ export function useNotifications() {
 
   // Register FCM token on server
   const registerToken = useCallback(async (token: string) => {
+    if (authBlocked.current) return;
+
     try {
-      await fetch('/api/notifications/register-token', {
+      const res = await fetch('/api/notifications/register-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),
       });
+
+      if (res.status === 401) {
+        authBlocked.current = true;
+      }
     } catch {
       // silently fail
     }
@@ -56,12 +74,20 @@ export function useNotifications() {
 
   // Mark a single notification as read
   const markAsRead = useCallback(async (notificationId: string) => {
+    if (authBlocked.current) return;
+
     try {
-      await fetch('/api/notifications/read', {
+      const res = await fetch('/api/notifications/read', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notificationId }),
       });
+
+      if (res.status === 401) {
+        authBlocked.current = true;
+        return;
+      }
+
       setNotifications((prev) =>
         prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n))
       );
@@ -73,10 +99,18 @@ export function useNotifications() {
 
   // Mark all notifications as read
   const markAllAsRead = useCallback(async () => {
+    if (authBlocked.current) return;
+
     try {
-      await fetch('/api/notifications/read-all', {
+      const res = await fetch('/api/notifications/read-all', {
         method: 'POST',
       });
+
+      if (res.status === 401) {
+        authBlocked.current = true;
+        return;
+      }
+
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnreadCount(0);
     } catch {

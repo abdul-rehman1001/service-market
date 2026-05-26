@@ -1,13 +1,9 @@
 'use client';
 
-import { useNotifications } from '@/hooks/useNotifications';
 import { Toaster } from 'react-hot-toast';
 
 
 export default function NotificationProvider({ children }: { children: React.ReactNode }) {
-  // Hook initializes FCM, registers token, and sets up foreground listener
-  useNotifications();
-
   return (
     <>
       <Toaster

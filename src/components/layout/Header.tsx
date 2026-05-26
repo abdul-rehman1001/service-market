@@ -105,7 +105,7 @@ export default function Header() {
         {/* Right Icons / Buttons */}
         <div className="flex items-center gap-4">
           {/* Notification Bell */}
-          <NotificationBell />
+          {user && <NotificationBell />}
 
           {/* User Avatar - Clickable to Profile */}
           <Link
