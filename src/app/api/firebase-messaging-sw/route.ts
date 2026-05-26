@@ -38,8 +38,8 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification?.title || 'Servizo';
   const notificationOptions = {
     body: payload.notification?.body || '',
-    icon: '/images/logo-icon.png',
-    badge: '/images/logo-icon.png',
+    icon: '/images/Servizo.jpeg',
+    badge: '/images/Servizo.jpeg',
     data: payload.data || {},
     tag: payload.data?.notificationId || 'default',
     requireInteraction: true,

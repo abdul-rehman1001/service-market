@@ -1,4 +1,5 @@
 // src/components/home/providers/data.ts
+import { landingImages } from "@/lib/landing-images";
 import { Provider } from "./types";
 
 export const allProviders: Provider[] = [
@@ -10,7 +11,7 @@ export const allProviders: Provider[] = [
     rating: 4.9,
     reviews: 138,
     description: "Specializing in pipe repairs, leak fixes, and bathroom installations.",
-    avatar: "/images/avatar1.png",
+    avatar: landingImages.defaultAvatar,
     category: "plumber",
     subcategory: "pipe_repair",
   },
@@ -22,7 +23,7 @@ export const allProviders: Provider[] = [
     rating: 5.0,
     reviews: 95,
     description: "Expert in sink repairs, faucet installations, and drain cleaning.",
-    avatar: "/images/avatar2.png",
+    avatar: landingImages.defaultAvatarAlt,
     category: "plumber",
     subcategory: "sink_issues",
   },

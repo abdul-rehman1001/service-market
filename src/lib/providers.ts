@@ -1,3 +1,4 @@
+import { landingImages } from '@/lib/landing-images';
 import prisma from './prisma';
 
 function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
@@ -290,7 +291,7 @@ export function formatProviderForDisplay(provider: any) {
       mainService?.description ||
       provider.user.bio ||
       'Professional service provider',
-    avatar: provider.user.profileImage || '/images/avatar1.png',
+    avatar: provider.user.profileImage || landingImages.defaultAvatar,
     // Additional data for reference
     userId: provider.userId,
     mainService: mainService,

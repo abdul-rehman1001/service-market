@@ -1,4 +1,6 @@
 // data.ts
+import { landingImages } from "@/lib/landing-images";
+
 export interface Provider {
   id: number;
   name: string;
@@ -16,9 +18,9 @@ export interface Subcategory {
 
 // Providers
 export const providers: Provider[] = [
-  { id: 1, name: "John Doe", role: "Master Plumber", rating: 4.9, reviews: 128, description: "Expert in residential & commercial plumbing. 24/7 emergency support available.", image: "/images/users/john.jpg" },
-  { id: 2, name: "Sarah Jane", role: "Web Developer", rating: 5.0, reviews: 92, description: "Full-stack developer specializing in modern web applications and e-commerce platforms.", image: "/images/users/sarah.jpg" },
-  { id: 3, name: "Mike Ross", role: "Personal Trainer", rating: 4.8, reviews: 210, description: "Certified trainer focused on strength conditioning and personalized fitness programs.", image: "/images/users/mike.jpg" },
+  { id: 1, name: "John Doe", role: "Master Plumber", rating: 4.9, reviews: 128, description: "Expert in residential & commercial plumbing. 24/7 emergency support available.", image: landingImages.defaultAvatar },
+  { id: 2, name: "Sarah Jane", role: "Web Developer", rating: 5.0, reviews: 92, description: "Full-stack developer specializing in modern web applications and e-commerce platforms.", image: landingImages.defaultAvatarAlt },
+  { id: 3, name: "Mike Ross", role: "Personal Trainer", rating: 4.8, reviews: 210, description: "Certified trainer focused on strength conditioning and personalized fitness programs.", image: landingImages.allInOne },
 ];
 
 // Subcategories by category

@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { landingImages } from '@/lib/landing-images';
 import { ProviderProfileType } from '@/types/provider';
 import StarRating from './StarRating';
 import { MapPin, Award, Briefcase, CheckCircle, Clock } from 'lucide-react';
@@ -22,7 +23,7 @@ export default function ProviderHeader({ provider }: Props) {
       {/* Avatar */}
       <div className="flex-shrink-0 relative">
         <Image
-          src={provider.user.profileImage || '/images/avatar1.png'}
+          src={provider.user.profileImage || landingImages.defaultAvatar}
           alt={fullName}
           width={112}
           height={112}

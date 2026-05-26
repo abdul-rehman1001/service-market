@@ -1,5 +1,6 @@
 // src/components/site/subcategories/Banner.tsx
 
+import { landingImages } from "@/lib/landing-images";
 import Image from "next/image";
 
 export default function Banner({ title }: { title: string }) {
@@ -8,7 +9,7 @@ export default function Banner({ title }: { title: string }) {
 
       {/* World Map Image */}
       <Image
-        src="/images/world-map.png"   // << Add your own map image
+        src={landingImages.banner}
         alt="world map"
         fill
         className="object-cover opacity-90"

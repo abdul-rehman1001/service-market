@@ -1,5 +1,6 @@
 'use client';
 
+import { landingImages } from '@/lib/landing-images';
 import ProviderCard from '@/components/home/providers/ProviderCard';
 import { motion } from 'framer-motion';
 
@@ -38,7 +39,7 @@ export default function ProvidersList({
   const transformProvider = (provider: Provider): any => ({
     id: provider.id,
     userId: provider.userId,
-    avatar: provider.profileImage || '/images/avatar1.png',
+    avatar: provider.profileImage || landingImages.defaultAvatar,
     name: provider.name,
     role: provider.services?.[0]?.name || 'Service Provider',
     rating: provider.rating,

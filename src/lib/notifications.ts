@@ -151,8 +151,8 @@ export async function sendNotification({ userId, type, bookingId, data }: SendNo
         notification: {
           title,
           body,
-          icon: '/images/logo-icon.png',
-          badge: '/images/logo-icon.png',
+          icon: '/images/Servizo.jpeg',
+          badge: '/images/Servizo.jpeg',
           requireInteraction: true,
         },
       },
@@ -236,7 +236,7 @@ export async function sendChatNotification({
         notification: {
           title: senderName,
           body: preview,
-          icon: '/images/logo-icon.png',
+          icon: '/images/Servizo.jpeg',
           tag: `chat-${bookingId}`,
         },
       },
