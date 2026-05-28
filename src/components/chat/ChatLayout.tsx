@@ -140,10 +140,10 @@ export default function ChatLayout() {
   }
 
   return (
-    <div className="mx-auto flex h-[76vh] flex-col overflow-hidden rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] shadow-[0_24px_50px_-30px_rgba(31,41,55,0.6)] md:flex-row">
+    <div className="mx-auto flex h-[76vh] min-h-0 flex-col overflow-hidden rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] shadow-[0_24px_50px_-30px_rgba(31,41,55,0.6)] md:flex-row">
       {/* Sidebar */}
       <aside
-        className={`w-full flex-shrink-0 border-b border-[#E5E7EB] md:w-80 md:border-b-0 md:border-r ${
+        className={`w-full min-h-0 flex-shrink-0 border-b border-[#E5E7EB] md:w-80 md:border-b-0 md:border-r ${
           mobileSidebarOpen ? 'block' : 'hidden md:block'
         }`}
       >
@@ -160,7 +160,7 @@ export default function ChatLayout() {
       </aside>
 
       {/* Chat Area */}
-      <div className={`flex-1 flex-col ${mobileSidebarOpen ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`min-h-0 flex-1 flex-col ${mobileSidebarOpen ? 'hidden md:flex' : 'flex'}`}>
         {activeConversation ? (
           <>
             <div className="flex items-center justify-between border-b border-[#E5E7EB] bg-[#FFFFFF] px-3 py-2 md:hidden">

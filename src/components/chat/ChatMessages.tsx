@@ -75,7 +75,7 @@ export default function ChatMessages({ messages, currentUserId, bookings, bookin
   return (
     <div
       ref={containerRef}
-      className="flex-1 space-y-3 overflow-y-auto overscroll-contain bg-[#F5F7F9] px-4 py-4 sm:px-6"
+      className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-[#F5F7F9] px-4 py-4 touch-pan-y sm:px-6"
     >
       {messages.map((msg) => (
         <ChatBubble
