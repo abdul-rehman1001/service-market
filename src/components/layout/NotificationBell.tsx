@@ -70,11 +70,22 @@ export default function NotificationBell() {
     return details.title;
   };
 
+  const handleBellClick = () => {
+    // On mobile and smaller screens, go straight to full notifications page.
+    if (window.innerWidth < 1024) {
+      setOpen(false);
+      router.push('/notifications');
+      return;
+    }
+
+    setOpen((prev) => !prev);
+  };
+
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Bell Button */}
       <button
-        onClick={() => setOpen(!open)}
+        onClick={handleBellClick}
         className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
         aria-label="Notifications"
       >
