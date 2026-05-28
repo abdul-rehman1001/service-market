@@ -178,8 +178,8 @@ export default function ProfilePage() {
     return (
       <>
         <Header />
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        <div className="flex min-h-screen items-center justify-center bg-[#F5F7F9]">
+          <Loader2 className="h-8 w-8 animate-spin text-[#009966]" />
         </div>
       </>
     );
@@ -189,8 +189,8 @@ export default function ProfilePage() {
     return (
       <>
         <Header />
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <p className="text-red-500">Failed to load profile</p>
+        <div className="flex min-h-screen items-center justify-center bg-[#F5F7F9]">
+          <p className="text-[#BE123C]">Failed to load profile</p>
         </div>
       </>
     );
@@ -199,39 +199,40 @@ export default function ProfilePage() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-[#F5F7F9] py-5 sm:py-7 lg:py-8">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           {/* Header Card */}
-          <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-            <div className="flex items-center gap-6">
+          <div className="mb-5 rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] p-4 shadow-[0_12px_32px_-24px_rgba(31,41,55,0.5)] sm:mb-6 sm:p-6">
+            <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:gap-6 sm:text-left">
               <div className="relative">
                 {profileForm.profileImage ? (
                   <img
                     src={profileForm.profileImage}
                     alt="Profile"
-                    className="w-24 h-24 rounded-full object-cover border-4 border-emerald-100"
+                    className="h-20 w-20 rounded-full border-4 border-[#D1FAE5] object-cover sm:h-24 sm:w-24"
                   />
                 ) : (
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-3xl font-bold border-4 border-emerald-100">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-[#D1FAE5] bg-[#009966] text-2xl font-bold text-white sm:h-24 sm:w-24 sm:text-3xl">
                     {user.firstName[0]}
                     {user.lastName[0]}
                   </div>
                 )}
               </div>
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#009966]">Profile</p>
+                <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#1F2937] sm:text-3xl">
                   {user.firstName} {user.lastName}
                 </h1>
-                <div className="flex items-center gap-3 mt-2">
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
-                    <Shield className="w-4 h-4" />
+                <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start sm:gap-3">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-[#A7F3D0] bg-[#D1FAE5] px-3 py-1 text-xs font-semibold text-[#007A52] sm:text-sm">
+                    <Shield className="h-4 w-4" />
                     {user.role}
                   </span>
                   <span
-                    className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
+                    className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold sm:text-sm ${
                       user.status === 'ACTIVE'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-yellow-100 text-yellow-700'
+                        ? 'border border-[#A7F3D0] bg-[#D1FAE5] text-[#007A52]'
+                        : 'border border-[#FDE68A] bg-[#FFF4D6] text-[#8A5A00]'
                     }`}
                   >
                     {user.status}
@@ -242,28 +243,28 @@ export default function ProfilePage() {
           </div>
 
           {/* Tabs */}
-          <div className="bg-white rounded-xl shadow-md mb-6">
-            <div className="flex border-b border-gray-200">
+          <div className="mb-6 rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] p-2 shadow-[0_10px_28px_-24px_rgba(31,41,55,0.45)]">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <button
                 onClick={() => setActiveTab('profile')}
-                className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
+                className={`flex-1 rounded-xl px-4 py-3 text-center text-sm font-semibold transition sm:text-base ${
                   activeTab === 'profile'
-                    ? 'text-emerald-600 border-b-2 border-emerald-600'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-[#009966] text-white'
+                    : 'text-[#6B7280] hover:bg-[#F5F7F9] hover:text-[#1F2937]'
                 }`}
               >
-                <User className="w-5 h-5 inline-block mr-2" />
+                <User className="mr-2 inline-block h-5 w-5" />
                 Profile Information
               </button>
               <button
                 onClick={() => setActiveTab('password')}
-                className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
+                className={`flex-1 rounded-xl px-4 py-3 text-center text-sm font-semibold transition sm:text-base ${
                   activeTab === 'password'
-                    ? 'text-emerald-600 border-b-2 border-emerald-600'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-[#009966] text-white'
+                    : 'text-[#6B7280] hover:bg-[#F5F7F9] hover:text-[#1F2937]'
                 }`}
               >
-                <Lock className="w-5 h-5 inline-block mr-2" />
+                <Lock className="mr-2 inline-block h-5 w-5" />
                 Change Password
               </button>
             </div>
@@ -272,10 +273,10 @@ export default function ProfilePage() {
           {/* Message */}
           {message.text && (
             <div
-              className={`mb-6 p-4 rounded-lg ${
+              className={`mb-6 rounded-xl border p-4 text-sm font-medium ${
                 message.type === 'success'
-                  ? 'bg-green-50 text-green-800 border border-green-200'
-                  : 'bg-red-50 text-red-800 border border-red-200'
+                  ? 'bg-[#D1FAE5] text-[#007A52] border-[#A7F3D0]'
+                  : 'bg-[#FFF1F2] text-[#BE123C] border-[#FECACA]'
               }`}
             >
               {message.text}
@@ -284,29 +285,29 @@ export default function ProfilePage() {
 
           {/* Profile Tab */}
           {activeTab === 'profile' && (
-            <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] p-4 shadow-[0_12px_32px_-24px_rgba(31,41,55,0.45)] sm:p-6">
               <form onSubmit={handleProfileSubmit}>
                 {/* Avatar Section */}
                 <div className="mb-8">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  <h3 className="mb-4 text-lg font-semibold text-[#1F2937]">
                     Profile Picture
                   </h3>
-                  <div className="flex items-center gap-6">
+                  <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:gap-6">
                     <div className="relative">
                       {profileForm.profileImage ? (
                         <img
                           src={profileForm.profileImage}
                           alt="Profile"
-                          className="w-32 h-32 rounded-full object-cover border-4 border-gray-100"
+                          className="h-28 w-28 rounded-full border-4 border-[#E5E7EB] object-cover sm:h-32 sm:w-32"
                         />
                       ) : (
-                        <div className="w-32 h-32 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-4xl font-bold border-4 border-gray-100">
+                        <div className="flex h-28 w-28 items-center justify-center rounded-full border-4 border-[#E5E7EB] bg-[#009966] text-3xl font-bold text-white sm:h-32 sm:w-32 sm:text-4xl">
                           {profileForm.firstName[0]}
                           {profileForm.lastName[0]}
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-col gap-3">
+                    <div className="flex w-full max-w-xs flex-col gap-3 sm:w-auto sm:max-w-none">
                       <label className="cursor-pointer">
                         <input
                           type="file"
@@ -314,8 +315,8 @@ export default function ProfilePage() {
                           onChange={handleImageUpload}
                           className="hidden"
                         />
-                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
-                          <Camera className="w-4 h-4" />
+                        <span className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#009966] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#007A52] sm:w-56">
+                          <Camera className="h-4 w-4" />
                           Upload New Photo
                         </span>
                       </label>
@@ -323,9 +324,9 @@ export default function ProfilePage() {
                         <button
                           type="button"
                           onClick={removeAvatar}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#BE123C] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#9F1239] sm:w-56"
                         >
-                          <XCircle className="w-4 h-4" />
+                          <XCircle className="h-4 w-4" />
                           Remove Photo
                         </button>
                       )}
@@ -333,16 +334,16 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <hr className="my-8" />
+                <hr className="my-8 border-[#E5E7EB]" />
 
                 {/* Personal Information */}
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="mb-4 text-lg font-semibold text-[#1F2937]">
                   Personal Information
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-[#1F2937]">
                       First Name *
                     </label>
                     <input
@@ -351,13 +352,13 @@ export default function ProfilePage() {
                       onChange={(e) =>
                         setProfileForm({ ...profileForm, firstName: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full rounded-xl border border-[#E5E7EB] bg-[#FFFFFF] px-4 py-2.5 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#009966]"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-[#1F2937]">
                       Last Name *
                     </label>
                     <input
@@ -366,45 +367,45 @@ export default function ProfilePage() {
                       onChange={(e) =>
                         setProfileForm({ ...profileForm, lastName: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full rounded-xl border border-[#E5E7EB] bg-[#FFFFFF] px-4 py-2.5 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#009966]"
                       required
                     />
                   </div>
 
                   {/* Email - Read Only */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email <span className="text-gray-500">(Cannot be changed)</span>
+                    <label className="mb-2 block text-sm font-medium text-[#1F2937]">
+                      Email <span className="text-[#6B7280]">(Cannot be changed)</span>
                     </label>
                     <div className="relative">
                       <input
                         type="email"
                         value={user.email}
                         disabled
-                        className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                        className="w-full cursor-not-allowed rounded-xl border border-[#E5E7EB] bg-[#F5F7F9] px-4 py-2.5 pl-10 text-sm text-[#6B7280]"
                       />
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
                     </div>
                   </div>
 
                   {/* Phone - Read Only */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone <span className="text-gray-500">(Cannot be changed)</span>
+                    <label className="mb-2 block text-sm font-medium text-[#1F2937]">
+                      Phone <span className="text-[#6B7280]">(Cannot be changed)</span>
                     </label>
                     <div className="relative">
                       <input
                         type="tel"
                         value={user.phone}
                         disabled
-                        className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                        className="w-full cursor-not-allowed rounded-xl border border-[#E5E7EB] bg-[#F5F7F9] px-4 py-2.5 pl-10 text-sm text-[#6B7280]"
                       />
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-[#1F2937]">
                       City
                     </label>
                     <div className="relative">
@@ -414,15 +415,15 @@ export default function ProfilePage() {
                         onChange={(e) =>
                           setProfileForm({ ...profileForm, city: e.target.value })
                         }
-                        className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full rounded-xl border border-[#E5E7EB] bg-[#FFFFFF] px-4 py-2.5 pl-10 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#009966]"
                         placeholder="Enter your city"
                       />
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
                     </div>
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-[#1F2937]">
                       Address
                     </label>
                     <input
@@ -431,13 +432,13 @@ export default function ProfilePage() {
                       onChange={(e) =>
                         setProfileForm({ ...profileForm, address: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full rounded-xl border border-[#E5E7EB] bg-[#FFFFFF] px-4 py-2.5 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#009966]"
                       placeholder="Enter your address"
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-[#1F2937]">
                       Bio
                     </label>
                     <div className="relative">
@@ -447,28 +448,28 @@ export default function ProfilePage() {
                           setProfileForm({ ...profileForm, bio: e.target.value })
                         }
                         rows={4}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                        className="w-full resize-none rounded-xl border border-[#E5E7EB] bg-[#FFFFFF] px-4 py-2.5 pl-10 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#009966]"
                         placeholder="Tell us about yourself..."
                       />
-                      <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                      <FileText className="absolute left-3 top-3 h-4 w-4 text-[#6B7280]" />
                     </div>
                   </div>
                 </div>
 
-                <div className="flex justify-end pt-6 border-t border-gray-200">
+                <div className="flex justify-end border-t border-[#E5E7EB] pt-6">
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 rounded-xl bg-[#009966] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#007A52] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {saving ? (
                       <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <Loader2 className="h-5 w-5 animate-spin" />
                         Saving...
                       </>
                     ) : (
                       <>
-                        <CheckCircle className="w-5 h-5" />
+                        <CheckCircle className="h-5 w-5" />
                         Save Changes
                       </>
                     )}
@@ -480,14 +481,14 @@ export default function ProfilePage() {
 
           {/* Password Tab */}
           {activeTab === 'password' && (
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">
+            <div className="rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] p-4 shadow-[0_12px_32px_-24px_rgba(31,41,55,0.45)] sm:p-6">
+              <h3 className="mb-6 text-lg font-semibold text-[#1F2937]">
                 Change Your Password
               </h3>
               <form onSubmit={handlePasswordSubmit} className="max-w-md">
                 <div className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-[#1F2937]">
                       Current Password *
                     </label>
                     <div className="relative">
@@ -500,25 +501,25 @@ export default function ProfilePage() {
                             oldPassword: e.target.value,
                           })
                         }
-                        className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full rounded-xl border border-[#E5E7EB] bg-[#FFFFFF] px-4 py-2.5 pr-10 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#009966]"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowOldPassword(!showOldPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#1F2937]"
                       >
                         {showOldPassword ? (
-                          <EyeOff className="w-5 h-5" />
+                          <EyeOff className="h-5 w-5" />
                         ) : (
-                          <Eye className="w-5 h-5" />
+                          <Eye className="h-5 w-5" />
                         )}
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-[#1F2937]">
                       New Password *
                     </label>
                     <div className="relative">
@@ -531,29 +532,29 @@ export default function ProfilePage() {
                             newPassword: e.target.value,
                           })
                         }
-                        className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full rounded-xl border border-[#E5E7EB] bg-[#FFFFFF] px-4 py-2.5 pr-10 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#009966]"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#1F2937]"
                       >
                         {showNewPassword ? (
-                          <EyeOff className="w-5 h-5" />
+                          <EyeOff className="h-5 w-5" />
                         ) : (
-                          <Eye className="w-5 h-5" />
+                          <Eye className="h-5 w-5" />
                         )}
                       </button>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="mt-1 text-xs text-[#6B7280]">
                       Must be 8+ characters with uppercase, lowercase, number, and
                       special character
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-[#1F2937]">
                       Confirm New Password *
                     </label>
                     <div className="relative">
@@ -566,38 +567,38 @@ export default function ProfilePage() {
                             confirmPassword: e.target.value,
                           })
                         }
-                        className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full rounded-xl border border-[#E5E7EB] bg-[#FFFFFF] px-4 py-2.5 pr-10 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#009966]"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#1F2937]"
                       >
                         {showConfirmPassword ? (
-                          <EyeOff className="w-5 h-5" />
+                          <EyeOff className="h-5 w-5" />
                         ) : (
-                          <Eye className="w-5 h-5" />
+                          <Eye className="h-5 w-5" />
                         )}
                       </button>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex justify-end pt-6 border-t border-gray-200 mt-8">
+                <div className="mt-8 flex justify-end border-t border-[#E5E7EB] pt-6">
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 rounded-xl bg-[#009966] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#007A52] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {saving ? (
                       <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <Loader2 className="h-5 w-5 animate-spin" />
                         Changing...
                       </>
                     ) : (
                       <>
-                        <Lock className="w-5 h-5" />
+                        <Lock className="h-5 w-5" />
                         Change Password
                       </>
                     )}
