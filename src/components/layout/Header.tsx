@@ -98,7 +98,7 @@ export default function Header() {
               onClick={() => setMobileOpen(false)}
             />
             <nav
-              className="fixed inset-y-0 right-0 z-[110] flex h-dvh w-[min(100%,20rem)] flex-col bg-white shadow-2xl lg:hidden"
+              className="fixed inset-y-0 left-0 z-[110] flex h-dvh w-[min(100%,20rem)] flex-col bg-white shadow-2xl lg:hidden"
               aria-label="Mobile navigation"
             >
               <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-4 py-4">
@@ -159,20 +159,35 @@ export default function Header() {
     <>
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => setMobileOpen((open) => !open)}
+            className="rounded-lg p-2 transition hover:bg-slate-100 lg:hidden"
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? (
+              <X className="h-5 w-5 text-slate-700 sm:h-6 sm:w-6" />
+            ) : (
+              <Menu className="h-5 w-5 text-slate-600 sm:h-6 sm:w-6" />
+            )}
+          </button>
 
-        {/* Logo */}
-        <Link
-          href="/"
-          className="hover:opacity-80 transition-all"
-        >
-          <Image
-            src="/images/Servizo.jpeg"
-            alt="Servizo Logo"
-            width={40}
-            height={40}
-            className="h-9 w-auto sm:h-10"
-          />
-        </Link>
+          {/* Logo */}
+          <Link
+            href="/"
+            className="hover:opacity-80 transition-all"
+          >
+            <Image
+              src="/images/Servizo.jpeg"
+              alt="Servizo Logo"
+              width={40}
+              height={40}
+              className="h-9 w-auto sm:h-10"
+            />
+          </Link>
+        </div>
 
         <nav className="hidden items-center gap-6 lg:flex lg:gap-8">
           {navItems.map((item) => (
@@ -222,25 +237,11 @@ export default function Header() {
           <button
             type="button"
             onClick={handleLogout}
-            className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 py-2 text-white shadow-sm transition hover:bg-emerald-700 sm:gap-2 sm:px-3"
+            className="hidden items-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 py-2 text-white shadow-sm transition hover:bg-emerald-700 sm:gap-2 sm:px-3 lg:flex"
             aria-label="Logout"
           >
             <LogOut className="h-4 w-4" />
             <span className="hidden text-sm font-medium sm:inline">Logout</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setMobileOpen((open) => !open)}
-            className="rounded-lg p-2 transition hover:bg-slate-100 lg:hidden"
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-            aria-expanded={mobileOpen}
-          >
-            {mobileOpen ? (
-              <X className="h-5 w-5 text-slate-700 sm:h-6 sm:w-6" />
-            ) : (
-              <Menu className="h-5 w-5 text-slate-600 sm:h-6 sm:w-6" />
-            )}
           </button>
         </div>
       </div>
