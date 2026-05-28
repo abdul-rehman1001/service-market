@@ -22,24 +22,24 @@ export default function ChatBubble({ message, currentUserId, booking, showBookin
   return (
     <div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`max-w-xs px-4 py-2 rounded-2xl text-sm ${
+        className={`max-w-[85%] rounded-2xl border px-4 py-2.5 text-sm shadow-sm sm:max-w-xs ${
           isMe
-            ? 'bg-emerald-600 text-white rounded-br-sm'
-            : 'bg-gray-100 text-gray-900 rounded-bl-sm'
+            ? 'border-[#009966] bg-[#009966] text-white rounded-br-sm'
+            : 'border-[#E5E7EB] bg-[#FFFFFF] text-[#1F2937] rounded-bl-sm'
         }`}
       >
         {showBookingLabel && booking && (
-          <span className={`block text-[10px] font-semibold tracking-wide mb-1 ${isMe ? 'text-emerald-200' : 'text-emerald-600'}`}>
+          <span className={`mb-1 block text-[10px] font-semibold tracking-wide ${isMe ? 'text-[#D1FAE5]' : 'text-[#009966]'}`}>
             {booking.serviceName}
           </span>
         )}
         <p>{message.content}</p>
         <div className={`flex items-center gap-1 mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
-          <span className={`text-[10px] ${isMe ? 'text-emerald-200' : 'text-gray-400'}`}>
+          <span className={`text-[10px] ${isMe ? 'text-[#D1FAE5]' : 'text-[#6B7280]'}`}>
             {formatTime(message.timestamp)}
           </span>
           {isMe && (
-            <span className={`text-[10px] ${message.read ? 'text-emerald-200' : 'text-emerald-300/60'}`}>
+            <span className={`text-[10px] ${message.read ? 'text-[#D1FAE5]' : 'text-white/60'}`}>
               {message.read ? '✓✓' : '✓'}
             </span>
           )}
