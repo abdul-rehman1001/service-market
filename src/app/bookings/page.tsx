@@ -6,6 +6,7 @@ import { Star, MapPin, Clock, User, MessageSquare, CheckCircle, AlertCircle, XCi
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import { ReviewModal } from '@/components/bookings/ReviewModal';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Provider {
   id: string;
@@ -59,23 +60,23 @@ const TABS = [
 const statusBadge = (status: string) => {
   switch (status) {
     case 'HOLD':
-      return 'bg-slate-100 text-slate-700';
+      return 'bg-[#F5F7F9] text-[#6B7280] border border-[#E5E7EB]';
     case 'PENDING':
-      return 'bg-amber-100 text-amber-800';
+      return 'bg-[#FFF4D6] text-[#8A5A00] border border-[#FDE68A]';
     case 'CONFIRMED':
-      return 'bg-emerald-100 text-emerald-800';
+      return 'bg-[#D1FAE5] text-[#007A52] border border-[#99F6C8]';
     case 'EN_ROUTE':
-      return 'bg-blue-100 text-blue-800';
+      return 'bg-[#E0F2FE] text-[#0369A1] border border-[#BAE6FD]';
     case 'IN_PROGRESS':
-      return 'bg-sky-100 text-sky-800';
+      return 'bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0]';
     case 'COMPLETED':
-      return 'bg-purple-100 text-purple-800';
+      return 'bg-[#D1FAE5] text-[#007A52] border border-[#A7F3D0]';
     case 'CANCELLED':
-      return 'bg-rose-100 text-rose-800';
+      return 'bg-[#FFE4E6] text-[#BE123C] border border-[#FECDD3]';
     case 'AUTO_CANCELLED':
-      return 'border border-rose-400 text-rose-700 bg-white';
+      return 'bg-white text-[#BE123C] border border-[#FDA4AF]';
     default:
-      return 'bg-slate-100 text-slate-700';
+      return 'bg-[#F5F7F9] text-[#6B7280] border border-[#E5E7EB]';
   }
 };
 
@@ -155,129 +156,137 @@ export default function MyBookingsPage() {
   }, [bookings]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-[#F5F7F9] text-[#1F2937]">
       <Header />
-      {/* Stats */}
-      <div className="max-w-6xl mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Total Bookings</p>
-            <p className="text-3xl font-bold text-slate-800 mt-1">{stats.total}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Pending</p>
-            <p className="text-3xl font-bold text-amber-600 mt-1">{stats.pending}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Completed</p>
-            <p className="text-3xl font-bold text-purple-600 mt-1">{stats.completed}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Cancelled</p>
-            <p className="text-3xl font-bold text-rose-600 mt-1">{stats.cancelled}</p>
-          </div>
-        </div>
-      </div>
+      <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+        {/* Page header */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-5 rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] p-5 shadow-[0_10px_30px_-22px_rgba(31,41,55,0.45)] sm:mb-6 sm:p-6"
+        >
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#009966]">My bookings</p>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-[#1F2937] sm:text-3xl">
+            Manage all your service appointments
+          </h1>
+          <p className="mt-1 text-sm text-[#6B7280] sm:text-base">
+            Track status, message providers, and leave reviews after completion.
+          </p>
+        </motion.div>
 
-      {/* Tabs */}
-      <div className="max-w-6xl mx-auto px-6 py-4">
-        <div className="flex gap-2 overflow-x-auto pb-2">
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
+          <StatCard label="Total Bookings" value={stats.total} accent="text-[#1F2937]" />
+          <StatCard label="Pending" value={stats.pending} accent="text-[#8A5A00]" />
+          <StatCard label="Completed" value={stats.completed} accent="text-[#007A52]" />
+          <StatCard label="Cancelled" value={stats.cancelled} accent="text-[#BE123C]" />
+        </div>
+
+        {/* Tabs */}
+        <div className="mt-4 rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] p-2 shadow-[0_8px_26px_-24px_rgba(31,41,55,0.5)] sm:mt-5">
+          <div className="flex gap-2 overflow-x-auto pb-1">
           {TABS.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-6 py-2 rounded-full text-sm font-medium border transition whitespace-nowrap ${
+              className={`rounded-xl border px-4 py-2 text-sm font-semibold whitespace-nowrap transition ${
                 activeTab === tab.key
-                  ? 'bg-emerald-600 text-white border-emerald-600'
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:text-emerald-700'
+                  ? 'bg-[#009966] text-white border-[#009966] shadow-sm'
+                  : 'bg-white text-[#6B7280] border-[#E5E7EB] hover:border-[#009966]/40 hover:text-[#007A52]'
               }`}
             >
               {tab.label}
             </button>
           ))}
+          </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="max-w-6xl mx-auto px-6 pb-12">
+        {/* Content */}
+        <div className="mt-4 pb-12 sm:mt-5">
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-12 h-12 rounded-full border-4 border-slate-200 border-t-emerald-600 animate-spin" />
-              <p className="text-slate-500">Loading bookings...</p>
+          <div className="rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] p-8 text-center sm:p-10">
+            <div className="mx-auto flex max-w-sm flex-col items-center gap-3">
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#E5E7EB] border-t-[#009966]" />
+              <p className="text-sm font-medium text-[#6B7280]">Loading bookings...</p>
             </div>
           </div>
         ) : error ? (
-          <div className="bg-rose-50 border border-rose-200 rounded-xl p-6 text-center">
-            <AlertCircle className="w-12 h-12 text-rose-600 mx-auto mb-3" />
-            <p className="text-rose-800 font-medium">{error}</p>
+          <div className="rounded-2xl border border-[#FECACA] bg-[#FFF1F2] p-6 text-center">
+            <AlertCircle className="mx-auto mb-3 h-12 w-12 text-[#BE123C]" />
+            <p className="font-medium text-[#BE123C]">{error}</p>
           </div>
         ) : filteredBookings.length === 0 ? (
-          <div className="bg-white border border-dashed border-slate-200 rounded-2xl p-12 text-center">
-            <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center">
-              <Clock className="w-8 h-8 text-slate-400" />
+          <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-[#FFFFFF] p-10 text-center sm:p-12">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#F5F7F9]">
+              <Clock className="h-8 w-8 text-[#6B7280]" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-800">No bookings found</h3>
-            <p className="text-sm text-slate-500 mt-2">
+            <h3 className="text-lg font-semibold text-[#1F2937]">No bookings found</h3>
+            <p className="mt-2 text-sm text-[#6B7280]">
               {activeTab === 'ALL'
                 ? "You haven't booked any services yet"
                 : `No ${activeTab.toLowerCase()} bookings`}
             </p>
             {activeTab === 'ALL' && (
               <Link href="/categories" className="inline-block mt-4">
-                <button className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-medium">
+                <button className="rounded-xl bg-[#009966] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#007A52] focus:outline-none focus:ring-2 focus:ring-[#009966] focus:ring-offset-2">
                   Browse Services
                 </button>
               </Link>
             )}
           </div>
         ) : (
-          <div className="space-y-4">
+          <motion.div
+            layout
+            className="space-y-4"
+          >
             {filteredBookings.map((booking) => {
               const isExpanded = expandedId === booking.id;
               const isCompleted = booking.status === 'COMPLETED';
               const hasReview = booking.review;
 
               return (
-                <div
+                <motion.div
                   key={booking.id}
-                  className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition overflow-hidden"
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] shadow-[0_14px_34px_-28px_rgba(31,41,55,0.45)] transition-all hover:-translate-y-0.5 hover:shadow-[0_20px_45px_-30px_rgba(31,41,55,0.55)]"
                 >
                   {/* Main Content */}
-                  <div className="p-6">
-                    <div className="flex items-start justify-between gap-4 mb-4">
-                      <div className="flex items-start gap-4 flex-1 min-w-0">
+                  <div className="p-4 sm:p-5 lg:p-6">
+                    <div className="mb-4 flex items-start justify-between gap-3 sm:gap-4">
+                      <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
                         {/* Provider Avatar */}
-                        <div className="flex-shrink-0">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold text-lg">
+                        <div className="shrink-0">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#009966] text-base font-bold text-white shadow-sm sm:h-14 sm:w-14 sm:text-lg">
                             {booking.provider.user.firstName.charAt(0)}
                             {booking.provider.user.lastName.charAt(0)}
                           </div>
                         </div>
 
                         {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="text-lg font-semibold text-slate-800 truncate">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="truncate text-base font-semibold text-[#1F2937] sm:text-lg">
                               {booking.provider.businessName ||
                                 `${booking.provider.user.firstName} ${booking.provider.user.lastName}`}
                             </h3>
                             {booking.provider.averageRating > 0 && (
-                              <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-full">
-                                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                                <span className="text-xs font-semibold text-slate-700">
+                              <div className="flex items-center gap-1 rounded-full border border-[#E5E7EB] bg-[#FFFFFF] px-2 py-1">
+                                <Star className="h-3.5 w-3.5 fill-[#F59E0B] text-[#F59E0B]" />
+                                <span className="text-xs font-semibold text-[#1F2937]">
                                   {booking.provider.averageRating.toFixed(1)}
                                 </span>
-                                <span className="text-xs text-slate-500">
+                                <span className="text-xs text-[#6B7280]">
                                   ({booking.provider.totalReviews})
                                 </span>
                               </div>
                             )}
                           </div>
 
-                          <p className="text-sm text-slate-600 mt-1">{booking.service.name}</p>
+                          <p className="mt-1 text-sm text-[#6B7280]">{booking.service.name}</p>
 
-                          <p className="text-xs text-slate-500 mt-2">
+                          <p className="mt-2 text-xs text-[#6B7280]">
                             Booking #{booking.bookingNumber}
                           </p>
                         </div>
@@ -287,7 +296,7 @@ export default function MyBookingsPage() {
                       <div className="flex items-center gap-2">
                         {statusIcon(booking.status)}
                         <span
-                          className={`px-3 py-1.5 rounded-full text-xs font-semibold ${statusBadge(
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold sm:px-3 sm:py-1.5 sm:text-xs ${statusBadge(
                             booking.status
                           )}`}
                         >
@@ -297,18 +306,18 @@ export default function MyBookingsPage() {
                     </div>
 
                     {/* Details Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                       {/* Date & Time */}
-                      <div className="flex items-start gap-3">
-                        <Clock className="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-3 rounded-xl border border-[#E5E7EB] bg-[#FFFFFF] p-3">
+                        <Clock className="mt-0.5 h-5 w-5 shrink-0 text-[#6B7280]" />
                         <div className="min-w-0">
-                          <p className="text-xs text-slate-500 uppercase tracking-wide">
+                          <p className="text-xs uppercase tracking-wide text-[#6B7280]">
                             Scheduled On
                           </p>
-                          <p className="text-sm font-medium text-slate-800 mt-1">
+                          <p className="mt-1 text-sm font-medium text-[#1F2937]">
                             {format(new Date(booking.scheduledStart), 'PPP')}
                           </p>
-                          <p className="text-xs text-slate-600 mt-1">
+                          <p className="mt-1 text-xs text-[#6B7280]">
                             {format(new Date(booking.scheduledStart), 'p')} -{' '}
                             {format(new Date(booking.scheduledEnd), 'p')}
                           </p>
@@ -316,13 +325,13 @@ export default function MyBookingsPage() {
                       </div>
 
                       {/* Location */}
-                      <div className="flex items-start gap-3">
-                        <MapPin className="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-3 rounded-xl border border-[#E5E7EB] bg-[#FFFFFF] p-3">
+                        <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#6B7280]" />
                         <div className="min-w-0">
-                          <p className="text-xs text-slate-500 uppercase tracking-wide">
+                          <p className="text-xs uppercase tracking-wide text-[#6B7280]">
                             Location
                           </p>
-                          <p className="text-sm font-medium text-slate-800 mt-1 truncate">
+                          <p className="mt-1 truncate text-sm font-medium text-[#1F2937]">
                             {booking.location}
                           </p>
                         </div>
@@ -330,11 +339,11 @@ export default function MyBookingsPage() {
                     </div>
 
                     {/* Price */}
-                    <div className="py-3 bg-slate-50 px-4 rounded-lg mb-4">
-                      <p className="text-xs text-slate-500 uppercase tracking-wide">
+                    <div className="mb-4 rounded-xl border border-[#E5E7EB] bg-[#F5F7F9] px-4 py-3">
+                      <p className="text-xs uppercase tracking-wide text-[#6B7280]">
                         Estimated Price
                       </p>
-                      <p className="text-lg font-bold text-emerald-600 mt-1">
+                      <p className="mt-1 text-lg font-bold text-[#009966]">
                         Rs. {booking.service.minPrice.toLocaleString()} -{' '}
                         {booking.service.maxPrice.toLocaleString()}
                       </p>
@@ -343,36 +352,43 @@ export default function MyBookingsPage() {
                     {/* Cancellation Reason */}
                     {['CANCELLED', 'AUTO_CANCELLED'].includes(booking.status) &&
                       booking.cancellationReason && (
-                        <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg mb-4">
-                          <p className="text-xs text-rose-700 font-medium">
+                        <div className="mb-4 rounded-lg border border-[#FECACA] bg-[#FFF1F2] p-3">
+                          <p className="text-xs font-medium text-[#BE123C]">
                             Cancellation Reason
                           </p>
-                          <p className="text-sm text-rose-700 mt-1">
+                          <p className="mt-1 text-sm text-[#BE123C]">
                             {booking.cancellationReason}
                           </p>
                         </div>
                       )}
 
                     {/* Problem Description */}
-                    <div
-                      className="mb-4 cursor-pointer"
-                      onClick={() => setExpandedId(isExpanded ? null : booking.id)}
-                    >
-                      <button className="text-emerald-600 font-semibold text-sm hover:text-emerald-700 transition">
+                    <div className="mb-4">
+                      <button
+                        onClick={() => setExpandedId(isExpanded ? null : booking.id)}
+                        className="text-sm font-semibold text-[#009966] transition hover:text-[#007A52]"
+                      >
                         {isExpanded ? '- Hide Details' : '+ View Details'}
                       </button>
-                      {isExpanded && (
-                        <p className="mt-3 p-3 bg-slate-50 rounded-lg text-sm text-slate-700 border border-slate-200">
-                          {booking.problemDescription}
-                        </p>
-                      )}
+                      <AnimatePresence initial={false}>
+                        {isExpanded && (
+                          <motion.p
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            className="mt-3 rounded-lg border border-[#E5E7EB] bg-[#F5F7F9] p-3 text-sm text-[#1F2937]"
+                          >
+                            {booking.problemDescription}
+                          </motion.p>
+                        )}
+                      </AnimatePresence>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-3 pt-4 border-t border-slate-200">
+                    <div className="flex flex-col gap-3 border-t border-[#E5E7EB] pt-4 sm:flex-row">
                       <Link href={`/messages?bookingId=${booking.id}`} className="flex-1">
-                        <button className="w-full px-4 py-2.5 rounded-lg bg-slate-600 text-white text-sm font-medium hover:bg-slate-700 transition flex items-center justify-center gap-2">
-                          <MessageSquare className="w-4 h-4" />
+                        <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm font-semibold text-[#1F2937] transition hover:border-[#009966]/40 hover:text-[#007A52] focus:outline-none focus:ring-2 focus:ring-[#009966] focus:ring-offset-2">
+                          <MessageSquare className="h-4 w-4" />
                           Message Provider
                         </button>
                       </Link>
@@ -389,26 +405,27 @@ export default function MyBookingsPage() {
                               serviceName: booking.service.name,
                             })
                           }
-                          className="flex-1 px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition flex items-center justify-center gap-2"
+                          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#009966] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#007A52] focus:outline-none focus:ring-2 focus:ring-[#009966] focus:ring-offset-2"
                         >
-                          <Star className="w-4 h-4" />
+                          <Star className="h-4 w-4" />
                           Leave Review
                         </button>
                       )}
 
                       {hasReview && (
-                        <div className="flex-1 px-4 py-2.5 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center gap-2">
-                          <Star className="w-4 h-4 text-purple-600 fill-purple-600" />
-                          <span className="text-sm text-purple-700 font-medium">Review Left</span>
+                        <div className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#A7F3D0] bg-[#D1FAE5] px-4 py-2.5">
+                          <Star className="h-4 w-4 fill-[#007A52] text-[#007A52]" />
+                          <span className="text-sm font-medium text-[#007A52]">Review Left</span>
                         </div>
                       )}
                     </div>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         )}
+      </div>
       </div>
 
       {/* Review Modal */}
@@ -432,6 +449,15 @@ export default function MyBookingsPage() {
             .catch((err) => console.error('Failed to refresh bookings:', err));
         }}
       />
+    </div>
+  );
+}
+
+function StatCard({ label, value, accent }: { label: string; value: number; accent?: string }) {
+  return (
+    <div className="rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] p-4 shadow-[0_8px_24px_-22px_rgba(31,41,55,0.45)]">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
+      <p className={`mt-1 text-2xl font-bold sm:text-3xl ${accent || "text-[#1F2937]"}`}>{value}</p>
     </div>
   );
 }
