@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   CheckCircle,
   XCircle,
@@ -14,7 +14,10 @@ import {
   Image as ImageIcon,
   Loader2,
   AlertCircle,
-} from 'lucide-react';
+  ShieldCheck,
+  FileCheck,
+  ExternalLink,
+} from "lucide-react";
 
 interface VerificationRequest {
   id: string;
@@ -48,65 +51,79 @@ interface VerificationRequest {
   }>;
 }
 
+const statusBadge: Record<string, string> = {
+  APPROVED:
+    "bg-[var(--admin-green-muted)] text-[var(--admin-green-dark)] border border-[var(--admin-beige)]",
+  REJECTED: "bg-red-50 text-red-700 border border-red-200",
+  PENDING: "bg-amber-50 text-amber-800 border border-amber-200",
+};
+
 export default function VerificationRequestsPage() {
   const router = useRouter();
   const [requests, setRequests] = useState<VerificationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
-  const [message, setMessage] = useState({ type: '', text: '' });
-  const [selectedRequest, setSelectedRequest] = useState<VerificationRequest | null>(
-    null
-  );
-  const [rejectionReason, setRejectionReason] = useState('');
+  const [message, setMessage] = useState({ type: "", text: "" });
+  const [selectedRequest, setSelectedRequest] = useState<VerificationRequest | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectModal, setShowRejectModal] = useState(false);
 
   useEffect(() => {
     fetchRequests();
   }, []);
 
+  const stats = useMemo(() => {
+    const pending = requests.filter((r) => r.verificationStatus === "PENDING").length;
+    const readyForReview = requests.filter(
+      (r) => r.cnicRequestReady || r.supportingDocumentsReady
+    ).length;
+    const totalDocs = requests.reduce((sum, r) => sum + r.documents.length, 0);
+    return { pending, readyForReview, total: requests.length, totalDocs };
+  }, [requests]);
+
   const fetchRequests = async () => {
     try {
-      const res = await fetch('/api/admin/verification-requests');
+      const res = await fetch("/api/admin/verification-requests");
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {
-          router.push('/login');
+          router.push("/login");
           return;
         }
-        throw new Error('Failed to fetch requests');
+        throw new Error("Failed to fetch requests");
       }
 
       const data = await res.json();
       setRequests(data.verificationRequests || []);
     } catch (error) {
-      console.error('Error fetching requests:', error);
-      setMessage({ type: 'error', text: 'Failed to load verification requests' });
+      console.error("Error fetching requests:", error);
+      setMessage({ type: "error", text: "Failed to load verification requests" });
     } finally {
       setLoading(false);
     }
   };
 
   const handleApprove = async (providerId: string) => {
-    if (!confirm('Are you sure you want to approve this provider?')) return;
+    if (!confirm("Are you sure you want to approve this provider?")) return;
 
     setProcessing(providerId);
-    setMessage({ type: '', text: '' });
+    setMessage({ type: "", text: "" });
 
     try {
-      const res = await fetch(
-        `/api/admin/verification-requests/${providerId}/approve`,
-        { method: 'POST' }
-      );
+      const res = await fetch(`/api/admin/verification-requests/${providerId}/approve`, {
+        method: "POST",
+      });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to approve');
+        throw new Error(data.error || "Failed to approve");
       }
 
-      setMessage({ type: 'success', text: 'Provider approved successfully!' });
+      setMessage({ type: "success", text: "Provider approved successfully!" });
       fetchRequests();
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error.message });
+    } catch (error: unknown) {
+      const err = error as Error;
+      setMessage({ type: "error", text: err.message });
     } finally {
       setProcessing(null);
     }
@@ -114,26 +131,26 @@ export default function VerificationRequestsPage() {
 
   const handleRejectClick = (request: VerificationRequest) => {
     setSelectedRequest(request);
-    setRejectionReason('');
+    setRejectionReason("");
     setShowRejectModal(true);
   };
 
   const handleRejectSubmit = async () => {
     if (!selectedRequest) return;
     if (!rejectionReason.trim()) {
-      alert('Please provide a rejection reason');
+      alert("Please provide a rejection reason");
       return;
     }
 
     setProcessing(selectedRequest.id);
-    setMessage({ type: '', text: '' });
+    setMessage({ type: "", text: "" });
 
     try {
       const res = await fetch(
         `/api/admin/verification-requests/${selectedRequest.id}/reject`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ reason: rejectionReason }),
         }
       );
@@ -141,320 +158,377 @@ export default function VerificationRequestsPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to reject');
+        throw new Error(data.error || "Failed to reject");
       }
 
       setMessage({
-        type: 'success',
-        text: 'Provider rejected and notified successfully!',
+        type: "success",
+        text: "Provider rejected and notified successfully!",
       });
       setShowRejectModal(false);
       setSelectedRequest(null);
-      setRejectionReason('');
+      setRejectionReason("");
       fetchRequests();
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error.message });
+    } catch (error: unknown) {
+      const err = error as Error;
+      setMessage({ type: "error", text: err.message });
     } finally {
       setProcessing(null);
     }
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-  };
-
-  const getStatusBadge = (status: string) => {
-    const styles = {
-      APPROVED: 'bg-green-100 text-green-800',
-      REJECTED: 'bg-red-100 text-red-800',
-      PENDING: 'bg-yellow-100 text-yellow-800',
-    };
-    return styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800';
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'APPROVED':
-        return <CheckCircle className="w-4 h-4" />;
-      case 'REJECTED':
-        return <XCircle className="w-4 h-4" />;
-      case 'PENDING':
-        return <Clock className="w-4 h-4" />;
+      case "APPROVED":
+        return <CheckCircle className="h-3.5 w-3.5" />;
+      case "REJECTED":
+        return <XCircle className="h-3.5 w-3.5" />;
+      case "PENDING":
+        return <Clock className="h-3.5 w-3.5" />;
       default:
-        return <AlertCircle className="w-4 h-4" />;
+        return <AlertCircle className="h-3.5 w-3.5" />;
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
-      </div>
+      <section className="flex h-72 flex-col items-center justify-center gap-3 sm:h-96">
+        <Loader2 className="animate-spin text-[var(--admin-green)]" size={40} />
+        <p className="text-sm font-medium text-[var(--admin-green)]/70 animate-admin-fade-in-up">
+          Loading verification requests…
+        </p>
+      </section>
     );
   }
 
   return (
-    <div className="p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Provider Verification Requests
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Review and approve or reject provider identity verification requests
-          </p>
-        </div>
-
-        {message.text && (
-          <div
-            className={`mb-6 p-4 rounded-lg ${
-              message.type === 'success'
-                ? 'bg-green-50 text-green-800 border border-green-200'
-                : 'bg-red-50 text-red-800 border border-red-200'
-            }`}
-          >
-            {message.text}
+    <section className="space-y-5 md:space-y-7">
+      {/* Header */}
+      <div className="animate-admin-fade-in-up flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-4">
+          <div className="hidden rounded-2xl bg-[var(--admin-green)] p-3 text-white shadow-lg sm:block">
+            <ShieldCheck size={26} />
           </div>
-        )}
-
-        {requests.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No Pending Requests
-            </h3>
-            <p className="text-gray-600">
-              All verification requests have been processed
+          <div>
+            <h2 className="text-2xl font-bold text-[var(--admin-green-dark)] sm:text-3xl">
+              Provider Verification
+            </h2>
+            <p className="mt-1 text-sm text-[var(--admin-green)]/75 sm:text-base">
+              Review and approve or reject provider identity verification requests
             </p>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {requests.map((request) => (
-              <div
-                key={request.id}
-                className="bg-white rounded-lg shadow-md p-6 border-2 border-gray-200 hover:border-emerald-300 transition-colors"
-              >
-                {/* Provider Info */}
-                <div className="flex items-start gap-6 mb-6">
+        </div>
+        <div className="animate-admin-scale-in self-start rounded-xl border border-[var(--admin-beige)]/60 bg-white/80 px-4 py-2.5 text-sm shadow-sm">
+          <span className="font-bold text-[var(--admin-green-dark)]">{stats.total}</span>
+          <span className="ml-1 text-[var(--admin-green)]/70">requests</span>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        {[
+          { label: "Total Requests", value: stats.total, icon: FileCheck, stagger: "admin-stagger-1" },
+          { label: "Pending", value: stats.pending, icon: Clock, stagger: "admin-stagger-2" },
+          {
+            label: "Ready to Review",
+            value: stats.readyForReview,
+            icon: ShieldCheck,
+            stagger: "admin-stagger-3",
+          },
+          { label: "Documents", value: stats.totalDocs, icon: FileText, stagger: "admin-stagger-4" },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className={`admin-card animate-admin-fade-in-up ${stat.stagger} flex items-center gap-3 rounded-2xl p-4`}
+          >
+            <div className="rounded-xl bg-[var(--admin-green-muted)] p-2.5 text-[var(--admin-green)]">
+              <stat.icon size={20} />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-xs font-medium text-[var(--admin-green)]/70">{stat.label}</p>
+              <p className="text-xl font-bold text-[var(--admin-green-dark)]">{stat.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Message */}
+      {message.text && (
+        <div
+          className={`animate-admin-fade-in-up rounded-2xl border px-4 py-3.5 text-sm font-medium sm:px-5 ${
+            message.type === "success"
+              ? "border-[var(--admin-beige)] bg-[var(--admin-green-muted)] text-[var(--admin-green-dark)]"
+              : "border-red-200 bg-red-50 text-red-700"
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {requests.length === 0 ? (
+        <div className="admin-card animate-admin-scale-in flex flex-col items-center justify-center rounded-2xl p-12 text-center sm:p-16">
+          <div className="mb-4 rounded-2xl bg-[var(--admin-green-muted)] p-5 text-[var(--admin-green)]">
+            <CheckCircle size={40} />
+          </div>
+          <h3 className="text-lg font-bold text-[var(--admin-green-dark)]">No Pending Requests</h3>
+          <p className="mt-2 max-w-sm text-sm text-[var(--admin-green)]/65">
+            All verification requests have been processed. New submissions will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-5 md:space-y-6">
+          {requests.map((request, index) => (
+            <article
+              key={request.id}
+              className="admin-card animate-admin-fade-in-up overflow-hidden rounded-2xl border-2 border-transparent transition-all duration-300 hover:border-[var(--admin-green)]/25"
+              style={{ animationDelay: `${Math.min(index, 6) * 0.06}s` }}
+            >
+              {/* Provider header */}
+              <div className="border-b border-[var(--admin-beige)]/40 bg-gradient-to-r from-[var(--admin-green-muted)]/50 to-transparent p-4 sm:p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
                   {request.user.profileImage ? (
                     <img
                       src={request.user.profileImage}
                       alt={`${request.user.firstName} ${request.user.lastName}`}
-                      className="w-20 h-20 rounded-full object-cover border-4 border-emerald-100"
+                      className="mx-auto h-20 w-20 shrink-0 rounded-2xl object-cover ring-4 ring-[var(--admin-beige)]/80 sm:mx-0"
                     />
                   ) : (
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-2xl font-bold border-4 border-emerald-100">
+                    <div className="mx-auto flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--admin-green)] to-[var(--admin-green-dark)] text-2xl font-bold text-white shadow-lg ring-4 ring-[var(--admin-beige)]/60 sm:mx-0">
                       {request.user.firstName[0]}
                       {request.user.lastName[0]}
                     </div>
                   )}
 
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900">
-                      {request.user.firstName} {request.user.lastName}
-                    </h3>
-                    {request.businessName && (
-                      <p className="text-gray-600 font-medium">
-                        {request.businessName}
-                      </p>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-4 mt-3">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Mail className="w-4 h-4" />
-                        {request.user.email}
+                  <div className="min-w-0 flex-1 text-center sm:text-left">
+                    <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <h3 className="text-xl font-bold text-[var(--admin-green-dark)]">
+                          {request.user.firstName} {request.user.lastName}
+                        </h3>
+                        {request.businessName && (
+                          <p className="mt-0.5 font-medium text-[var(--admin-green)]/80">
+                            {request.businessName}
+                          </p>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Phone className="w-4 h-4" />
-                        {request.user.phone}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <User className="w-4 h-4" />
-                        CNIC: {request.cnic}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Briefcase className="w-4 h-4" />
-                        {request.yearsOfExperience} years experience
-                      </div>
-                    </div>
-
-                    <div className="mt-3">
                       <span
-                        className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(
-                          request.verificationStatus
-                        )}`}
+                        className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold ${statusBadge[request.verificationStatus] || "bg-gray-100 text-gray-700"}`}
                       >
                         {getStatusIcon(request.verificationStatus)}
                         {request.verificationStatus}
                       </span>
                     </div>
 
+                    <div className="mt-4 grid grid-cols-1 gap-2.5 text-sm sm:grid-cols-2 sm:gap-3">
+                      <div className="flex items-center justify-center gap-2 rounded-xl bg-white/70 px-3 py-2 text-[var(--admin-green-dark)]/80 sm:justify-start">
+                        <Mail className="h-4 w-4 shrink-0 text-[var(--admin-green)]" />
+                        <span className="truncate">{request.user.email}</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-2 rounded-xl bg-white/70 px-3 py-2 text-[var(--admin-green-dark)]/80 sm:justify-start">
+                        <Phone className="h-4 w-4 shrink-0 text-[var(--admin-green)]" />
+                        <span>{request.user.phone}</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-2 rounded-xl bg-white/70 px-3 py-2 text-[var(--admin-green-dark)]/80 sm:justify-start">
+                        <User className="h-4 w-4 shrink-0 text-[var(--admin-green)]" />
+                        <span>CNIC: {request.cnic}</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-2 rounded-xl bg-white/70 px-3 py-2 text-[var(--admin-green-dark)]/80 sm:justify-start">
+                        <Briefcase className="h-4 w-4 shrink-0 text-[var(--admin-green)]" />
+                        <span>{request.yearsOfExperience} years experience</span>
+                      </div>
+                    </div>
+
                     {request.supportingDocumentsReady && (
-                      <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-                        {request.pendingSupportingDocumentCount} supporting document{request.pendingSupportingDocumentCount === 1 ? '' : 's'} are waiting for review.
+                      <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5 text-sm text-blue-800">
+                        {request.pendingSupportingDocumentCount} supporting document
+                        {request.pendingSupportingDocumentCount === 1 ? "" : "s"} waiting for
+                        review.
                       </div>
                     )}
                   </div>
                 </div>
+              </div>
 
-                {/* Documents */}
-                <div className="border-t border-gray-200 pt-6">
-                  <h4 className="font-semibold text-gray-900 mb-4">
-                    Uploaded Documents ({request.documents.length})
-                  </h4>
+              {/* Documents */}
+              <div className="p-4 sm:p-6">
+                <h4 className="mb-4 flex items-center gap-2 font-semibold text-[var(--admin-green-dark)]">
+                  <FileText size={18} className="text-[var(--admin-green)]" />
+                  Uploaded Documents
+                  <span className="rounded-lg bg-[var(--admin-green-muted)] px-2 py-0.5 text-xs font-bold text-[var(--admin-green)]">
+                    {request.documents.length}
+                  </span>
+                </h4>
 
-                  {request.documents.length === 0 ? (
-                    <p className="text-gray-500 text-sm">No documents uploaded</p>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {request.documents.map((doc) => (
-                        <div
-                          key={doc.id}
-                          className="flex items-start gap-3 p-4 border border-gray-200 rounded-lg hover:border-emerald-300 transition-colors"
-                        >
-                          <div className="flex-shrink-0">
-                            {doc.mimeType.startsWith('image/') ? (
-                              <ImageIcon className="w-8 h-8 text-emerald-600" />
-                            ) : (
-                              <FileText className="w-8 h-8 text-emerald-600" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h5 className="text-sm font-medium text-gray-900">
-                              {doc.documentType.replace(/_/g, ' ')}
-                            </h5>
-                            <p className="text-xs text-gray-600 truncate">
-                              {doc.fileName}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {formatFileSize(doc.fileSize)}
-                            </p>
-                            <a
-                              href={doc.fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-emerald-600 hover:text-emerald-700 text-xs font-medium mt-1 inline-block"
-                            >
-                              View Document →
-                            </a>
-                          </div>
-                          <span
-                            className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(
-                              doc.status
-                            )}`}
-                          >
-                            {getStatusIcon(doc.status)}
-                            {doc.status}
-                          </span>
+                {request.documents.length === 0 ? (
+                  <p className="text-sm text-[var(--admin-green)]/50">No documents uploaded</p>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {request.documents.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="group flex flex-col gap-3 rounded-xl border border-[var(--admin-beige)]/50 bg-white/80 p-4 transition-all duration-200 hover:border-[var(--admin-green)]/40 hover:shadow-md sm:flex-row sm:items-start"
+                      >
+                        <div className="flex shrink-0 items-center justify-center rounded-xl bg-[var(--admin-green-muted)] p-3 text-[var(--admin-green)]">
+                          {doc.mimeType.startsWith("image/") ? (
+                            <ImageIcon className="h-7 w-7" />
+                          ) : (
+                            <FileText className="h-7 w-7" />
+                          )}
                         </div>
-                      ))}
+                        <div className="min-w-0 flex-1">
+                          <h5 className="text-sm font-semibold text-[var(--admin-green-dark)]">
+                            {doc.documentType.replace(/_/g, " ")}
+                          </h5>
+                          <p className="mt-0.5 truncate text-xs text-[var(--admin-green)]/65">
+                            {doc.fileName}
+                          </p>
+                          <p className="text-xs text-[var(--admin-green)]/50">
+                            {formatFileSize(doc.fileSize)}
+                          </p>
+                          <a
+                            href={doc.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[var(--admin-green)] transition-colors hover:text-[var(--admin-green-dark)]"
+                          >
+                            View Document
+                            <ExternalLink size={12} />
+                          </a>
+                        </div>
+                        <span
+                          className={`inline-flex w-fit items-center gap-1 self-start rounded-lg px-2.5 py-1 text-xs font-semibold sm:self-auto ${statusBadge[doc.status] || "bg-gray-100 text-gray-700"}`}
+                        >
+                          {getStatusIcon(doc.status)}
+                          {doc.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              {(request.cnicRequestReady || request.supportingDocumentsReady) && (
+                <div className="border-t border-[var(--admin-beige)]/40 bg-[var(--admin-cream)]/50 p-4 sm:p-6">
+                  {request.supportingDocumentsReady ? (
+                    <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                      Provider verification is already approved. Review and approve supporting
+                      documents separately.
+                    </div>
+                  ) : (
+                    <div className="mb-4 rounded-xl border border-[var(--admin-beige)] bg-[var(--admin-green-muted)] px-4 py-3 text-sm text-[var(--admin-green-dark)]">
+                      CNIC front and back are ready for verification review.
                     </div>
                   )}
-                </div>
 
-                {/* Action Buttons */}
-                {(request.cnicRequestReady || request.supportingDocumentsReady) && (
-                  <div className="mt-6 pt-6 border-t border-gray-200 space-y-3">
-                    {request.supportingDocumentsReady ? (
-                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-                        Provider verification is already approved. Review and approve supporting documents separately.
-                      </div>
-                    ) : (
-                      <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-800">
-                        CNIC front and back are ready for verification review.
-                      </div>
-                    )}
-
-                    <div className="flex gap-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                     <button
+                      type="button"
                       onClick={() => handleApprove(request.id)}
                       disabled={
                         processing === request.id ||
                         (!request.cnicRequestReady && !request.supportingDocumentsReady)
                       }
-                      className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--admin-green)] px-6 py-3.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:bg-[var(--admin-green-dark)] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {processing === request.id ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <Loader2 className="h-5 w-5 animate-spin" />
                       ) : (
-                        <CheckCircle className="w-5 h-5" />
+                        <CheckCircle className="h-5 w-5" />
                       )}
                       {request.supportingDocumentsReady && !request.cnicRequestReady
-                        ? 'Approve Documents'
-                        : 'Approve Verification'}
+                        ? "Approve Documents"
+                        : "Approve Verification"}
                     </button>
                     <button
+                      type="button"
                       onClick={() => handleRejectClick(request)}
                       disabled={processing === request.id}
-                      className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-red-200 bg-red-50 px-6 py-3.5 text-sm font-semibold text-red-700 transition-all duration-200 hover:bg-red-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <XCircle className="w-5 h-5" />
+                      <XCircle className="h-5 w-5" />
                       Reject
                     </button>
-                    </div>
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
 
-        {/* Reject Modal */}
-        {showRejectModal && selectedRequest && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
-                Reject Verification Request
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Please provide a reason for rejecting{' '}
-                <strong>
-                  {selectedRequest.user.firstName} {selectedRequest.user.lastName}
-                </strong>
-                's verification request:
-              </p>
-              <textarea
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
-                placeholder="Enter detailed reason for rejection..."
-                required
-              />
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={() => {
-                    setShowRejectModal(false);
-                    setSelectedRequest(null);
-                    setRejectionReason('');
-                  }}
-                  disabled={processing !== null}
-                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleRejectSubmit}
-                  disabled={processing !== null || !rejectionReason.trim()}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                >
-                  {processing === selectedRequest.id ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Rejecting...
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="w-4 h-4" />
-                      Reject
-                    </>
-                  )}
-                </button>
-              </div>
+      {/* Reject modal */}
+      {showRejectModal && selectedRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--admin-green-dark)]/50 p-4 backdrop-blur-sm animate-admin-fade-in-up">
+          <div
+            className="admin-card w-full max-w-md animate-admin-scale-in space-y-4 rounded-2xl p-6"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reject-verification-title"
+          >
+            <h3
+              id="reject-verification-title"
+              className="text-lg font-bold text-[var(--admin-green-dark)]"
+            >
+              Reject Verification Request
+            </h3>
+            <p className="text-sm text-[var(--admin-green-dark)]/75">
+              Please provide a reason for rejecting{" "}
+              <strong>
+                {selectedRequest.user.firstName} {selectedRequest.user.lastName}
+              </strong>
+              &apos;s verification request:
+            </p>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              rows={4}
+              className="w-full resize-none rounded-xl border border-[var(--admin-beige)] bg-white px-4 py-3 text-sm text-[var(--admin-green-dark)] transition-all focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200"
+              placeholder="Enter detailed reason for rejection..."
+              required
+            />
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setSelectedRequest(null);
+                  setRejectionReason("");
+                }}
+                disabled={processing !== null}
+                className="rounded-xl border border-[var(--admin-beige)] px-4 py-2.5 text-sm font-medium text-[var(--admin-green-dark)] transition-colors hover:bg-[var(--admin-green-muted)] disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleRejectSubmit}
+                disabled={processing !== null || !rejectionReason.trim()}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+              >
+                {processing === selectedRequest.id ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Rejecting…
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="h-4 w-4" />
+                    Reject
+                  </>
+                )}
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+    </section>
   );
 }

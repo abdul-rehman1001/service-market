@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileDown, FileSpreadsheet } from "lucide-react";
+import { FileDown, FileSpreadsheet, Loader2 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { AdminQuery, QueryStatistics } from "@/app/admin/queries/page";
@@ -10,6 +10,8 @@ interface QueryExportProps {
   queries: AdminQuery[];
   statistics: QueryStatistics;
 }
+
+const PDF_GREEN: [number, number, number] = [47, 160, 132];
 
 export default function QueryExport({ queries, statistics }: QueryExportProps) {
   const [exporting, setExporting] = useState<string | null>(null);
@@ -25,11 +27,8 @@ export default function QueryExport({ queries, statistics }: QueryExportProps) {
     s === "IN_PROGRESS" ? "In Progress" : s.charAt(0) + s.slice(1).toLowerCase();
 
   const typeLabel = (t: string) =>
-    t === "SERVICE_ISSUE"
-      ? "Service Issue"
-      : t.charAt(0) + t.slice(1).toLowerCase();
+    t === "SERVICE_ISSUE" ? "Service Issue" : t.charAt(0) + t.slice(1).toLowerCase();
 
-  /* ---------- CSV ---------- */
   const exportCSV = () => {
     setExporting("csv");
     try {
@@ -61,8 +60,7 @@ export default function QueryExport({ queries, statistics }: QueryExportProps) {
         q.resolvedAt ? formatDate(q.resolvedAt) : "",
       ]);
 
-      const csvContent =
-        [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+      const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
 
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
@@ -76,22 +74,19 @@ export default function QueryExport({ queries, statistics }: QueryExportProps) {
     }
   };
 
-  /* ---------- PDF ---------- */
   const exportPDF = () => {
     setExporting("pdf");
     try {
       const doc = new jsPDF({ orientation: "landscape" });
 
-      // Title
       doc.setFontSize(18);
-      doc.setTextColor(5, 150, 105); // emerald-600
+      doc.setTextColor(...PDF_GREEN);
       doc.text("Query & Complaint Report", 14, 18);
 
       doc.setFontSize(10);
       doc.setTextColor(100);
       doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 25);
 
-      // Statistics summary
       doc.setFontSize(12);
       doc.setTextColor(30);
       doc.text("Statistics Overview", 14, 35);
@@ -112,14 +107,12 @@ export default function QueryExport({ queries, statistics }: QueryExportProps) {
           ],
         ],
         theme: "grid",
-        headStyles: { fillColor: [5, 150, 105] },
+        headStyles: { fillColor: PDF_GREEN },
         styles: { fontSize: 10 },
       });
 
-      // Queries table
       const tableY =
-        (doc as jsPDF & { lastAutoTable?: { finalY?: number } }).lastAutoTable
-          ?.finalY ?? 55;
+        (doc as jsPDF & { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY ?? 55;
 
       doc.setFontSize(12);
       doc.setTextColor(30);
@@ -127,17 +120,7 @@ export default function QueryExport({ queries, statistics }: QueryExportProps) {
 
       autoTable(doc, {
         startY: tableY + 14,
-        head: [
-          [
-            "Query #",
-            "User",
-            "Email",
-            "Subject",
-            "Type",
-            "Status",
-            "Created",
-          ],
-        ],
+        head: [["Query #", "User", "Email", "Subject", "Type", "Status", "Created"]],
         body: queries.map((q) => [
           q.queryNumber,
           `${q.user.firstName} ${q.user.lastName}`,
@@ -148,37 +131,45 @@ export default function QueryExport({ queries, statistics }: QueryExportProps) {
           formatDate(q.createdAt),
         ]),
         theme: "striped",
-        headStyles: { fillColor: [5, 150, 105] },
+        headStyles: { fillColor: PDF_GREEN },
         styles: { fontSize: 8, cellPadding: 3 },
         columnStyles: {
           3: { cellWidth: 60 },
         },
       });
 
-      doc.save(
-        `queries-report-${new Date().toISOString().slice(0, 10)}.pdf`
-      );
+      doc.save(`queries-report-${new Date().toISOString().slice(0, 10)}.pdf`);
     } finally {
       setExporting(null);
     }
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <button
+        type="button"
         onClick={exportCSV}
         disabled={exporting !== null || queries.length === 0}
-        className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+        className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--admin-beige)] bg-white px-3 py-2 text-sm font-medium text-[var(--admin-green-dark)] shadow-sm transition-all hover:border-[var(--admin-green)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <FileSpreadsheet size={16} />
+        {exporting === "csv" ? (
+          <Loader2 size={16} className="animate-spin" />
+        ) : (
+          <FileSpreadsheet size={16} />
+        )}
         {exporting === "csv" ? "Exporting…" : "CSV"}
       </button>
       <button
+        type="button"
         onClick={exportPDF}
         disabled={exporting !== null || queries.length === 0}
-        className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+        className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--admin-green)] px-3 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-[var(--admin-green-dark)] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <FileDown size={16} />
+        {exporting === "pdf" ? (
+          <Loader2 size={16} className="animate-spin" />
+        ) : (
+          <FileDown size={16} />
+        )}
         {exporting === "pdf" ? "Exporting…" : "PDF"}
       </button>
     </div>

@@ -51,7 +51,7 @@ const STATUS_COLORS: Record<string, string> = {
   CONFIRMED: "#3b82f6",
   EN_ROUTE: "#8b5cf6",
   IN_PROGRESS: "#06b6d4",
-  COMPLETED: "#10b981",
+  COMPLETED: "#2fa084",
   CANCELLED: "#ef4444",
   AUTO_CANCELLED: "#f97316",
 };
@@ -67,8 +67,11 @@ const STATUS_LABELS: Record<string, string> = {
   AUTO_CANCELLED: "Auto Cancelled",
 };
 
+const CHART_GREEN = "#2fa084";
+const CHART_GREEN_DARK = "#1f6f5f";
+const CHART_ACCENT = "#6fcf97";
+
 function formatLabel(dateStr: string): string {
-  // "2025-01" → "Jan 25", "2025-01-15" → "Jan 15"
   const parts = dateStr.split("-");
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const month = months[parseInt(parts[1]) - 1] || parts[1];
@@ -91,20 +94,21 @@ export default function AnalyticsCharts({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 md:space-y-6">
       {/* Booking Trends */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-lg">Booking Trends</h3>
-          <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
+      <div className="admin-card rounded-2xl p-4 sm:p-6">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h3 className="text-lg font-bold text-[var(--admin-green-dark)]">Booking Trends</h3>
+          <div className="flex gap-1 self-start rounded-xl bg-[var(--admin-beige)]/40 p-1 sm:self-auto">
             {periodOptions.map((opt) => (
               <button
                 key={opt.value}
+                type="button"
                 onClick={() => onTrendPeriodChange(opt.value)}
-                className={`px-3 py-1 text-xs rounded-md transition ${
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
                   trendPeriod === opt.value
-                    ? "bg-emerald-600 text-white"
-                    : "text-slate-600 hover:bg-slate-200"
+                    ? "bg-[var(--admin-green)] text-white shadow-sm"
+                    : "text-[var(--admin-green-dark)]/70 hover:bg-white/60"
                 }`}
               >
                 {opt.label}
@@ -114,131 +118,151 @@ export default function AnalyticsCharts({
         </div>
 
         {loading ? (
-          <div className="h-72 flex items-center justify-center">
-            <Loader2 className="animate-spin text-emerald-600" size={28} />
+          <div className="flex h-64 items-center justify-center sm:h-72">
+            <Loader2 className="animate-spin text-[var(--admin-green)]" size={28} />
           </div>
         ) : bookingTrends.length === 0 ? (
-          <div className="h-72 flex items-center justify-center text-slate-400">
+          <div className="flex h-64 items-center justify-center text-[var(--admin-green)]/50 sm:h-72">
             No booking data available for this period
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={bookingTrends}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="date" tickFormatter={formatLabel} fontSize={12} />
-              <YAxis fontSize={12} />
-              <Tooltip
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                labelFormatter={((label: any) => formatLabel(String(label))) as any}
-                contentStyle={{ borderRadius: "8px", border: "1px solid #e2e8f0" }}
-              />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="total"
-                stroke="#3b82f6"
-                strokeWidth={2}
-                name="Total"
-                dot={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="completed"
-                stroke="#10b981"
-                strokeWidth={2}
-                name="Completed"
-                dot={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="cancelled"
-                stroke="#ef4444"
-                strokeWidth={2}
-                name="Cancelled"
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="h-64 w-full sm:h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={bookingTrends}>
+                <CartesianGrid strokeDasharray="3 3" stroke={CHART_ACCENT} />
+                <XAxis dataKey="date" tickFormatter={formatLabel} fontSize={12} stroke={CHART_GREEN_DARK} />
+                <YAxis fontSize={12} stroke={CHART_GREEN_DARK} />
+                <Tooltip
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  labelFormatter={((label: any) => formatLabel(String(label))) as any}
+                  contentStyle={{
+                    borderRadius: "12px",
+                    border: `1px solid ${CHART_ACCENT}`,
+                    boxShadow: "0 4px 16px rgba(31, 111, 95, 0.1)",
+                  }}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="total"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  name="Total"
+                  dot={false}
+                  animationDuration={800}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="completed"
+                  stroke={CHART_GREEN}
+                  strokeWidth={2}
+                  name="Completed"
+                  dot={false}
+                  animationDuration={800}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="cancelled"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  name="Cancelled"
+                  dot={false}
+                  animationDuration={800}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </div>
 
       {/* User Growth + Status Distribution */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* User Growth */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h3 className="font-semibold text-lg mb-4">User Growth (Last 12 Months)</h3>
+      <div className="grid grid-cols-1 gap-5 md:gap-6 lg:grid-cols-2">
+        <div className="admin-card rounded-2xl p-4 sm:p-6">
+          <h3 className="mb-4 text-lg font-bold text-[var(--admin-green-dark)]">
+            User Growth (Last 12 Months)
+          </h3>
           {userGrowth.length === 0 ? (
-            <div className="h-72 flex items-center justify-center text-slate-400">
+            <div className="flex h-64 items-center justify-center text-[var(--admin-green)]/50 sm:h-72">
               No user growth data available
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={userGrowth}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="month" tickFormatter={formatLabel} fontSize={12} />
-                <YAxis fontSize={12} />
-                <Tooltip
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  labelFormatter={((label: any) => formatLabel(String(label))) as any}
-                  contentStyle={{ borderRadius: "8px", border: "1px solid #e2e8f0" }}
-                />
-                <Legend />
-                <Bar dataKey="seekers" fill="#3b82f6" name="Seekers" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="providers" fill="#10b981" name="Providers" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="h-64 w-full sm:h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={userGrowth}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_ACCENT} />
+                  <XAxis dataKey="month" tickFormatter={formatLabel} fontSize={12} stroke={CHART_GREEN_DARK} />
+                  <YAxis fontSize={12} stroke={CHART_GREEN_DARK} />
+                  <Tooltip
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    labelFormatter={((label: any) => formatLabel(String(label))) as any}
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: `1px solid ${CHART_ACCENT}`,
+                      boxShadow: "0 4px 16px rgba(13, 83, 14, 0.08)",
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="seekers" fill="#3b82f6" name="Seekers" radius={[6, 6, 0, 0]} animationDuration={800} />
+                  <Bar dataKey="providers" fill={CHART_GREEN} name="Providers" radius={[6, 6, 0, 0]} animationDuration={800} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           )}
         </div>
 
-        {/* Booking Status Distribution */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h3 className="font-semibold text-lg mb-4">Booking Status Distribution</h3>
+        <div className="admin-card rounded-2xl p-4 sm:p-6">
+          <h3 className="mb-4 text-lg font-bold text-[var(--admin-green-dark)]">
+            Booking Status Distribution
+          </h3>
           {statusDistribution.length === 0 ? (
-            <div className="h-72 flex items-center justify-center text-slate-400">
+            <div className="flex h-64 items-center justify-center text-[var(--admin-green)]/50 sm:h-72">
               No booking data available
             </div>
           ) : (
             <div className="flex flex-col items-center">
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={statusDistribution}
-                    dataKey="count"
-                    nameKey="status"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={90}
-                    innerRadius={50}
-                    paddingAngle={2}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    label={((props: any) =>
-                      `${STATUS_LABELS[props.name] || props.name}: ${props.value}`
-                    ) as any}
-                    labelLine={false}
-                  >
-                    {statusDistribution.map((entry) => (
-                      <Cell
-                        key={entry.status}
-                        fill={STATUS_COLORS[entry.status] || "#94a3b8"}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    formatter={((value: any, name: any) => {
-                      return [value, STATUS_LABELS[name] || name];
-                    }) as any}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex flex-wrap gap-3 mt-2 justify-center">
+              <div className="h-56 w-full sm:h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={statusDistribution}
+                      dataKey="count"
+                      nameKey="status"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={90}
+                      innerRadius={50}
+                      paddingAngle={2}
+                      animationDuration={800}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      label={((props: any) =>
+                        `${STATUS_LABELS[props.name] || props.name}: ${props.value}`
+                      ) as any}
+                      labelLine={false}
+                    >
+                      {statusDistribution.map((entry) => (
+                        <Cell
+                          key={entry.status}
+                          fill={STATUS_COLORS[entry.status] || "#94a3b8"}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      formatter={((value: any, name: any) => {
+                        return [value, STATUS_LABELS[name] || name];
+                      }) as any}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-3 flex flex-wrap justify-center gap-2 sm:gap-3">
                 {statusDistribution.map((entry) => (
                   <div key={entry.status} className="flex items-center gap-1.5 text-xs">
                     <div
-                      className="w-3 h-3 rounded-full"
+                      className="h-3 w-3 rounded-full"
                       style={{ backgroundColor: STATUS_COLORS[entry.status] || "#94a3b8" }}
                     />
-                    <span className="text-slate-600">
+                    <span className="text-[var(--admin-green-dark)]/75">
                       {STATUS_LABELS[entry.status] || entry.status} ({entry.count})
                     </span>
                   </div>

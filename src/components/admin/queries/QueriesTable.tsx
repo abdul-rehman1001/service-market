@@ -12,10 +12,11 @@ interface QueriesTableProps {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  OPEN: "bg-amber-100 text-amber-700",
-  IN_PROGRESS: "bg-blue-100 text-blue-700",
-  RESOLVED: "bg-emerald-100 text-emerald-700",
-  CLOSED: "bg-slate-100 text-slate-700",
+  OPEN: "bg-amber-50 text-amber-800 border border-amber-200",
+  IN_PROGRESS: "bg-blue-50 text-blue-700 border border-blue-200",
+  RESOLVED:
+    "bg-[var(--admin-green-muted)] text-[var(--admin-green-dark)] border border-[var(--admin-beige)]",
+  CLOSED: "bg-slate-100 text-slate-600 border border-slate-200",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -34,6 +35,159 @@ const TYPE_LABELS: Record<string, string> = {
   OTHER: "Other",
 };
 
+function PersonAvatar({
+  image,
+  firstName,
+  lastName,
+}: {
+  image: string | null;
+  firstName: string;
+  lastName: string;
+}) {
+  if (image) {
+    return (
+      <img
+        src={image}
+        alt=""
+        className="h-8 w-8 shrink-0 rounded-lg object-cover ring-2 ring-[var(--admin-beige)]/80"
+      />
+    );
+  }
+  return (
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--admin-green)] to-[var(--admin-green-dark)] text-[10px] font-bold text-white">
+      {firstName[0]}
+      {lastName[0]}
+    </div>
+  );
+}
+
+function QueryRow({
+  query,
+  index,
+}: {
+  query: AdminQuery;
+  index: number;
+}) {
+  return (
+    <tr
+      className="animate-admin-fade-in-up border-t border-[var(--admin-beige)]/30 transition-colors hover:bg-[var(--admin-green-muted)]/30"
+      style={{ animationDelay: `${Math.min(index, 8) * 0.04}s` }}
+    >
+      <td className="px-5 py-4">
+        <span className="font-mono text-xs font-semibold text-[var(--admin-green-dark)]">
+          {query.queryNumber}
+        </span>
+      </td>
+      <td className="px-5 py-4">
+        <div className="flex items-center gap-2">
+          <PersonAvatar
+            image={query.user.profileImage}
+            firstName={query.user.firstName}
+            lastName={query.user.lastName}
+          />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-[var(--admin-green-dark)]">
+              {query.user.firstName} {query.user.lastName}
+            </p>
+            <p className="truncate text-xs text-[var(--admin-green)]/60">{query.user.email}</p>
+          </div>
+        </div>
+      </td>
+      <td className="max-w-[200px] px-5 py-4">
+        <p className="truncate text-sm text-[var(--admin-green-dark)]/80" title={query.subject}>
+          {query.subject}
+        </p>
+      </td>
+      <td className="px-5 py-4">
+        <span className="inline-block rounded-lg bg-[var(--admin-green-muted)] px-2 py-1 text-xs font-medium text-[var(--admin-green-dark)]">
+          {TYPE_LABELS[query.queryType] || query.queryType}
+        </span>
+      </td>
+      <td className="px-5 py-4">
+        <span
+          className={`inline-block rounded-lg px-2.5 py-1 text-xs font-semibold ${STATUS_COLORS[query.status] || "bg-gray-100 text-gray-700"}`}
+        >
+          {STATUS_LABELS[query.status] || query.status}
+        </span>
+      </td>
+      <td className="whitespace-nowrap px-5 py-4 text-xs text-[var(--admin-green)]/70">
+        {new Date(query.createdAt).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })}
+      </td>
+      <td className="px-5 py-4 text-right">
+        <Link
+          href={`/admin/queries/${query.id}`}
+          className="inline-flex items-center gap-1 rounded-lg border border-[var(--admin-beige)]/60 bg-white px-3 py-1.5 text-xs font-semibold text-[var(--admin-green)] transition-all hover:border-[var(--admin-green)] hover:bg-[var(--admin-green-muted)]"
+        >
+          <Eye size={14} />
+          View
+        </Link>
+      </td>
+    </tr>
+  );
+}
+
+function QueryCard({ query, index }: { query: AdminQuery; index: number }) {
+  return (
+    <article
+      className="admin-card animate-admin-fade-in-up rounded-2xl p-4"
+      style={{ animationDelay: `${Math.min(index, 6) * 0.05}s` }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="font-mono text-xs font-bold text-[var(--admin-green)]">
+            #{query.queryNumber}
+          </p>
+          <p className="mt-1 font-semibold text-[var(--admin-green-dark)] line-clamp-2">
+            {query.subject}
+          </p>
+        </div>
+        <span
+          className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold ${STATUS_COLORS[query.status] || ""}`}
+        >
+          {STATUS_LABELS[query.status] || query.status}
+        </span>
+      </div>
+
+      <div className="mt-3 flex items-center gap-2">
+        <PersonAvatar
+          image={query.user.profileImage}
+          firstName={query.user.firstName}
+          lastName={query.user.lastName}
+        />
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-[var(--admin-green-dark)]">
+            {query.user.firstName} {query.user.lastName}
+          </p>
+          <p className="truncate text-xs text-[var(--admin-green)]/60">{query.user.email}</p>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <span className="rounded-lg bg-[var(--admin-green-muted)] px-2 py-0.5 text-xs font-medium text-[var(--admin-green-dark)]">
+          {TYPE_LABELS[query.queryType] || query.queryType}
+        </span>
+        <span className="text-xs text-[var(--admin-green)]/55">
+          {new Date(query.createdAt).toLocaleDateString()}
+        </span>
+      </div>
+
+      <div className="mt-4 border-t border-[var(--admin-beige)]/40 pt-3">
+        <Link
+          href={`/admin/queries/${query.id}`}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--admin-green)] px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-[var(--admin-green-dark)] sm:w-auto"
+        >
+          <Eye size={16} />
+          View Details
+        </Link>
+      </div>
+    </article>
+  );
+}
+
 export default function QueriesTable({
   queries,
   pagination,
@@ -42,93 +196,82 @@ export default function QueriesTable({
 }: QueriesTableProps) {
   if (queries.length === 0 && !loading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-        <Inbox size={48} className="mx-auto text-slate-300 mb-3" />
-        <p className="text-slate-500 text-lg">No queries found</p>
-        <p className="text-slate-400 text-sm">Try adjusting your filters</p>
+      <div className="admin-card animate-admin-scale-in flex flex-col items-center justify-center rounded-2xl p-12 text-center">
+        <div className="mb-4 rounded-2xl bg-[var(--admin-green-muted)] p-4 text-[var(--admin-green)]">
+          <Inbox size={32} />
+        </div>
+        <p className="font-semibold text-[var(--admin-green-dark)]">No queries found</p>
+        <p className="mt-1 text-sm text-[var(--admin-green)]/60">Try adjusting your filters</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 border-b">
-            <tr>
-              <th className="p-3 text-left font-medium text-slate-600">Query ID</th>
-              <th className="p-3 text-left font-medium text-slate-600">User</th>
-              <th className="p-3 text-left font-medium text-slate-600">Subject</th>
-              <th className="p-3 text-left font-medium text-slate-600">Type</th>
-              <th className="p-3 text-left font-medium text-slate-600">Status</th>
-              <th className="p-3 text-left font-medium text-slate-600">Date</th>
-              <th className="p-3 text-right font-medium text-slate-600">Action</th>
-            </tr>
-          </thead>
-          <tbody className={loading ? "opacity-50" : ""}>
-            {queries.map((q) => (
-              <tr key={q.id} className="border-t hover:bg-slate-50 transition">
-                <td className="p-3 font-mono text-xs font-medium text-slate-700">
-                  {q.queryNumber}
-                </td>
-                <td className="p-3">
-                  <div>
-                    <p className="font-medium text-slate-800">
-                      {q.user.firstName} {q.user.lastName}
-                    </p>
-                    <p className="text-xs text-slate-400">{q.user.email}</p>
-                  </div>
-                </td>
-                <td className="p-3 max-w-[200px]">
-                  <p className="text-slate-700 truncate">{q.subject}</p>
-                </td>
-                <td className="p-3">
-                  <span className="text-xs text-slate-600">
-                    {TYPE_LABELS[q.queryType] || q.queryType}
-                  </span>
-                </td>
-                <td className="p-3">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      STATUS_COLORS[q.status] || "bg-slate-100 text-slate-600"
-                    }`}
-                  >
-                    {STATUS_LABELS[q.status] || q.status}
-                  </span>
-                </td>
-                <td className="p-3 text-slate-500 text-xs whitespace-nowrap">
-                  {new Date(q.createdAt).toLocaleDateString()}
-                </td>
-                <td className="p-3 text-right">
-                  <Link
-                    href={`/admin/queries/${q.id}`}
-                    className="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-700 text-xs font-medium"
-                  >
-                    <Eye size={14} />
-                    View
-                  </Link>
-                </td>
+    <div className="space-y-4">
+      <div
+        className={`admin-card animate-admin-scale-in hidden overflow-hidden rounded-2xl md:block ${loading ? "opacity-60" : ""}`}
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[var(--admin-beige)]/50 bg-gradient-to-r from-[var(--admin-green-muted)] to-[var(--admin-beige)]/20">
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                  Query ID
+                </th>
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                  User
+                </th>
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                  Subject
+                </th>
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                  Type
+                </th>
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                  Status
+                </th>
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                  Date
+                </th>
+                <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                  Action
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {queries.map((q, index) => (
+                <QueryRow key={q.id} query={q} index={index} />
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Pagination */}
+      <div className={`space-y-3 md:hidden ${loading ? "opacity-60" : ""}`}>
+        {queries.map((q, index) => (
+          <QueryCard key={q.id} query={q} index={index} />
+        ))}
+      </div>
+
       {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t bg-slate-50">
-          <p className="text-sm text-slate-500">
-            Showing {(pagination.page - 1) * pagination.limit + 1}–
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
-            {pagination.total}
+        <div className="admin-card animate-admin-fade-in-up flex flex-col gap-3 rounded-2xl px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <p className="text-center text-sm text-[var(--admin-green)]/75 sm:text-left">
+            Showing{" "}
+            <span className="font-semibold text-[var(--admin-green-dark)]">
+              {(pagination.page - 1) * pagination.limit + 1}–
+              {Math.min(pagination.page * pagination.limit, pagination.total)}
+            </span>{" "}
+            of{" "}
+            <span className="font-semibold text-[var(--admin-green-dark)]">{pagination.total}</span>
           </p>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap items-center justify-center gap-1">
             <button
+              type="button"
               onClick={() => onPageChange(pagination.page - 1)}
               disabled={pagination.page <= 1}
-              className="p-1.5 rounded-lg hover:bg-slate-200 disabled:opacity-30 transition"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--admin-beige)] bg-white text-[var(--admin-green-dark)] transition-all hover:border-[var(--admin-green)] disabled:opacity-40"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={18} />
             </button>
             {Array.from({ length: Math.min(pagination.totalPages, 5) }, (_, i) => {
               let pageNum: number;
@@ -144,11 +287,12 @@ export default function QueriesTable({
               return (
                 <button
                   key={pageNum}
+                  type="button"
                   onClick={() => onPageChange(pageNum)}
-                  className={`px-3 py-1 text-sm rounded-lg transition ${
+                  className={`min-w-[2.25rem] rounded-xl px-3 py-1.5 text-sm font-medium transition-all ${
                     pagination.page === pageNum
-                      ? "bg-emerald-600 text-white"
-                      : "hover:bg-slate-200 text-slate-600"
+                      ? "bg-[var(--admin-green)] text-white shadow-sm"
+                      : "border border-[var(--admin-beige)] bg-white text-[var(--admin-green-dark)] hover:border-[var(--admin-green)]"
                   }`}
                 >
                   {pageNum}
@@ -156,11 +300,12 @@ export default function QueriesTable({
               );
             })}
             <button
+              type="button"
               onClick={() => onPageChange(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages}
-              className="p-1.5 rounded-lg hover:bg-slate-200 disabled:opacity-30 transition"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--admin-beige)] bg-white text-[var(--admin-green-dark)] transition-all hover:border-[var(--admin-green)] disabled:opacity-40"
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={18} />
             </button>
           </div>
         </div>

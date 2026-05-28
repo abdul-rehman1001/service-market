@@ -8,17 +8,17 @@ interface ExportButtonsProps {
   data: AnalyticsData;
 }
 
+const PDF_GREEN: [number, number, number] = [47, 160, 132];
+
 export default function ExportButtons({ data }: ExportButtonsProps) {
   const [exportingCSV, setExportingCSV] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
 
-  // ── CSV Export ─────────────────────────────────────────────────
   const handleCSVExport = async () => {
     setExportingCSV(true);
     try {
       const sections: string[] = [];
 
-      // Stats section
       sections.push("=== PLATFORM STATS ===");
       sections.push("Metric,Value");
       sections.push(`Total Users,${data.stats.totalUsers}`);
@@ -30,7 +30,6 @@ export default function ExportButtons({ data }: ExportButtonsProps) {
       sections.push(`Total Reviews,${data.stats.totalReviews}`);
       sections.push("");
 
-      // Booking Trends
       sections.push("=== BOOKING TRENDS ===");
       sections.push("Date,Total,Completed,Cancelled");
       for (const t of data.bookingTrends) {
@@ -38,7 +37,6 @@ export default function ExportButtons({ data }: ExportButtonsProps) {
       }
       sections.push("");
 
-      // User Growth
       sections.push("=== USER GROWTH ===");
       sections.push("Month,Seekers,Providers,Total");
       for (const g of data.userGrowth) {
@@ -46,7 +44,6 @@ export default function ExportButtons({ data }: ExportButtonsProps) {
       }
       sections.push("");
 
-      // Popular Categories
       sections.push("=== POPULAR CATEGORIES ===");
       sections.push("Rank,Category,Bookings");
       data.popularCategories.forEach((cat, i) => {
@@ -54,7 +51,6 @@ export default function ExportButtons({ data }: ExportButtonsProps) {
       });
       sections.push("");
 
-      // Status Distribution
       sections.push("=== BOOKING STATUS DISTRIBUTION ===");
       sections.push("Status,Count");
       for (const s of data.statusDistribution) {
@@ -76,7 +72,6 @@ export default function ExportButtons({ data }: ExportButtonsProps) {
     }
   };
 
-  // ── PDF Export ─────────────────────────────────────────────────
   const handlePDFExport = async () => {
     setExportingPDF(true);
     try {
@@ -87,15 +82,13 @@ export default function ExportButtons({ data }: ExportButtonsProps) {
       const doc = new jsPDF();
       const autoTable = autoTableModule.default;
 
-      // Title
       doc.setFontSize(20);
-      doc.setTextColor(16, 185, 129); // emerald
+      doc.setTextColor(...PDF_GREEN);
       doc.text("Platform Analytics Report", 14, 22);
       doc.setFontSize(10);
       doc.setTextColor(100);
       doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 30);
 
-      // Stats Table
       doc.setFontSize(14);
       doc.setTextColor(30);
       doc.text("Platform Overview", 14, 42);
@@ -113,11 +106,10 @@ export default function ExportButtons({ data }: ExportButtonsProps) {
           ["Total Reviews", data.stats.totalReviews.toLocaleString()],
         ],
         theme: "grid",
-        headStyles: { fillColor: [16, 185, 129] },
+        headStyles: { fillColor: PDF_GREEN },
         styles: { fontSize: 10 },
       });
 
-      // Popular Categories Table
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let currentY = (doc as any).lastAutoTable?.finalY || 100;
       currentY += 12;
@@ -135,11 +127,10 @@ export default function ExportButtons({ data }: ExportButtonsProps) {
           cat.bookings.toLocaleString(),
         ]),
         theme: "grid",
-        headStyles: { fillColor: [16, 185, 129] },
+        headStyles: { fillColor: PDF_GREEN },
         styles: { fontSize: 10 },
       });
 
-      // Status Distribution Table
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       currentY = (doc as any).lastAutoTable?.finalY || 160;
       currentY += 12;
@@ -161,11 +152,10 @@ export default function ExportButtons({ data }: ExportButtonsProps) {
           s.count.toLocaleString(),
         ]),
         theme: "grid",
-        headStyles: { fillColor: [16, 185, 129] },
+        headStyles: { fillColor: PDF_GREEN },
         styles: { fontSize: 10 },
       });
 
-      // Booking Trends Table
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       currentY = (doc as any).lastAutoTable?.finalY || 200;
       currentY += 12;
@@ -189,11 +179,10 @@ export default function ExportButtons({ data }: ExportButtonsProps) {
           t.cancelled.toString(),
         ]),
         theme: "grid",
-        headStyles: { fillColor: [16, 185, 129] },
+        headStyles: { fillColor: PDF_GREEN },
         styles: { fontSize: 9 },
       });
 
-      // User Growth Table
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       currentY = (doc as any).lastAutoTable?.finalY || 200;
       currentY += 12;
@@ -217,7 +206,7 @@ export default function ExportButtons({ data }: ExportButtonsProps) {
           g.total.toString(),
         ]),
         theme: "grid",
-        headStyles: { fillColor: [16, 185, 129] },
+        headStyles: { fillColor: PDF_GREEN },
         styles: { fontSize: 9 },
       });
 
@@ -230,16 +219,17 @@ export default function ExportButtons({ data }: ExportButtonsProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <h3 className="font-semibold text-lg mb-4">Export Reports</h3>
-      <p className="text-sm text-slate-500 mb-4">
+    <div className="admin-card rounded-2xl p-4 sm:p-6">
+      <h3 className="mb-2 text-lg font-bold text-[var(--admin-green-dark)]">Export Reports</h3>
+      <p className="mb-5 text-sm text-[var(--admin-green)]/70">
         Download analytics data as CSV or a formatted PDF report.
       </p>
-      <div className="flex gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
         <button
+          type="button"
           onClick={handleCSVExport}
           disabled={exportingCSV}
-          className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--admin-green)] px-5 py-2.5 text-sm font-medium text-white shadow-md transition-all duration-200 hover:bg-[var(--admin-green-dark)] hover:shadow-lg disabled:opacity-50"
         >
           {exportingCSV ? (
             <Loader2 size={16} className="animate-spin" />
@@ -249,9 +239,10 @@ export default function ExportButtons({ data }: ExportButtonsProps) {
           Export CSV
         </button>
         <button
+          type="button"
           onClick={handlePDFExport}
           disabled={exportingPDF}
-          className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-[var(--admin-green)] bg-transparent px-5 py-2.5 text-sm font-medium text-[var(--admin-green)] transition-all duration-200 hover:bg-[var(--admin-green)] hover:text-white disabled:opacity-50"
         >
           {exportingPDF ? (
             <Loader2 size={16} className="animate-spin" />

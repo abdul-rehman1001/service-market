@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageSquare, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { MessageSquare, Clock, CheckCircle, XCircle, AlertCircle, Timer } from "lucide-react";
 import type { QueryStatistics } from "@/app/admin/queries/page";
 
 interface QueryStatsProps {
@@ -11,54 +11,63 @@ export default function QueryStats({ statistics }: QueryStatsProps) {
   const stats = [
     {
       label: "Total Queries",
-      value: statistics.total,
+      value: statistics.total.toLocaleString(),
       icon: MessageSquare,
-      color: "bg-blue-100 text-blue-700",
+      stagger: "admin-stagger-1",
     },
     {
       label: "Open",
-      value: statistics.open,
+      value: statistics.open.toLocaleString(),
       icon: AlertCircle,
-      color: "bg-amber-100 text-amber-700",
+      stagger: "admin-stagger-2",
     },
     {
       label: "In Progress",
-      value: statistics.inProgress,
+      value: statistics.inProgress.toLocaleString(),
       icon: Clock,
-      color: "bg-indigo-100 text-indigo-700",
+      stagger: "admin-stagger-3",
     },
     {
       label: "Resolved",
-      value: statistics.resolved,
+      value: statistics.resolved.toLocaleString(),
       icon: CheckCircle,
-      color: "bg-emerald-100 text-emerald-700",
+      stagger: "admin-stagger-4",
     },
     {
       label: "Closed",
-      value: statistics.closed,
+      value: statistics.closed.toLocaleString(),
       icon: XCircle,
-      color: "bg-slate-100 text-slate-600",
+      stagger: "admin-stagger-5",
+    },
+    {
+      label: "Avg Response",
+      value:
+        statistics.avgResponseTimeHours > 0
+          ? `${statistics.avgResponseTimeHours}h`
+          : "N/A",
+      icon: Timer,
+      stagger: "admin-stagger-6",
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 sm:gap-4">
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
           <div
             key={stat.label}
-            className="bg-white rounded-xl shadow-sm p-4 flex items-center gap-3"
+            className={`admin-card animate-admin-fade-in-up ${stat.stagger} flex items-center gap-3 rounded-2xl p-4`}
           >
-            <div className={`p-2 rounded-lg ${stat.color}`}>
+            <div className="rounded-xl bg-[var(--admin-green-muted)] p-2.5 text-[var(--admin-green)]">
               <Icon size={18} />
             </div>
-            <div>
-              <p className="text-xs text-slate-500">{stat.label}</p>
-              <p className="text-lg font-semibold text-slate-800">
-                {typeof stat.value === "number"
-                  ? stat.value.toLocaleString()
-                  : stat.value}
+            <div className="min-w-0">
+              <p className="truncate text-xs font-medium text-[var(--admin-green)]/70">
+                {stat.label}
+              </p>
+              <p className="text-lg font-bold text-[var(--admin-green-dark)] sm:text-xl">
+                {stat.value}
               </p>
             </div>
           </div>

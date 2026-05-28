@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Save, Loader2, CheckCircle, AlertCircle, Eye } from "lucide-react";
+import { Save, Loader2, CheckCircle, AlertCircle, Eye, FileEdit } from "lucide-react";
 
 interface ContentEditorProps {
   pageKey: string;
@@ -12,6 +12,9 @@ const PAGE_TITLES: Record<string, string> = {
   terms: "Terms & Conditions",
   privacy: "Privacy Policy",
 };
+
+const inputClass =
+  "w-full rounded-xl border border-[var(--admin-beige)]/60 bg-white px-4 py-3 text-sm text-[var(--admin-green-dark)] shadow-sm transition-all duration-200 focus:border-[var(--admin-green)] focus:outline-none focus:ring-2 focus:ring-[var(--admin-green)]/20";
 
 export default function ContentEditor({ pageKey }: ContentEditorProps) {
   const [body, setBody] = useState("");
@@ -73,39 +76,44 @@ export default function ContentEditor({ pageKey }: ContentEditorProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-emerald-600" size={28} />
+      <div className="flex h-64 flex-col items-center justify-center gap-3">
+        <Loader2 className="animate-spin text-[var(--admin-green)]" size={32} />
+        <p className="text-sm text-[var(--admin-green)]/70">Loading content…</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
-          <p className="text-sm text-slate-500">
-            Edit the content below. HTML formatting is supported.
-          </p>
+    <div className="animate-admin-fade-in-up space-y-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="rounded-xl bg-[var(--admin-green-muted)] p-2.5 text-[var(--admin-green)]">
+            <FileEdit size={20} />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-[var(--admin-green-dark)]">{title}</h3>
+            <p className="mt-0.5 text-sm text-[var(--admin-green)]/70">
+              Edit the content below. HTML formatting is supported.
+            </p>
+          </div>
         </div>
         <button
+          type="button"
           onClick={() => setPreview(!preview)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border transition ${
+          className={`inline-flex items-center justify-center gap-1.5 self-start rounded-xl border px-4 py-2 text-sm font-medium transition-all duration-200 ${
             preview
-              ? "bg-emerald-50 border-emerald-300 text-emerald-700"
-              : "border-slate-300 text-slate-600 hover:bg-slate-50"
+              ? "border-[var(--admin-green)] bg-[var(--admin-green-muted)] text-[var(--admin-green-dark)]"
+              : "border-[var(--admin-beige)] bg-white text-[var(--admin-green-dark)] hover:border-[var(--admin-green)]/40 hover:shadow-sm"
           }`}
         >
-          <Eye size={14} />
+          <Eye size={16} />
           {preview ? "Edit" : "Preview"}
         </button>
       </div>
 
-      {/* Editor / Preview */}
       {preview ? (
         <div
-          className="w-full min-h-[320px] p-4 border rounded-lg bg-slate-50 prose prose-sm max-w-none"
+          className="admin-card min-h-[280px] rounded-2xl p-4 sm:min-h-[320px] sm:p-6 prose prose-sm max-w-none prose-headings:text-[var(--admin-green-dark)] prose-p:text-[var(--admin-green-dark)]/80"
           dangerouslySetInnerHTML={{ __html: body }}
         />
       ) : (
@@ -113,41 +121,39 @@ export default function ContentEditor({ pageKey }: ContentEditorProps) {
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder={`Enter ${title} content here...`}
-          className="w-full h-80 p-4 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm font-mono resize-y"
+          className={`${inputClass} min-h-[280px] resize-y font-mono sm:min-h-[320px]`}
         />
       )}
 
-      {/* Actions */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 border-t border-[var(--admin-beige)]/40 pt-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
         <button
+          type="button"
           onClick={handleSave}
           disabled={saving || !hasChanges}
-          className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--admin-green)] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:bg-[var(--admin-green-dark)] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {saving ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <Save size={16} />
-          )}
+          {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
           Save &amp; Publish
         </button>
 
         {status === "saved" && (
-          <span className="flex items-center gap-1.5 text-sm text-emerald-600">
+          <span className="flex items-center gap-1.5 text-sm font-medium text-[var(--admin-green)]">
             <CheckCircle size={16} />
             Saved successfully
           </span>
         )}
 
         {status === "error" && (
-          <span className="flex items-center gap-1.5 text-sm text-red-500">
+          <span className="flex items-center gap-1.5 text-sm font-medium text-red-600">
             <AlertCircle size={16} />
             Failed to save. Please try again.
           </span>
         )}
 
         {hasChanges && status === "idle" && (
-          <span className="text-xs text-amber-600">Unsaved changes</span>
+          <span className="inline-flex items-center rounded-lg bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 border border-amber-200">
+            Unsaved changes
+          </span>
         )}
       </div>
     </div>
