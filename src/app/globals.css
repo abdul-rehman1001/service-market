@@ -175,6 +175,16 @@ body {
   border-color: rgba(47, 160, 132, 0.4);
 }
 
+.rich-text-editor:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(31, 111, 95, 0.45);
+  pointer-events: none;
+}
+
+.rich-text-editor:focus {
+  outline: none;
+}
+
 /* Admin shell — sidebar & header */
 .admin-sidebar {
   background: linear-gradient(

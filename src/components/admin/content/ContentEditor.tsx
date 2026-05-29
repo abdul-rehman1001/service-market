@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Save, Loader2, CheckCircle, AlertCircle, Eye, FileEdit } from "lucide-react";
+import { Save, Loader2, CheckCircle, AlertCircle, Eye, FileEdit, Code2, Type } from "lucide-react";
+import RichTextEditor from "./RichTextEditor";
+
+type EditMode = "visual" | "html" | "preview";
 
 interface ContentEditorProps {
   pageKey: string;
@@ -22,7 +25,7 @@ export default function ContentEditor({ pageKey }: ContentEditorProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"idle" | "saved" | "error">("idle");
-  const [preview, setPreview] = useState(false);
+  const [editMode, setEditMode] = useState<EditMode>("visual");
 
   const fetchContent = useCallback(async () => {
     setLoading(true);
@@ -44,8 +47,15 @@ export default function ContentEditor({ pageKey }: ContentEditorProps) {
   useEffect(() => {
     fetchContent();
     setStatus("idle");
-    setPreview(false);
+    setEditMode("visual");
   }, [fetchContent]);
+
+  const modeButtonClass = (mode: EditMode) =>
+    `inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition-all duration-200 ${
+      editMode === mode
+        ? "border-[var(--admin-green)] bg-[var(--admin-green-muted)] text-[var(--admin-green-dark)]"
+        : "border-[var(--admin-beige)] bg-white text-[var(--admin-green-dark)] hover:border-[var(--admin-green)]/40 hover:shadow-sm"
+    }`;
 
   const handleSave = async () => {
     setSaving(true);
@@ -93,35 +103,43 @@ export default function ContentEditor({ pageKey }: ContentEditorProps) {
           <div>
             <h3 className="text-lg font-bold text-[var(--admin-green-dark)]">{title}</h3>
             <p className="mt-0.5 text-sm text-[var(--admin-green)]/70">
-              Edit the content below. HTML formatting is supported.
+              Write in plain language using the visual editor, or switch to HTML for advanced edits.
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setPreview(!preview)}
-          className={`inline-flex items-center justify-center gap-1.5 self-start rounded-xl border px-4 py-2 text-sm font-medium transition-all duration-200 ${
-            preview
-              ? "border-[var(--admin-green)] bg-[var(--admin-green-muted)] text-[var(--admin-green-dark)]"
-              : "border-[var(--admin-beige)] bg-white text-[var(--admin-green-dark)] hover:border-[var(--admin-green)]/40 hover:shadow-sm"
-          }`}
-        >
-          <Eye size={16} />
-          {preview ? "Edit" : "Preview"}
-        </button>
+        <div className="flex flex-wrap gap-2 self-start">
+          <button type="button" onClick={() => setEditMode("visual")} className={modeButtonClass("visual")}>
+            <Type size={16} />
+            Edit
+          </button>
+          <button type="button" onClick={() => setEditMode("html")} className={modeButtonClass("html")}>
+            <Code2 size={16} />
+            HTML
+          </button>
+          <button type="button" onClick={() => setEditMode("preview")} className={modeButtonClass("preview")}>
+            <Eye size={16} />
+            Preview
+          </button>
+        </div>
       </div>
 
-      {preview ? (
+      {editMode === "preview" ? (
         <div
           className="admin-card min-h-[280px] rounded-2xl p-4 sm:min-h-[320px] sm:p-6 prose prose-sm max-w-none prose-headings:text-[var(--admin-green-dark)] prose-p:text-[var(--admin-green-dark)]/80"
           dangerouslySetInnerHTML={{ __html: body }}
         />
-      ) : (
+      ) : editMode === "html" ? (
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder={`Enter ${title} content here...`}
+          placeholder={`Enter ${title} HTML here...`}
           className={`${inputClass} min-h-[280px] resize-y font-mono sm:min-h-[320px]`}
+        />
+      ) : (
+        <RichTextEditor
+          value={body}
+          onChange={setBody}
+          placeholder={`Write ${title} content here — use the toolbar for headings, lists, and links.`}
         />
       )}
 
