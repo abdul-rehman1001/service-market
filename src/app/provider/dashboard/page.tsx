@@ -15,6 +15,7 @@ import { AvailabilityPanel } from '@/components/provider/AvailabilityPanel';
 import { BookingRequestsPanel } from '@/components/provider/BookingRequestsPanel';
 import { DocumentManagementPanel } from '@/components/provider/DocumentManagementPanel';
 import { ChatPanel } from '@/components/provider/ChatPanel';
+import { ProviderProfilePanel } from '@/components/provider/ProviderProfilePanel';
 
 export default function ProviderDashboardPage() {
   const [activeTab, setActiveTab] = useState<ProviderDashboardTab>('services');
@@ -44,6 +45,10 @@ export default function ProviderDashboardPage() {
             setActiveTab('messages');
             setSidebarOpen(false);
           }}
+          onOpenProfile={() => {
+            setActiveTab('profile');
+            setSidebarOpen(false);
+          }}
           onMenuClick={() => setSidebarOpen((o) => !o)}
           activeTabLabel={getProviderTabLabel(activeTab)}
         />
@@ -63,6 +68,7 @@ export default function ProviderDashboardPage() {
             {activeTab === 'bookings' && <BookingRequestsPanel />}
             {activeTab === 'documents' && <DocumentManagementPanel />}
             {activeTab === 'messages' && <ChatPanel />}
+            {activeTab === 'profile' && <ProviderProfilePanel />}
           </div>
         </main>
       </div>

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
 import {
   Bell,
   MessageCircle,
@@ -37,12 +36,14 @@ const LOCATION_SYNC_INTERVAL_MS = 15000;
 
 interface ProviderDashboardHeaderProps {
   onOpenMessages?: () => void;
+  onOpenProfile?: () => void;
   onMenuClick?: () => void;
   activeTabLabel?: string;
 }
 
 export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = ({
   onOpenMessages,
+  onOpenProfile,
   onMenuClick,
   activeTabLabel,
 }) => {
@@ -579,10 +580,11 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
           </button>
 
           {/* Profile Button */}
-          <Link
-            href="/profile"
-            className="hidden items-center gap-2 rounded-lg p-2 transition-colors hover:bg-[#6FCF97]/20 sm:flex"
-            title="View Profile"
+          <button
+            type="button"
+            onClick={onOpenProfile}
+            className="flex items-center gap-2 rounded-lg p-2 transition-colors hover:bg-[#6FCF97]/20"
+            title="My Profile"
           >
             {provider?.user?.profileImage ? (
               <img
@@ -591,15 +593,16 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
                 className="h-8 w-8 rounded-full border-2 border-[#6FCF97]/70 object-cover"
               />
             ) : provider?.user ? (
-              <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#6FCF97]/70 bg-gradient-to-br from-[#2FA084] to-[#1F6F5F] text-sm font-semibold text-white">
-                {provider.user.firstName[0]}{provider.user.lastName[0]}
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#6FCF97]/70 bg-[#2FA084] text-sm font-semibold text-white">
+                {provider.user.firstName[0]}
+                {provider.user.lastName[0]}
               </div>
             ) : (
               <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#6FCF97]/70 bg-[#1F6F5F] text-sm font-semibold text-white">
                 <User className="h-4 w-4" />
               </div>
             )}
-          </Link>
+          </button>
 
           {/* Logout Button */}
           <button

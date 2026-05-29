@@ -1,6 +1,7 @@
 'use client';
 
 import type { Dispatch, SetStateAction } from 'react';
+import Image from 'next/image';
 import type { LucideIcon } from 'lucide-react';
 import {
   BarChart3,
@@ -12,7 +13,6 @@ import {
   Star,
   Wrench,
   X,
-  LayoutDashboard,
 } from 'lucide-react';
 
 export type ProviderDashboardTab =
@@ -23,7 +23,8 @@ export type ProviderDashboardTab =
   | 'availability'
   | 'bookings'
   | 'documents'
-  | 'messages';
+  | 'messages'
+  | 'profile';
 
 interface DashboardSidebarProps {
   activeTab: ProviderDashboardTab;
@@ -67,16 +68,18 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       {/* Brand */}
       <div className="relative border-b border-white/10 px-4 pb-4 pt-5 sm:px-5">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
-              <LayoutDashboard className="h-5 w-5 text-[#6FCF97]" />
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-white shadow-md ring-2 ring-white/25">
+              <Image
+                src="/images/Servizo.jpeg"
+                alt="Servizo"
+                width={44}
+                height={44}
+                className="h-full w-full object-cover"
+                priority
+              />
             </div>
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#6FCF97]">
-                Servizo
-              </p>
-              <h2 className="truncate text-base font-bold tracking-tight">Provider Hub</h2>
-            </div>
+            <span className="truncate text-lg font-bold tracking-tight text-white">Servizo</span>
           </div>
           <button
             type="button"
@@ -136,5 +139,6 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 };
 
 export function getProviderTabLabel(tab: ProviderDashboardTab): string {
+  if (tab === 'profile') return 'My Profile';
   return tabs.find((t) => t.key === tab)?.label ?? 'Dashboard';
 }
