@@ -15,6 +15,7 @@ interface UserData {
 
 const PAGE_TITLES: Record<string, string> = {
   "/admin": "Analytics Dashboard",
+  "/admin/profile": "Admin Profile",
   "/admin/users": "User Management",
   "/admin/verification": "Provider Verification",
   "/admin/categories": "Categories",
@@ -100,9 +101,9 @@ export default function AdminHeader({ onMenuClick }: { onMenuClick: () => void }
         {/* Right: profile */}
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <Link
-            href="/profile"
+            href="/admin/profile"
             className="group flex items-center gap-2.5 rounded-2xl border border-[var(--admin-beige)]/50 bg-white py-1.5 pl-1.5 pr-3 shadow-sm transition-all duration-300 hover:border-[var(--admin-green)]/50 hover:shadow-lg sm:gap-3 sm:pr-4"
-            title="Go to Profile"
+            title="Open Admin Profile"
           >
             {user?.profileImage ? (
               <img
