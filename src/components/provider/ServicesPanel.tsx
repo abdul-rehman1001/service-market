@@ -2,9 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, Plus, Edit, Trash2, Tag, Clock } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, Tag, Clock, ImageIcon } from 'lucide-react';
 import ServiceFormModal from './ServiceFormModal';
 import { formatPKR } from '@/lib/utils';
+
+function CategoryIcon({ icon }: { icon: string }) {
+  const parts = icon.split(/[\s\n]+/).filter(Boolean);
+  const glyphs = parts.length > 0 ? parts : [icon];
+
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1">
+      {glyphs.map((glyph, index) => (
+        <span
+          key={`${glyph}-${index}`}
+          className="inline-flex h-8 w-8 items-center justify-center text-xl leading-none"
+        >
+          {glyph}
+        </span>
+      ))}
+    </span>
+  );
+}
 
 interface Service {
   id: string;
@@ -105,9 +123,9 @@ export const ServicesPanel: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
-        <span className="ml-2 text-gray-600">Loading services...</span>
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#2FA084]" />
+        <span className="ml-2 text-[#1F6F5F]/70">Loading services...</span>
       </div>
     );
   }
@@ -134,139 +152,154 @@ export const ServicesPanel: React.FC = () => {
       className="space-y-6"
     >
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-800">My Services</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <h2 className="text-2xl font-bold text-[#1F6F5F]">My Services</h2>
+          <p className="mt-1 text-sm text-[#1F6F5F]/65">
             {services.length} service{services.length !== 1 ? 's' : ''} total
           </p>
         </div>
         <button
+          type="button"
           onClick={handleAddNew}
-          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition active:scale-95"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2FA084] px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#1F6F5F] active:scale-[0.98]"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="h-4 w-4" />
           Add New Service
         </button>
       </div>
 
       {services.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
-          <p className="text-gray-500 mb-4">You haven't created any services yet.</p>
+        <div className="rounded-2xl border border-dashed border-[#6FCF97]/50 bg-[#EEEEEE]/60 p-12 text-center">
+          <p className="mb-4 text-[#1F6F5F]/70">You haven&apos;t created any services yet.</p>
           <button
+            type="button"
             onClick={handleAddNew}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#2FA084] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1F6F5F]"
           >
             <Plus className="w-4 h-4" />
             Create Your First Service
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.map((service) => (
-            <motion.div
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {services.map((service, index) => (
+            <motion.article
               key={service.id}
-              whileHover={{ scale: 1.02 }}
-              className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm transition hover:shadow-md"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.04 }}
+              whileHover={{ y: -4 }}
+              className="group flex flex-col overflow-hidden rounded-2xl border border-[#6FCF97]/35 bg-white shadow-[0_8px_28px_-18px_rgba(31,111,95,0.55)] transition-shadow hover:shadow-[0_16px_40px_-20px_rgba(31,111,95,0.65)]"
             >
-              {/* Image Gallery */}
-              {service.images.length > 0 ? (
-                <div className="relative h-40 bg-gray-100 overflow-hidden">
+              {/* Image */}
+              <div className="relative h-44 overflow-hidden bg-[#EEEEEE]">
+                {service.images.length > 0 ? (
                   <img
                     src={service.images[0]}
                     alt={service.name}
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                   />
-                  {service.images.length > 1 && (
-                    <div className="absolute top-2 right-2 bg-black/60 text-white text-xs font-medium px-2 py-1 rounded">
-                      +{service.images.length - 1}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="h-40 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
-                  <span className="text-slate-400 text-sm">No images</span>
-                </div>
-              )}
-
-              {/* Card Content */}
-              <div className="p-5">
-                {/* Category Badge */}
-                <div className="flex items-center gap-2 mb-3">
-                  {service.category.icon && (
-                    <span className="text-xl">{service.category.icon}</span>
-                  )}
-                  <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                    {service.category.name}
-                  </span>
-                </div>
-
-                {/* Service Name */}
-                <h3 className="font-semibold text-slate-800 text-lg mb-2">
-                  {service.name}
-                </h3>
-
-              {/* Description */}
-              <p className="text-sm text-slate-600 mb-3 line-clamp-2">
-                {service.description}
-              </p>
-
-              {/* Details */}
-              <div className="space-y-1.5 mb-4">
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <Tag className="w-4 h-4 text-emerald-600" />
-                  <span>
-                    {formatPKR(service.minPrice)} - {formatPKR(service.maxPrice)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <Clock className="w-4 h-4 text-blue-600" />
-                  <span>{service.defaultDurationMinutes} minutes</span>
-                </div>
-                {service._count && service._count.bookings > 0 && (
-                  <p className="text-xs text-gray-500">
-                    {service._count.bookings} booking{service._count.bookings !== 1 ? 's' : ''}
-                  </p>
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center gap-2 text-[#1F6F5F]/45">
+                    <ImageIcon className="h-8 w-8" />
+                    <span className="text-xs font-medium">No image</span>
+                  </div>
                 )}
-              </div>
-
-              {/* Status */}
-              <div className="mb-4">
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1F6F5F]/55 via-transparent to-transparent" />
+                {service.images.length > 1 && (
+                  <span className="absolute right-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+                    +{service.images.length - 1}
+                  </span>
+                )}
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm ${
                     service.isActive
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-gray-100 text-gray-700'
+                      ? 'bg-[#6FCF97] text-[#1F6F5F]'
+                      : 'bg-white/90 text-[#1F6F5F]/70'
                   }`}
                 >
                   {service.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
 
-              {/* Actions */}
-              <div className="flex gap-2 pt-3 border-t border-gray-100">
-                <button
-                  onClick={() => handleEdit(service)}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition active:scale-95"
-                >
-                  <Edit className="w-3.5 h-3.5" />
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(service.id)}
-                  disabled={deleting === service.id}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-600 text-white rounded-md text-sm hover:bg-red-700 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {deleting === service.id ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-3.5 h-3.5" />
-                  )}
-                  Delete
-                </button>
+              {/* Body */}
+              <div className="flex flex-1 flex-col p-4 sm:p-5">
+                <div className="mb-3">
+                  <span className="inline-flex max-w-full items-center gap-2 rounded-xl border border-[#6FCF97]/40 bg-[#EEEEEE] px-3 py-2">
+                    {service.category.icon ? <CategoryIcon icon={service.category.icon} /> : null}
+                    <span className="min-w-0 text-xs font-semibold leading-snug text-[#1F6F5F] sm:text-[13px]">
+                      {service.category.name}
+                    </span>
+                  </span>
+                </div>
+
+                <h3 className="mb-2 line-clamp-2 text-lg font-bold leading-snug text-[#1F6F5F]">
+                  {service.name}
+                </h3>
+
+                <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-[#1F6F5F]/70">
+                  {service.description}
+                </p>
+
+                <div className="mb-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-[#6FCF97]/30 bg-[#EEEEEE]/80 px-3 py-2.5">
+                    <div className="mb-1 flex items-center gap-1.5 text-[#2FA084]">
+                      <Tag className="h-3.5 w-3.5" />
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-[#1F6F5F]/60">
+                        Price
+                      </span>
+                    </div>
+                    <p className="text-xs font-semibold leading-snug text-[#1F6F5F]">
+                      {formatPKR(service.minPrice)} – {formatPKR(service.maxPrice)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-[#6FCF97]/30 bg-[#EEEEEE]/80 px-3 py-2.5">
+                    <div className="mb-1 flex items-center gap-1.5 text-[#2FA084]">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-[#1F6F5F]/60">
+                        Duration
+                      </span>
+                    </div>
+                    <p className="text-xs font-semibold text-[#1F6F5F]">
+                      {service.defaultDurationMinutes} min
+                    </p>
+                  </div>
+                </div>
+
+                {service._count && service._count.bookings > 0 ? (
+                  <p className="mb-4 text-xs font-medium text-[#2FA084]">
+                    {service._count.bookings} booking{service._count.bookings !== 1 ? 's' : ''}
+                  </p>
+                ) : (
+                  <div className="mb-4" />
+                )}
+
+                <div className="mt-auto flex gap-2 border-t border-[#EEEEEE] pt-4">
+                  <button
+                    type="button"
+                    onClick={() => handleEdit(service)}
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#2FA084] px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1F6F5F] active:scale-[0.98]"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(service.id)}
+                    disabled={deleting === service.id}
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {deleting === service.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                    Delete
+                  </button>
+                </div>
               </div>
-              </div>
-            </motion.div>
+            </motion.article>
           ))}
         </div>
       )}

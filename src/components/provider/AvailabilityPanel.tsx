@@ -1,8 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { format } from 'date-fns';
-import { AlertCircle, Clock, Calendar, CheckCircle2, Loader2, X, Plus } from 'lucide-react';
+import {
+  AlertCircle,
+  Clock,
+  Calendar,
+  CheckCircle2,
+  Loader2,
+  X,
+  Plus,
+  RefreshCw,
+  CalendarDays,
+} from 'lucide-react';
 
 const DAYS_OF_WEEK = [
   { index: 0, name: 'Sunday', abbr: 'Sun' },
@@ -29,27 +39,33 @@ interface UnavailableDate {
 
 type AlertType = 'success' | 'error' | 'info';
 
+const inputClass =
+  'w-full rounded-xl border border-[#6FCF97]/45 bg-white px-3 py-2.5 text-sm text-[#1F6F5F] shadow-sm transition focus:border-[#2FA084] focus:outline-none focus:ring-2 focus:ring-[#2FA084]/25';
+
+const labelClass = 'mb-1.5 block text-xs font-semibold text-[#1F6F5F]';
+
+const primaryBtnClass =
+  'inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#2FA084] px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#1F6F5F] disabled:cursor-not-allowed disabled:opacity-50';
+
 export const AvailabilityPanel: React.FC = () => {
-  // State
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
   const [unavailableDates, setUnavailableDates] = useState<UnavailableDate[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [alert, setAlert] = useState<{ type: AlertType; message: string } | null>(null);
 
-  // Form state
   const [selectedDay, setSelectedDay] = useState<number>(1);
   const [startTime, setStartTime] = useState<string>('09:00');
   const [endTime, setEndTime] = useState<string>('17:00');
   const [unavailableDate, setUnavailableDate] = useState<string>('');
   const [unavailableReason, setUnavailableReason] = useState<string>('');
 
-  // Fetch initial data
-  useEffect(() => {
-    fetchData();
+  const showAlert = useCallback((type: AlertType, message: string) => {
+    setAlert({ type, message });
+    setTimeout(() => setAlert(null), 5000);
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [availRes, unavailRes] = await Promise.all([
@@ -72,34 +88,28 @@ export const AvailabilityPanel: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showAlert]);
 
-  const showAlert = (type: AlertType, message: string) => {
-    setAlert({ type, message });
-    setTimeout(() => setAlert(null), 5000);
-  };
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const timeValueToMinutes = (value: string) => {
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-      return null;
-    }
+    if (Number.isNaN(date.getTime())) return null;
     return date.getUTCHours() * 60 + date.getUTCMinutes();
   };
 
   const formatTime = (value: string) => {
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-      return 'Invalid time';
-    }
+    if (Number.isNaN(date.getTime())) return 'Invalid time';
     const hours = date.getUTCHours();
     const minutes = date.getUTCMinutes();
     return format(new Date(0, 0, 0, hours, minutes), 'hh:mm a');
   };
 
-  const formatSlotRange = (slot: AvailabilitySlot) => {
-    return `${formatTime(slot.startTime)} – ${formatTime(slot.endTime)}`;
-  };
+  const formatSlotRange = (slot: AvailabilitySlot) =>
+    `${formatTime(slot.startTime)} – ${formatTime(slot.endTime)}`;
 
   const validateTimes = (): boolean => {
     const [startHour, startMin] = startTime.split(':').map(Number);
@@ -125,11 +135,7 @@ export const AvailabilityPanel: React.FC = () => {
       .some((slot) => {
         const slotStartMinutes = timeValueToMinutes(slot.startTime);
         const slotEndMinutes = timeValueToMinutes(slot.endTime);
-
-        if (slotStartMinutes === null || slotEndMinutes === null) {
-          return false;
-        }
-
+        if (slotStartMinutes === null || slotEndMinutes === null) return false;
         return startMinutes < slotEndMinutes && endMinutes > slotStartMinutes;
       });
   };
@@ -139,9 +145,7 @@ export const AvailabilityPanel: React.FC = () => {
       showAlert('error', 'Please fill all fields');
       return;
     }
-
     if (!validateTimes()) return;
-
     if (hasOverlap()) {
       showAlert('error', 'Time slot overlaps with existing availability');
       return;
@@ -152,11 +156,7 @@ export const AvailabilityPanel: React.FC = () => {
       const response = await fetch('/api/providers/availability', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          dayOfWeek: selectedDay,
-          startTime,
-          endTime,
-        }),
+        body: JSON.stringify({ dayOfWeek: selectedDay, startTime, endTime }),
       });
 
       if (!response.ok) {
@@ -178,15 +178,11 @@ export const AvailabilityPanel: React.FC = () => {
   const handleDeleteAvailability = async (id: string) => {
     try {
       setSaving(true);
-      const response = await fetch(`/api/providers/availability/${id}`, {
-        method: 'DELETE',
-      });
-
+      const response = await fetch(`/api/providers/availability/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to delete');
-
       showAlert('success', 'Availability deleted');
       await fetchData();
-    } catch (error) {
+    } catch {
       showAlert('error', 'Failed to delete availability');
     } finally {
       setSaving(false);
@@ -229,98 +225,144 @@ export const AvailabilityPanel: React.FC = () => {
   const handleDeleteUnavailableDate = async (id: string) => {
     try {
       setSaving(true);
-      const response = await fetch(`/api/providers/unavailability/${id}`, {
-        method: 'DELETE',
-      });
-
+      const response = await fetch(`/api/providers/unavailability/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to delete');
-
       showAlert('success', 'Unavailable date removed');
       await fetchData();
-    } catch (error) {
+    } catch {
       showAlert('error', 'Failed to delete unavailable date');
     } finally {
       setSaving(false);
     }
   };
 
+  const groupedAvailability = useMemo(
+    () =>
+      DAYS_OF_WEEK.map((day) => ({
+        ...day,
+        slots: availability
+          .filter((a) => a.dayOfWeek === day.index)
+          .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()),
+      })),
+    [availability]
+  );
+
+  const summary = useMemo(() => {
+    const daysWithHours = groupedAvailability.filter((d) => d.slots.length > 0).length;
+    const totalSlots = availability.length;
+    return { daysWithHours, totalSlots, blockedDates: unavailableDates.length };
+  }, [groupedAvailability, availability.length, unavailableDates.length]);
+
+  const minUnavailableDate = format(new Date(), 'yyyy-MM-dd');
+
   if (loading) {
     return (
-      <section className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-green-600 mx-auto mb-2" />
-          <p className="text-slate-600">Loading availability settings...</p>
-        </div>
+      <section className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#6FCF97]/35 bg-white py-16">
+        <Loader2 className="h-9 w-9 animate-spin text-[#2FA084]" />
+        <p className="text-sm text-[#1F6F5F]/65">Loading availability…</p>
       </section>
     );
   }
 
-  const groupedAvailability = DAYS_OF_WEEK.map(day => ({
-    ...day,
-    slots: availability
-      .filter(a => a.dayOfWeek === day.index)
-      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()),
-  }));
-
-  const minUnavailableDate = format(new Date(), 'yyyy-MM-dd');
-
   return (
-    <section className="space-y-6 max-w-5xl">
+    <section className="w-full space-y-5 sm:space-y-6">
       {/* Header */}
-      <div className="relative">
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6 shadow-sm">
-          <h2 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
-            <Clock className="w-8 h-8 text-green-600" />
-            Availability Management
-          </h2>
-          <p className="text-sm text-slate-600 mt-2">
-            Set your working hours and mark days when you're unavailable
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold text-[#1F6F5F] sm:text-2xl">Availability</h2>
+          <p className="mt-1 text-sm text-[#1F6F5F]/65">
+            Set weekly working hours and mark days you are off
           </p>
+        </div>
+        <button
+          type="button"
+          onClick={fetchData}
+          disabled={saving}
+          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-[#6FCF97]/50 bg-white px-3.5 py-2 text-sm font-semibold text-[#1F6F5F] shadow-sm transition hover:border-[#2FA084] hover:bg-[#EEEEEE] disabled:opacity-50"
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </button>
+      </div>
+
+      {/* Quick stats */}
+      <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-3 sm:gap-4">
+        <div className="rounded-2xl border border-[#6FCF97]/35 bg-gradient-to-br from-white to-[#6FCF97]/10 p-4">
+          <p className="text-xs font-semibold text-[#1F6F5F]/65">Active days</p>
+          <p className="mt-1 text-2xl font-bold text-[#1F6F5F]">{summary.daysWithHours}/7</p>
+        </div>
+        <div className="rounded-2xl border border-[#6FCF97]/35 bg-gradient-to-br from-white to-[#6FCF97]/10 p-4">
+          <p className="text-xs font-semibold text-[#1F6F5F]/65">Time slots</p>
+          <p className="mt-1 text-2xl font-bold text-[#1F6F5F]">{summary.totalSlots}</p>
+        </div>
+        <div className="rounded-2xl border border-[#6FCF97]/35 bg-gradient-to-br from-white to-[#EEEEEE]/80 p-4">
+          <p className="text-xs font-semibold text-[#1F6F5F]/65">Blocked dates</p>
+          <p className="mt-1 text-2xl font-bold text-[#1F6F5F]">{summary.blockedDates}</p>
         </div>
       </div>
 
       {/* Alert */}
       {alert && (
         <div
-          className={`p-4 rounded-lg border flex items-start gap-3 ${
+          className={`flex items-start gap-3 rounded-xl border p-4 ${
             alert.type === 'success'
-              ? 'bg-green-50 border-green-200 text-green-800'
+              ? 'border-[#6FCF97]/50 bg-[#6FCF97]/15 text-[#1F6F5F]'
               : alert.type === 'error'
-              ? 'bg-red-50 border-red-200 text-red-800'
-              : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                ? 'border-red-200 bg-red-50 text-red-800'
+                : 'border-[#6FCF97]/40 bg-[#EEEEEE] text-[#1F6F5F]'
           }`}
         >
           {alert.type === 'success' ? (
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
           ) : (
-            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
           )}
           <p className="text-sm font-medium">{alert.message}</p>
         </div>
       )}
 
-      {/* Weekly Schedule Section */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-b border-slate-200">
-          <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-green-600" />
-            Weekly Schedule
+      {/* Weekly schedule */}
+      <div className="overflow-hidden rounded-2xl border border-[#6FCF97]/35 bg-white shadow-sm">
+        <div className="border-b border-[#6FCF97]/25 bg-gradient-to-r from-[#EEEEEE]/80 to-white px-4 py-3.5 sm:px-5">
+          <h3 className="flex items-center gap-2 text-base font-bold text-[#1F6F5F] sm:text-lg">
+            <Calendar className="h-5 w-5 text-[#2FA084]" />
+            Weekly schedule
           </h3>
         </div>
 
-        <div className="p-6 space-y-4">
-          {/* Add Availability Form */}
-          <div className="bg-green-50 border-2 border-dashed border-green-200 rounded-lg p-4">
-            <h4 className="font-medium text-slate-900 mb-3">Add Working Hours</h4>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+        <div className="space-y-4 p-4 sm:p-5">
+          {/* Add form */}
+          <div className="rounded-2xl border border-dashed border-[#6FCF97]/50 bg-[#EEEEEE]/50 p-4 sm:p-5">
+            <h4 className="mb-3 text-sm font-bold text-[#1F6F5F]">Add working hours</h4>
+
+            {/* Day pills — quick select on mobile */}
+            <div className="mb-4 flex gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {DAYS_OF_WEEK.map((d) => (
+                <button
+                  key={d.index}
+                  type="button"
+                  onClick={() => setSelectedDay(d.index)}
+                  className={`shrink-0 rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                    selectedDay === d.index
+                      ? 'bg-[#2FA084] text-white shadow-sm'
+                      : 'bg-white text-[#1F6F5F] ring-1 ring-[#6FCF97]/40 hover:bg-[#6FCF97]/15'
+                  }`}
+                >
+                  {d.abbr}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="sm:col-span-2 lg:col-span-1">
+                <label htmlFor="avail-day" className={labelClass}>
                   Day
                 </label>
                 <select
+                  id="avail-day"
                   value={selectedDay}
                   onChange={(e) => setSelectedDay(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                  className={inputClass}
                 >
                   {DAYS_OF_WEEK.map((d) => (
                     <option key={d.index} value={d.index}>
@@ -329,46 +371,46 @@ export const AvailabilityPanel: React.FC = () => {
                   ))}
                 </select>
               </div>
-
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label htmlFor="avail-start" className={labelClass}>
                   Start
                 </label>
                 <input
+                  id="avail-start"
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                  className={inputClass}
                 />
               </div>
-
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label htmlFor="avail-end" className={labelClass}>
                   End
                 </label>
                 <input
+                  id="avail-end"
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                  className={inputClass}
                 />
               </div>
-
-              <div className="flex items-end">
+              <div className="flex items-end sm:col-span-2 lg:col-span-1">
                 <button
+                  type="button"
                   onClick={handleAddAvailability}
                   disabled={saving}
-                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-slate-400 transition flex items-center justify-center gap-2 text-sm"
+                  className={primaryBtnClass}
                 >
                   {saving ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Saving...
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Saving…
                     </>
                   ) : (
                     <>
-                      <Plus className="w-4 h-4" />
-                      Add
+                      <Plus className="h-4 w-4" />
+                      Add hours
                     </>
                   )}
                 </button>
@@ -376,53 +418,62 @@ export const AvailabilityPanel: React.FC = () => {
             </div>
           </div>
 
-          {/* Availability Grid by Day */}
+          {/* Days list */}
           <div className="space-y-3">
             {groupedAvailability.map((day) => (
               <div
                 key={day.index}
-                className="border border-slate-200 rounded-lg p-4 hover:border-slate-300 transition"
+                className={`rounded-xl border p-3.5 transition sm:p-4 ${
+                  day.slots.length > 0
+                    ? 'border-[#6FCF97]/40 bg-gradient-to-r from-[#6FCF97]/8 to-white'
+                    : 'border-[#EEEEEE] bg-[#EEEEEE]/40'
+                }`}
               >
-                <div className="flex items-start justify-between mb-3">
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <h4 className="font-semibold text-slate-900">{day.name}</h4>
-                    <p className="text-sm text-slate-500">
-                      {day.slots.length === 0 ? 'No working hours set' : `${day.slots.length} time slot(s)`}
+                    <h4 className="font-semibold text-[#1F6F5F]">{day.name}</h4>
+                    <p className="text-xs text-[#1F6F5F]/55">
+                      {day.slots.length === 0
+                        ? 'No hours set'
+                        : `${day.slots.length} slot${day.slots.length !== 1 ? 's' : ''}`}
                     </p>
                   </div>
+                  {day.slots.length > 0 && (
+                    <span className="rounded-full bg-[#2FA084] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                      Open
+                    </span>
+                  )}
                 </div>
 
                 {day.slots.length > 0 ? (
                   <div className="space-y-2">
-                    {day.slots.map((slot) => {
-                      return (
-                        <div
-                          key={slot.id}
-                          className="flex items-center justify-between bg-slate-50 rounded-lg p-3 group"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                              <Clock className="w-5 h-5 text-green-600" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-slate-900">
-                                {formatSlotRange(slot)}
-                              </p>
-                            </div>
+                    {day.slots.map((slot) => (
+                      <div
+                        key={slot.id}
+                        className="flex items-center justify-between gap-2 rounded-lg border border-[#6FCF97]/25 bg-white px-3 py-2.5"
+                      >
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#2FA084]/15">
+                            <Clock className="h-4 w-4 text-[#2FA084]" />
                           </div>
-                          <button
-                            onClick={() => handleDeleteAvailability(slot.id)}
-                            disabled={saving}
-                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 transition"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
+                          <p className="truncate text-sm font-semibold text-[#1F6F5F]">
+                            {formatSlotRange(slot)}
+                          </p>
                         </div>
-                      );
-                    })}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteAvailability(slot.id)}
+                          disabled={saving}
+                          className="shrink-0 rounded-lg p-2 text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                          aria-label="Remove slot"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-slate-500">Not available on this day</p>
+                  <p className="text-xs text-[#1F6F5F]/50">Not available this day</p>
                 )}
               </div>
             ))}
@@ -430,61 +481,61 @@ export const AvailabilityPanel: React.FC = () => {
         </div>
       </div>
 
-      {/* Unavailable Dates Section */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-b border-slate-200">
-          <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-green-600" />
-            Unavailable Dates
+      {/* Unavailable dates */}
+      <div className="overflow-hidden rounded-2xl border border-[#6FCF97]/35 bg-white shadow-sm">
+        <div className="border-b border-[#6FCF97]/25 bg-gradient-to-r from-[#EEEEEE]/80 to-white px-4 py-3.5 sm:px-5">
+          <h3 className="flex items-center gap-2 text-base font-bold text-[#1F6F5F] sm:text-lg">
+            <CalendarDays className="h-5 w-5 text-[#2FA084]" />
+            Unavailable dates
           </h3>
         </div>
 
-        <div className="p-6 space-y-4">
-          {/* Add Unavailable Date Form */}
-          <div className="bg-green-50 border-2 border-dashed border-green-200 rounded-lg p-4">
-            <h4 className="font-medium text-slate-900 mb-3">Mark Days as Unavailable</h4>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <div className="md:col-span-2">
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+        <div className="space-y-4 p-4 sm:p-5">
+          <div className="rounded-2xl border border-dashed border-[#6FCF97]/50 bg-[#EEEEEE]/50 p-4 sm:p-5">
+            <h4 className="mb-3 text-sm font-bold text-[#1F6F5F]">Mark a day off</h4>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="sm:col-span-2">
+                <label htmlFor="unavail-date" className={labelClass}>
                   Date
                 </label>
                 <input
+                  id="unavail-date"
                   type="date"
                   value={unavailableDate}
                   min={minUnavailableDate}
                   onChange={(e) => setUnavailableDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                  className={inputClass}
                 />
               </div>
-
-              <div className="md:col-span-1">
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  Reason (optional)
+              <div>
+                <label htmlFor="unavail-reason" className={labelClass}>
+                  Reason <span className="font-normal text-[#1F6F5F]/50">(optional)</span>
                 </label>
                 <input
+                  id="unavail-reason"
                   type="text"
                   value={unavailableReason}
                   onChange={(e) => setUnavailableReason(e.target.value)}
-                  placeholder="e.g., Leave"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                  placeholder="e.g. Holiday"
+                  className={inputClass}
                 />
               </div>
-
-              <div className="flex items-end">
+              <div className="flex items-end sm:col-span-2 lg:col-span-1">
                 <button
+                  type="button"
                   onClick={handleAddUnavailableDate}
                   disabled={saving}
-                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-slate-400 transition flex items-center justify-center gap-2 text-sm"
+                  className={primaryBtnClass}
                 >
                   {saving ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Adding...
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Adding…
                     </>
                   ) : (
                     <>
-                      <Plus className="w-4 h-4" />
-                      Add
+                      <Plus className="h-4 w-4" />
+                      Add date
                     </>
                   )}
                 </button>
@@ -492,49 +543,51 @@ export const AvailabilityPanel: React.FC = () => {
             </div>
           </div>
 
-          {/* Unavailable Dates List */}
           {unavailableDates.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {unavailableDates.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between bg-slate-50 rounded-lg p-3 group border border-slate-200"
+                  className="flex items-center justify-between gap-2 rounded-xl border border-[#6FCF97]/30 bg-[#EEEEEE]/60 px-3 py-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                      <Calendar className="w-5 h-5 text-green-600" />
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-100">
+                      <Calendar className="h-4 w-4 text-red-600" />
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">
-                        {format(new Date(item.date), 'EEEE, d MMMM yyyy')}
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-[#1F6F5F]">
+                        {format(new Date(item.date), 'EEE, MMM d, yyyy')}
                       </p>
                       {item.reason && (
-                        <p className="text-xs text-slate-500">{item.reason}</p>
+                        <p className="truncate text-xs text-[#1F6F5F]/60">{item.reason}</p>
                       )}
                     </div>
                   </div>
                   <button
+                    type="button"
                     onClick={() => handleDeleteUnavailableDate(item.id)}
                     disabled={saving}
-                    className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 transition"
+                    className="shrink-0 rounded-lg p-2 text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                    aria-label="Remove date"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-slate-500 text-center py-4">
-              No unavailable dates marked. You're available as per your weekly schedule.
+            <p className="rounded-xl border border-dashed border-[#6FCF97]/35 bg-[#EEEEEE]/40 py-8 text-center text-sm text-[#1F6F5F]/60">
+              No blocked dates. Customers can book based on your weekly schedule.
             </p>
           )}
         </div>
       </div>
 
-      {/* Info Box */}
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-        <p className="text-sm text-green-800">
-          <strong>💡 Tip:</strong> Set your weekly working hours above, then mark specific dates when you're unavailable. Customers will see your availability when booking services.
+      {/* Tip */}
+      <div className="rounded-xl border border-[#6FCF97]/35 bg-[#6FCF97]/12 px-4 py-3.5">
+        <p className="text-sm leading-relaxed text-[#1F6F5F]/85">
+          <span className="font-semibold text-[#1F6F5F]">Tip:</span> Add your weekly hours first,
+          then block specific dates for holidays or time off. Customers see this when booking.
         </p>
       </div>
     </section>

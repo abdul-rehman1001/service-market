@@ -1,15 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Upload,
   FileText,
-  CheckCircle,
+  CheckCircle2,
   XCircle,
   Clock,
   AlertCircle,
   Loader2,
   Image as ImageIcon,
+  RefreshCw,
+  Shield,
+  IdCard,
+  ExternalLink,
 } from 'lucide-react';
 
 interface ProviderData {
@@ -28,6 +32,41 @@ interface ProviderDocument {
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   rejectionReason?: string | null;
   createdAt: string;
+}
+
+const inputClass =
+  'w-full rounded-xl border border-[#6FCF97]/45 bg-white px-4 py-2.5 text-sm text-[#1F6F5F] shadow-sm transition focus:border-[#2FA084] focus:outline-none focus:ring-2 focus:ring-[#2FA084]/25 disabled:cursor-not-allowed disabled:bg-[#EEEEEE]';
+
+const labelClass = 'mb-1.5 block text-sm font-semibold text-[#1F6F5F]';
+
+const primaryBtnClass =
+  'inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#2FA084] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#1F6F5F] disabled:cursor-not-allowed disabled:opacity-50';
+
+/** Solid secondary text — avoids opacity-based “faded” look */
+const mutedTextClass = 'text-[#4A7268]';
+
+const cardHeaderClass = 'border-b border-[#6FCF97] bg-[#EEEEEE] px-4 py-3.5 sm:px-5';
+
+function verificationBadgeStyles(status: string) {
+  switch (status) {
+    case 'APPROVED':
+      return 'bg-[#6FCF97]/25 text-[#1F6F5F] border-[#6FCF97]/40';
+    case 'REJECTED':
+      return 'bg-red-100 text-red-800 border-red-200';
+    default:
+      return 'bg-amber-100 text-amber-800 border-amber-200';
+  }
+}
+
+function docStatusStyles(status: string) {
+  switch (status) {
+    case 'APPROVED':
+      return 'bg-[#6FCF97]/25 text-[#1F6F5F] border-[#6FCF97]/40';
+    case 'REJECTED':
+      return 'bg-red-100 text-red-800 border-red-200';
+    default:
+      return 'bg-amber-100 text-amber-800 border-amber-200';
+  }
 }
 
 export const DocumentManagementPanel: React.FC = () => {
@@ -52,12 +91,9 @@ export const DocumentManagementPanel: React.FC = () => {
     files: [] as File[],
   });
 
-  useEffect(() => {
-    void fetchProviderData();
-  }, []);
-
-  const fetchProviderData = async () => {
+  const fetchProviderData = useCallback(async () => {
     try {
+      setLoading(true);
       const providerRes = await fetch('/api/provider/dashboard');
       if (!providerRes.ok) {
         const data = await providerRes.json();
@@ -91,7 +127,18 @@ export const DocumentManagementPanel: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void fetchProviderData();
+  }, [fetchProviderData]);
+
+  const docSummary = useMemo(() => {
+    const pending = documents.filter((d) => d.status === 'PENDING').length;
+    const approved = documents.filter((d) => d.status === 'APPROVED').length;
+    const rejected = documents.filter((d) => d.status === 'REJECTED').length;
+    return { pending, approved, rejected, total: documents.length };
+  }, [documents]);
 
   const handleViewDocument = (fileUrl: string) => {
     window.open(fileUrl, '_blank', 'noopener,noreferrer');
@@ -101,11 +148,9 @@ export const DocumentManagementPanel: React.FC = () => {
     if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
       return 'All files must be images (JPEG or PNG)';
     }
-
     if (file.size > 5 * 1024 * 1024) {
       return 'Each file must be less than 5MB';
     }
-
     return null;
   };
 
@@ -156,7 +201,6 @@ export const DocumentManagementPanel: React.FC = () => {
     }
 
     const folder = `service-market/providers/${provider?.id}/documents`;
-
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', uploadPreset);
@@ -311,314 +355,395 @@ export const DocumentManagementPanel: React.FC = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const StatusIcon = ({ status }: { status: string }) => {
     switch (status) {
       case 'APPROVED':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle2 className="h-4 w-4 text-[#2FA084]" />;
       case 'REJECTED':
-        return <XCircle className="w-4 h-4 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-red-600" />;
       case 'PENDING':
-        return <Clock className="w-4 h-4 text-yellow-500" />;
+        return <Clock className="h-4 w-4 text-amber-600" />;
       default:
-        return <AlertCircle className="w-4 h-4 text-gray-500" />;
+        return <AlertCircle className="h-4 w-4 text-[#1F6F5F]/50" />;
     }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const styles = {
-      APPROVED: 'bg-green-100 text-green-800',
-      REJECTED: 'bg-red-100 text-red-800',
-      PENDING: 'bg-yellow-100 text-yellow-800',
-    };
-    return styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800';
   };
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
+
+  const FilePicker = ({
+    id,
+    label,
+    file,
+    onChange,
+    disabled,
+  }: {
+    id: string;
+    label: string;
+    file: File | null;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    disabled?: boolean;
+  }) => (
+    <div>
+      <label htmlFor={id} className={labelClass}>
+        {label}
+      </label>
+      <label
+        htmlFor={id}
+        className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#6FCF97] bg-[#EEEEEE] px-3 py-4 text-center transition hover:border-[#2FA084] hover:bg-[#6FCF97]/20 ${
+          disabled ? 'pointer-events-none opacity-50' : ''
+        }`}
+      >
+        <Upload className="mb-1.5 h-5 w-5 text-[#2FA084]" />
+        <span className="text-xs font-semibold text-[#1F6F5F]">Tap to upload</span>
+        <span className={`mt-0.5 text-[10px] ${mutedTextClass}`}>JPEG or PNG, max 5MB</span>
+        <input
+          id={id}
+          type="file"
+          onChange={onChange}
+          accept="image/jpeg,image/png,image/jpg"
+          disabled={disabled}
+          className="hidden"
+        />
+      </label>
+      {file && (
+        <p className="mt-1.5 truncate text-xs font-medium text-[#2FA084]">{file.name}</p>
+      )}
+    </div>
+  );
 
   if (loading) {
     return (
-      <section className="min-h-[320px] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+      <section className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#6FCF97]/35 bg-white py-16">
+        <Loader2 className="h-9 w-9 animate-spin text-[#2FA084]" />
+        <p className={`text-sm ${mutedTextClass}`}>Loading documents…</p>
       </section>
     );
   }
 
+  const isVerified = provider?.verificationStatus === 'APPROVED';
+
   return (
-    <section className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold text-slate-800 tracking-tight">
-          Identity Verification & Documents
-        </h2>
-        <p className="text-sm text-slate-500 mt-1">
-          Submit CNIC verification and upload supporting documents
-        </p>
-        {provider && (
-          <div className="mt-3">
+    <section className="space-y-5 sm:space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold text-[#1F6F5F] sm:text-2xl">Documents</h2>
+          <p className={`mt-1 text-sm ${mutedTextClass}`}>
+            Submit CNIC for verification and upload supporting files
+          </p>
+          {provider && (
             <span
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${
-                provider.verificationStatus === 'APPROVED'
-                  ? 'bg-green-100 text-green-800'
-                  : provider.verificationStatus === 'REJECTED'
-                  ? 'bg-red-100 text-red-800'
-                  : 'bg-yellow-100 text-yellow-800'
-              }`}
+              className={`mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${verificationBadgeStyles(provider.verificationStatus)}`}
             >
-              {getStatusIcon(provider.verificationStatus)}
-              Verification Status: {provider.verificationStatus}
+              <Shield className="h-3.5 w-3.5" />
+              Verification: {provider.verificationStatus}
             </span>
-          </div>
-        )}
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={fetchProviderData}
+          disabled={loading}
+          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-[#6FCF97]/50 bg-white px-3.5 py-2 text-sm font-semibold text-[#1F6F5F] shadow-sm transition hover:border-[#2FA084] hover:bg-[#EEEEEE] disabled:opacity-50"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </button>
       </div>
+
+      {/* Doc summary pills */}
+      {documents.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-full border border-[#6FCF97]/40 bg-[#EEEEEE] px-3 py-1 text-xs font-semibold text-[#1F6F5F]">
+            Total: {docSummary.total}
+          </span>
+          <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
+            Pending: {docSummary.pending}
+          </span>
+          <span className="rounded-full border border-[#6FCF97]/40 bg-[#6FCF97]/15 px-3 py-1 text-xs font-semibold text-[#1F6F5F]">
+            Approved: {docSummary.approved}
+          </span>
+          {docSummary.rejected > 0 && (
+            <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
+              Rejected: {docSummary.rejected}
+            </span>
+          )}
+        </div>
+      )}
 
       {message.text && (
         <div
-          className={`p-4 rounded-lg border text-sm ${
+          className={`rounded-xl border p-4 text-sm ${
             message.type === 'success'
-              ? 'bg-green-50 text-green-800 border-green-200'
-              : 'bg-red-50 text-red-800 border-red-200'
+              ? 'border-[#6FCF97]/50 bg-[#6FCF97]/15 text-[#1F6F5F]'
+              : 'border-red-200 bg-red-50 text-red-800'
           }`}
         >
           {message.text}
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">CNIC Verification Request</h3>
-          <p className="text-sm text-gray-600 mb-5">
-            Upload CNIC front and back together in one request. Provider verification is approved only after admin approves this CNIC request.
-          </p>
-
-          <form onSubmit={handleCnicRequestSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">CNIC Number (13 digits) *</label>
-              <input
-                type="text"
-                value={cnicForm.cnicNumber}
-                onChange={(e) =>
-                  setCnicForm((prev) => ({
-                    ...prev,
-                    cnicNumber: e.target.value.replace(/\D/g, '').slice(0, 13),
-                  }))
-                }
-                placeholder="1234567890123"
-                maxLength={13}
-                pattern="\d{13}"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                required
-              />
-              <p className="text-xs text-gray-500 mt-1">Enter exactly 13 digits without dashes</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">CNIC Front *</label>
-                <input
-                  id="provider-cnic-front-input"
-                  type="file"
-                  onChange={(e) => handleCnicFileChange(e, 'frontFile')}
-                  accept="image/jpeg,image/png,image/jpg"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  required
-                />
-                {cnicForm.frontFile && (
-                  <p className="text-xs text-gray-600 mt-1 truncate">{cnicForm.frontFile.name}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">CNIC Back *</label>
-                <input
-                  id="provider-cnic-back-input"
-                  type="file"
-                  onChange={(e) => handleCnicFileChange(e, 'backFile')}
-                  accept="image/jpeg,image/png,image/jpg"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  required
-                />
-                {cnicForm.backFile && (
-                  <p className="text-xs text-gray-600 mt-1 truncate">{cnicForm.backFile.name}</p>
-                )}
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={uploadingCnic || !cnicForm.frontFile || !cnicForm.backFile}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {uploadingCnic ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Submitting CNIC Request...
-                </>
-              ) : (
-                <>
-                  <Upload className="w-5 h-5" />
-                  Submit CNIC Verification Request
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="my-6 border-t border-gray-200" />
-
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Supporting Documents</h3>
-          <p className="text-sm text-gray-600 mb-5">
-            Upload optional supporting documents such as certificates.
-          </p>
-
-          {provider?.verificationStatus !== 'APPROVED' && (
-            <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-              Supporting document requests are available after your CNIC verification is approved.
-            </div>
-          )}
-
-          <form onSubmit={handleSupportingUpload} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Document Type *</label>
-              <select
-                value={supportingForm.documentType}
-                disabled={provider?.verificationStatus !== 'APPROVED'}
-                onChange={(e) =>
-                  setSupportingForm({
-                    documentType: e.target.value as 'CERTIFICATE' | 'OTHER',
-                    files: [],
-                  })
-                }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                required
-              >
-                <option value="CERTIFICATE">Certificate (Multiple Images)</option>
-                <option value="OTHER">Other</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Image{supportingForm.documentType === 'CERTIFICATE' ? 's' : ''} *
-              </label>
-              <input
-                id="provider-supporting-doc-input"
-                type="file"
-                onChange={handleSupportingFilesChange}
-                accept="image/jpeg,image/png,image/jpg"
-                multiple={supportingForm.documentType === 'CERTIFICATE'}
-                disabled={provider?.verificationStatus !== 'APPROVED'}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                required
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                {supportingForm.documentType === 'CERTIFICATE'
-                  ? 'JPEG or PNG only, max 5MB each. You can select multiple images.'
-                  : 'JPEG or PNG only, max 5MB'}
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-2 xl:gap-6">
+        {/* Upload column */}
+        <div className="space-y-5">
+          {/* CNIC card */}
+          <div className="overflow-hidden rounded-2xl border border-[#6FCF97]/35 bg-white shadow-sm">
+            <div className={cardHeaderClass}>
+              <h3 className="flex items-center gap-2 text-base font-bold text-[#1F6F5F]">
+                <IdCard className="h-5 w-5 text-[#2FA084]" />
+                CNIC verification
+              </h3>
+              <p className={`mt-1 text-xs sm:text-sm ${mutedTextClass}`}>
+                Upload front and back in one request for admin review
               </p>
             </div>
 
-            {supportingForm.files.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-700">
-                  Selected {supportingForm.files.length} file{supportingForm.files.length > 1 ? 's' : ''}:
-                </p>
-                {supportingForm.files.map((file, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <ImageIcon className="w-5 h-5 text-emerald-600" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
-                      <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+            <form onSubmit={handleCnicRequestSubmit} className="space-y-4 p-4 sm:p-5">
+              <div>
+                <label htmlFor="cnic-number" className={labelClass}>
+                  CNIC number <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="cnic-number"
+                  type="text"
+                  inputMode="numeric"
+                  value={cnicForm.cnicNumber}
+                  onChange={(e) =>
+                    setCnicForm((prev) => ({
+                      ...prev,
+                      cnicNumber: e.target.value.replace(/\D/g, '').slice(0, 13),
+                    }))
+                  }
+                  placeholder="1234567890123"
+                  maxLength={13}
+                  className={inputClass}
+                  required
+                />
+                <p className={`mt-1 text-xs ${mutedTextClass}`}>Exactly 13 digits, no dashes</p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FilePicker
+                  id="provider-cnic-front-input"
+                  label="CNIC front *"
+                  file={cnicForm.frontFile}
+                  onChange={(e) => handleCnicFileChange(e, 'frontFile')}
+                />
+                <FilePicker
+                  id="provider-cnic-back-input"
+                  label="CNIC back *"
+                  file={cnicForm.backFile}
+                  onChange={(e) => handleCnicFileChange(e, 'backFile')}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={uploadingCnic || !cnicForm.frontFile || !cnicForm.backFile}
+                className={primaryBtnClass}
+              >
+                {uploadingCnic ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Submitting…
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-5 w-5" />
+                    Submit CNIC request
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Supporting docs card */}
+          <div className="overflow-hidden rounded-2xl border border-[#6FCF97]/35 bg-white shadow-sm">
+            <div className={cardHeaderClass}>
+              <h3 className="flex items-center gap-2 text-base font-bold text-[#1F6F5F]">
+                <FileText className="h-5 w-5 text-[#2FA084]" />
+                Supporting documents
+              </h3>
+              <p className={`mt-1 text-xs sm:text-sm ${mutedTextClass}`}>
+                Certificates and other optional files
+              </p>
+            </div>
+
+            <div className="p-4 sm:p-5">
+              {!isVerified && (
+                <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+                  Available after CNIC verification is approved.
+                </div>
+              )}
+
+              <form onSubmit={handleSupportingUpload} className="space-y-4">
+                <div>
+                  <label htmlFor="supporting-type" className={labelClass}>
+                    Document type
+                  </label>
+                  <select
+                    id="supporting-type"
+                    value={supportingForm.documentType}
+                    disabled={!isVerified}
+                    onChange={(e) =>
+                      setSupportingForm({
+                        documentType: e.target.value as 'CERTIFICATE' | 'OTHER',
+                        files: [],
+                      })
+                    }
+                    className={inputClass}
+                    required
+                  >
+                    <option value="CERTIFICATE">Certificate (multiple images)</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="provider-supporting-doc-input" className={labelClass}>
+                    Select image{supportingForm.documentType === 'CERTIFICATE' ? 's' : ''}
+                  </label>
+                  <label
+                    htmlFor="provider-supporting-doc-input"
+                    className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#6FCF97] bg-[#EEEEEE] px-3 py-5 text-center transition hover:border-[#2FA084] ${
+                      !isVerified ? 'pointer-events-none opacity-50' : ''
+                    }`}
+                  >
+                    <ImageIcon className="mb-2 h-6 w-6 text-[#2FA084]" />
+                    <span className="text-xs font-semibold text-[#1F6F5F]">Tap to select files</span>
+                    <input
+                      id="provider-supporting-doc-input"
+                      type="file"
+                      onChange={handleSupportingFilesChange}
+                      accept="image/jpeg,image/png,image/jpg"
+                      multiple={supportingForm.documentType === 'CERTIFICATE'}
+                      disabled={!isVerified}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {supportingForm.files.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-[#1F6F5F]">
+                      Selected ({supportingForm.files.length})
+                    </p>
+                    {supportingForm.files.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2.5 rounded-lg border border-[#6FCF97] bg-[#EEEEEE] px-3 py-2"
+                      >
+                        <ImageIcon className="h-4 w-4 shrink-0 text-[#2FA084]" />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-[#1F6F5F]">{file.name}</p>
+                          <p className={`text-xs ${mutedTextClass}`}>{formatFileSize(file.size)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={
+                    uploadingSupporting ||
+                    supportingForm.files.length === 0 ||
+                    !isVerified
+                  }
+                  className={primaryBtnClass}
+                >
+                  {uploadingSupporting ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Uploading…
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-5 w-5" />
+                      Upload{' '}
+                      {supportingForm.files.length > 1
+                        ? `${supportingForm.files.length} files`
+                        : 'document'}
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {/* Documents list */}
+        <div className="overflow-hidden rounded-2xl border border-[#6FCF97]/35 bg-white shadow-sm">
+          <div className={cardHeaderClass}>
+            <h3 className="text-base font-bold text-[#1F6F5F] sm:text-lg">Uploaded documents</h3>
+          </div>
+
+          <div className="p-4 sm:p-5">
+            {documents.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-[#6FCF97] bg-[#EEEEEE] py-10 text-center">
+                <FileText className="mx-auto mb-2 h-8 w-8 text-[#2FA084]" />
+                <p className={`text-sm ${mutedTextClass}`}>No documents uploaded yet</p>
+              </div>
+            ) : (
+              <div className="max-h-[min(70vh,640px)] space-y-3 overflow-y-auto pr-0.5">
+                {documents.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="rounded-xl border border-[#6FCF97] bg-[#EEEEEE] p-3.5 sm:p-4"
+                  >
+                    <div className="flex gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#6FCF97]/35">
+                        {doc.mimeType.startsWith('image/') ? (
+                          <ImageIcon className="h-5 w-5 text-[#2FA084]" />
+                        ) : (
+                          <FileText className="h-5 w-5 text-[#2FA084]" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0">
+                            <h4 className="text-sm font-semibold text-[#1F6F5F]">
+                              {doc.documentType.replace(/_/g, ' ')}
+                            </h4>
+                            <p className={`truncate text-xs ${mutedTextClass}`}>{doc.fileName}</p>
+                            <p className={`mt-0.5 text-[10px] ${mutedTextClass}`}>
+                              {formatFileSize(doc.fileSize)} ·{' '}
+                              {new Date(doc.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <span
+                            className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${docStatusStyles(doc.status)}`}
+                          >
+                            <StatusIcon status={doc.status} />
+                            {doc.status}
+                          </span>
+                        </div>
+
+                        {doc.status === 'REJECTED' && doc.rejectionReason && (
+                          <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs text-red-700">
+                            {doc.rejectionReason}
+                          </p>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => handleViewDocument(doc.fileUrl)}
+                          className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#2FA084] hover:underline"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          View document
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
-
-            <button
-              type="submit"
-              disabled={
-                uploadingSupporting ||
-                supportingForm.files.length === 0 ||
-                provider?.verificationStatus !== 'APPROVED'
-              }
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {uploadingSupporting ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <Upload className="w-5 h-5" />
-                  Upload {supportingForm.files.length > 1 ? `${supportingForm.files.length} Documents` : 'Document'}
-                </>
-              )}
-            </button>
-          </form>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-5">Uploaded Documents</h3>
-          {documents.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No documents uploaded yet</p>
-          ) : (
-            <div className="space-y-3 max-h-[560px] overflow-auto pr-1">
-              {documents.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="p-4 border border-gray-200 rounded-lg hover:border-emerald-300 transition-colors"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0">
-                      {doc.mimeType.startsWith('image/') ? (
-                        <ImageIcon className="w-8 h-8 text-emerald-600" />
-                      ) : (
-                        <FileText className="w-8 h-8 text-emerald-600" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-900">
-                            {doc.documentType.replace(/_/g, ' ')}
-                          </h4>
-                          <p className="text-sm text-gray-600 truncate">{doc.fileName}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {formatFileSize(doc.fileSize)} • {new Date(doc.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(
-                            doc.status
-                          )}`}
-                        >
-                          {getStatusIcon(doc.status)}
-                          {doc.status}
-                        </span>
-                      </div>
-
-                      {doc.status === 'REJECTED' && doc.rejectionReason && (
-                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                          <p className="text-xs font-medium text-red-800">Rejection Reason:</p>
-                          <p className="text-xs text-red-700 mt-1">{doc.rejectionReason}</p>
-                        </div>
-                      )}
-
-                      <button
-                        onClick={() => handleViewDocument(doc.fileUrl)}
-                        className="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-700 text-sm font-medium mt-2 hover:underline"
-                      >
-                        View Document
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </section>

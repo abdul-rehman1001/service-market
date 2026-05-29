@@ -1,8 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Loader2, Upload, Trash2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import {
+  X,
+  Loader2,
+  Upload,
+  Trash2,
+  Wrench,
+  ImageIcon,
+  Tag,
+  Clock,
+  ToggleLeft,
+  ToggleRight,
+} from 'lucide-react';
 
 interface Category {
   id: string;
@@ -27,6 +38,11 @@ interface ServiceFormModalProps {
   service?: Service | null;
   onClose: (shouldRefresh?: boolean) => void;
 }
+
+const inputClass =
+  'w-full rounded-xl border border-[#6FCF97]/45 bg-white px-4 py-3 text-sm text-[#1F6F5F] shadow-sm transition placeholder:text-[#1F6F5F]/40 focus:border-[#2FA084] focus:outline-none focus:ring-2 focus:ring-[#2FA084]/25';
+
+const labelClass = 'mb-1.5 block text-sm font-semibold text-[#1F6F5F]';
 
 export default function ServiceFormModal({ service, onClose }: ServiceFormModalProps) {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -65,7 +81,19 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
     fetchCategories();
   }, []);
 
-  const handleChange = (field: string, value: any) => {
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !submitting) onClose();
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [onClose, submitting]);
+
+  const handleChange = (field: string, value: string | boolean | string[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -77,29 +105,29 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
       setUploadingImages(true);
 
       for (const file of files) {
-        // Validate file type
         if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
           alert(`Invalid file type: ${file.name}. Only JPEG, PNG, and WebP are allowed.`);
           continue;
         }
 
-        // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
           alert(`File too large: ${file.name}. Max size is 5MB.`);
           continue;
         }
 
-        // Upload to Cloudinary
         const formDataForUpload = new FormData();
         formDataForUpload.append('file', file);
-        formDataForUpload.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'service_market_upload');
+        formDataForUpload.append(
+          'upload_preset',
+          process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'service_market_upload'
+        );
         formDataForUpload.append('folder', 'service-market/services');
 
         const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-          method: 'POST',
-          body: formDataForUpload,
-        });
+        const uploadRes = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+          { method: 'POST', body: formDataForUpload }
+        );
 
         const uploadData = await uploadRes.json();
 
@@ -117,7 +145,6 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
       alert('Failed to upload images');
     } finally {
       setUploadingImages(false);
-      // Reset input
       e.target.value = '';
     }
   };
@@ -132,7 +159,6 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
     if (!formData.name.trim()) {
       alert('Service name is required');
       return;
@@ -150,7 +176,7 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
 
     const minPrice = parseFloat(formData.minPrice);
     const maxPrice = parseFloat(formData.maxPrice);
-    const duration = parseInt(formData.defaultDurationMinutes);
+    const duration = parseInt(formData.defaultDurationMinutes, 10);
 
     if (isNaN(minPrice) || minPrice < 0) {
       alert('Please enter a valid minimum price');
@@ -203,152 +229,203 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
       }
 
       alert(service ? 'Service updated successfully!' : 'Service created successfully!');
-      onClose(true); // Refresh the list
-    } catch (err: any) {
-      alert(err.message);
+      onClose(true);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to save service';
+      alert(message);
     } finally {
       setSubmitting(false);
     }
   };
 
+  const isEdit = Boolean(service);
+
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-        >
-          {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">
-              {service ? 'Edit Service' : 'Create New Service'}
-            </h2>
+    <div
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-[#1F6F5F]/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="service-form-title"
+      onClick={() => !submitting && onClose()}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 24 }}
+        transition={{ duration: 0.22, ease: 'easeOut' }}
+        className="flex max-h-[96dvh] w-full flex-col overflow-hidden rounded-t-2xl border border-[#6FCF97]/40 bg-white shadow-2xl sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="shrink-0 border-b border-[#6FCF97]/30 bg-gradient-to-r from-[#EEEEEE] via-white to-[#EEEEEE] px-4 py-4 sm:px-6">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#2FA084] text-white shadow-md">
+                <Wrench className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <h2 id="service-form-title" className="text-lg font-bold text-[#1F6F5F] sm:text-xl">
+                  {isEdit ? 'Edit Service' : 'Add New Service'}
+                </h2>
+                <p className="mt-0.5 text-xs text-[#1F6F5F]/65 sm:text-sm">
+                  {isEdit
+                    ? 'Update your service details below'
+                    : 'Fill in the details to list a new service'}
+                </p>
+              </div>
+            </div>
             <button
+              type="button"
               onClick={() => onClose()}
-              className="text-gray-400 hover:text-gray-600 transition"
+              disabled={submitting}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#6FCF97]/40 bg-white text-[#1F6F5F] transition hover:bg-[#EEEEEE] disabled:opacity-50"
+              aria-label="Close"
             >
-              <X className="w-5 h-5" />
+              <X className="h-5 w-5" />
             </button>
           </div>
+        </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-5">
-            {/* Service Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Service Name <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleChange('name', e.target.value)}
-                placeholder="e.g. AC Repair & Maintenance"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                required
-              />
-            </div>
+        {/* Scrollable form */}
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
+            {/* Basic info */}
+            <section className="rounded-2xl border border-[#6FCF97]/30 bg-[#EEEEEE]/50 p-4 sm:p-5">
+              <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[#1F6F5F]">
+                Basic information
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="service-name" className={labelClass}>
+                    Service name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="service-name"
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => handleChange('name', e.target.value)}
+                    placeholder="e.g. AC Repair & Gas Refill"
+                    className={inputClass}
+                    required
+                  />
+                </div>
 
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description <span className="text-red-600">*</span>
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => handleChange('description', e.target.value)}
-                placeholder="Describe your service in detail..."
-                rows={4}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
-                required
-              />
-            </div>
+                <div>
+                  <label htmlFor="service-description" className={labelClass}>
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    id="service-description"
+                    value={formData.description}
+                    onChange={(e) => handleChange('description', e.target.value)}
+                    placeholder="Describe what you offer, what's included, etc."
+                    rows={4}
+                    className={`${inputClass} resize-none`}
+                    required
+                  />
+                </div>
 
-            {/* Category */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category <span className="text-red-600">*</span>
-              </label>
-              <select
-                value={formData.categoryId}
-                onChange={(e) => handleChange('categoryId', e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                disabled={loadingCategories}
-                required
-              >
-                <option value="">Select a category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.icon ? `${category.icon} ` : ''}
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-              {loadingCategories && (
-                <p className="text-xs text-gray-500 mt-1">Loading categories...</p>
-              )}
-            </div>
-
-            {/* Price Range */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Min Price ($) <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.minPrice}
-                  onChange={(e) => handleChange('minPrice', e.target.value)}
-                  placeholder="0.00"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  required
-                />
+                <div>
+                  <label htmlFor="service-category" className={labelClass}>
+                    Category <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="service-category"
+                    value={formData.categoryId}
+                    onChange={(e) => handleChange('categoryId', e.target.value)}
+                    className={inputClass}
+                    disabled={loadingCategories}
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.icon ? `${category.icon} ` : ''}
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                  {loadingCategories && (
+                    <p className="mt-1.5 flex items-center gap-1.5 text-xs text-[#1F6F5F]/60">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Loading categories…
+                    </p>
+                  )}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Max Price ($) <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.maxPrice}
-                  onChange={(e) => handleChange('maxPrice', e.target.value)}
-                  placeholder="0.00"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  required
-                />
+            </section>
+
+            {/* Pricing */}
+            <section className="rounded-2xl border border-[#6FCF97]/30 bg-[#EEEEEE]/50 p-4 sm:p-5">
+              <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-[#1F6F5F]">
+                <Tag className="h-4 w-4 text-[#2FA084]" />
+                Pricing & duration
+              </h3>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="min-price" className={labelClass}>
+                    Min price (Rs) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="min-price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.minPrice}
+                    onChange={(e) => handleChange('minPrice', e.target.value)}
+                    placeholder="0"
+                    className={inputClass}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="max-price" className={labelClass}>
+                    Max price (Rs) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="max-price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.maxPrice}
+                    onChange={(e) => handleChange('maxPrice', e.target.value)}
+                    placeholder="0"
+                    className={inputClass}
+                    required
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label htmlFor="duration" className={labelClass}>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 text-[#2FA084]" />
+                      Duration (minutes) <span className="text-red-500">*</span>
+                    </span>
+                  </label>
+                  <input
+                    id="duration"
+                    type="number"
+                    min="1"
+                    value={formData.defaultDurationMinutes}
+                    onChange={(e) => handleChange('defaultDurationMinutes', e.target.value)}
+                    placeholder="e.g. 90"
+                    className={inputClass}
+                    required
+                  />
+                  <p className="mt-1.5 text-xs text-[#1F6F5F]/60">
+                    Typical time needed to complete this service
+                  </p>
+                </div>
               </div>
-            </div>
+            </section>
 
-            {/* Duration */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Duration (minutes) <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={formData.defaultDurationMinutes}
-                onChange={(e) => handleChange('defaultDurationMinutes', e.target.value)}
-                placeholder="e.g. 60"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                required
-              />
-              <p className="text-xs text-gray-500 mt-1">Standard time needed to complete this service</p>
-            </div>
-
-            {/* Images Upload */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Service Images
-              </label>
+            {/* Images */}
+            <section className="rounded-2xl border border-[#6FCF97]/30 bg-[#EEEEEE]/50 p-4 sm:p-5">
+              <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-[#1F6F5F]">
+                <ImageIcon className="h-4 w-4 text-[#2FA084]" />
+                Photos
+              </h3>
               <div className="space-y-3">
-                {/* Upload Input */}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-emerald-400 hover:bg-emerald-50 transition">
+                <div className="rounded-xl border-2 border-dashed border-[#6FCF97]/55 bg-white p-5 text-center transition hover:border-[#2FA084] hover:bg-[#6FCF97]/10 sm:p-6">
                   <input
                     type="file"
                     multiple
@@ -360,97 +437,111 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
                   />
                   <label
                     htmlFor="image-upload"
-                    className="cursor-pointer flex flex-col items-center gap-2"
+                    className={`flex cursor-pointer flex-col items-center gap-2 ${uploadingImages ? 'pointer-events-none opacity-70' : ''}`}
                   >
                     {uploadingImages ? (
                       <>
-                        <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
-                        <span className="text-sm text-gray-600">Uploading...</span>
+                        <Loader2 className="h-7 w-7 animate-spin text-[#2FA084]" />
+                        <span className="text-sm font-medium text-[#1F6F5F]">Uploading…</span>
                       </>
                     ) : (
                       <>
-                        <Upload className="w-6 h-6 text-emerald-600" />
-                        <span className="text-sm font-medium text-gray-700">
-                          Click to upload or drag images here
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#6FCF97]/25">
+                          <Upload className="h-6 w-6 text-[#2FA084]" />
+                        </div>
+                        <span className="text-sm font-semibold text-[#1F6F5F]">
+                          Tap to upload photos
                         </span>
-                        <span className="text-xs text-gray-500">
-                          JPEG, PNG, WebP up to 5MB each
+                        <span className="text-xs text-[#1F6F5F]/60">
+                          JPEG, PNG, WebP · max 5MB each
                         </span>
                       </>
                     )}
                   </label>
                 </div>
 
-                {/* Uploaded Images Preview */}
                 {formData.images.length > 0 && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
                     {formData.images.map((image, index) => (
                       <div
-                        key={index}
-                        className="relative group bg-gray-100 rounded-lg overflow-hidden aspect-square"
+                        key={image}
+                        className="group relative aspect-square overflow-hidden rounded-xl border border-[#6FCF97]/35 bg-[#EEEEEE]"
                       >
                         <img
                           src={image}
-                          alt={`Service image ${index + 1}`}
-                          className="w-full h-full object-cover"
+                          alt={`Service ${index + 1}`}
+                          className="h-full w-full object-cover"
                         />
                         <button
                           type="button"
                           onClick={() => removeImage(index)}
-                          className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                          className="absolute inset-0 flex items-center justify-center bg-[#1F6F5F]/55 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100"
+                          aria-label={`Remove image ${index + 1}`}
                         >
-                          <Trash2 className="w-5 h-5 text-white" />
+                          <span className="flex items-center gap-1.5 rounded-lg bg-red-500 px-2.5 py-1.5 text-xs font-semibold text-white">
+                            <Trash2 className="h-4 w-4" />
+                            Remove
+                          </span>
                         </button>
                       </div>
                     ))}
                   </div>
                 )}
-                <p className="text-xs text-gray-500">
-                  {formData.images.length} image{formData.images.length !== 1 ? 's' : ''} uploaded
+                <p className="text-xs text-[#1F6F5F]/60">
+                  {formData.images.length} photo{formData.images.length !== 1 ? 's' : ''} added
                 </p>
               </div>
-            </div>
+            </section>
 
-            {/* Active Status */}
-            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={formData.isActive}
-                onChange={(e) => handleChange('isActive', e.target.checked)}
-                className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
-              />
-              <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
-                Active (Service visible to customers)
-              </label>
-            </div>
+            {/* Active toggle */}
+            <button
+              type="button"
+              onClick={() => handleChange('isActive', !formData.isActive)}
+              className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[#6FCF97]/35 bg-white px-4 py-3.5 text-left transition hover:border-[#2FA084]/50 sm:px-5"
+            >
+              <div>
+                <p className="text-sm font-semibold text-[#1F6F5F]">Service visible to customers</p>
+                <p className="mt-0.5 text-xs text-[#1F6F5F]/60">
+                  {formData.isActive
+                    ? 'Active, shown in search & bookings'
+                    : 'Inactive, hidden from customers'}
+                </p>
+              </div>
+              {formData.isActive ? (
+                <ToggleRight className="h-8 w-8 shrink-0 text-[#2FA084]" />
+              ) : (
+                <ToggleLeft className="h-8 w-8 shrink-0 text-[#1F6F5F]/40" />
+              )}
+            </button>
+          </div>
 
-            {/* Actions */}
-            <div className="flex gap-3 pt-4">
-              <button
-                type="submit"
-                disabled={submitting || uploadingImages}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                {submitting
-                  ? 'Saving...'
-                  : service
-                  ? 'Update Service'
-                  : 'Create Service'}
-              </button>
+          {/* Footer actions */}
+          <div className="shrink-0 border-t border-[#6FCF97]/30 bg-white px-4 py-4 sm:px-6">
+            <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end sm:gap-3">
               <button
                 type="button"
                 onClick={() => onClose()}
                 disabled={submitting}
-                className="px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50"
+                className="w-full rounded-xl border border-[#6FCF97]/50 bg-[#EEEEEE] px-4 py-3 text-sm font-semibold text-[#1F6F5F] transition hover:bg-[#EEEEEE]/80 disabled:opacity-50 sm:w-auto sm:min-w-[120px]"
               >
                 Cancel
               </button>
+              <button
+                type="submit"
+                disabled={submitting || uploadingImages}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#2FA084] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#1F6F5F] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-w-[160px]"
+              >
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {submitting
+                  ? 'Saving…'
+                  : isEdit
+                    ? 'Update Service'
+                    : 'Create Service'}
+              </button>
             </div>
-          </form>
-        </motion.div>
-      </div>
-    </AnimatePresence>
+          </div>
+        </form>
+      </motion.div>
+    </div>
   );
 }
