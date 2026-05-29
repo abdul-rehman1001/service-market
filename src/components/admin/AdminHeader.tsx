@@ -1,8 +1,8 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 
 interface UserData {
@@ -35,6 +35,7 @@ function getPageTitle(pathname: string): string {
 
 export default function AdminHeader({ onMenuClick }: { onMenuClick: () => void }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
   const pageTitle = useMemo(() => getPageTitle(pathname), [pathname]);
 
@@ -74,6 +75,15 @@ export default function AdminHeader({ onMenuClick }: { onMenuClick: () => void }
     ? `${user.firstName} ${user.lastName}`.trim()
     : "Administrator";
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
   return (
     <header className="admin-header relative sticky top-0 z-30 px-4 py-3 sm:px-6 sm:py-3.5">
       <div className="flex items-center justify-between gap-4">
@@ -100,6 +110,16 @@ export default function AdminHeader({ onMenuClick }: { onMenuClick: () => void }
 
         {/* Right: profile */}
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--admin-green)] bg-[var(--admin-green)] px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[var(--admin-green-dark)] hover:border-[var(--admin-green-dark)] hover:shadow-md sm:gap-2 sm:px-3.5 sm:text-sm"
+            aria-label="Logout"
+            title="Logout"
+          >
+            <LogOut size={15} />
+            <span className="hidden sm:inline">Logout</span>
+          </button>
           <Link
             href="/admin/profile"
             className="group flex items-center gap-2.5 rounded-2xl border border-[var(--admin-beige)]/50 bg-white py-1.5 pl-1.5 pr-3 shadow-sm transition-all duration-300 hover:border-[var(--admin-green)]/50 hover:shadow-lg sm:gap-3 sm:pr-4"
