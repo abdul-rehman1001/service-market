@@ -157,7 +157,7 @@ export default function Header() {
 
   return (
     <>
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full bg-white/95 shadow-[0_1px_0_0_rgba(226,232,240,0.9)] backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
         <div className="flex items-center gap-2 sm:gap-3">
           <button

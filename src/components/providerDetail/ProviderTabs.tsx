@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import { motion, useReducedMotion } from 'framer-motion';
 
 interface Props {
   activeTab: string;
@@ -13,22 +15,36 @@ const tabs = [
 ];
 
 export default function ProviderTabs({ activeTab, onTabChange }: Props) {
+  const reduceMotion = useReducedMotion();
+
   return (
-    <div className="bg-white sticky top-0 z-10 border-b">
-      <nav className="flex overflow-x-auto">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            className={`flex-shrink-0 px-4 py-3 text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? 'border-b-2 border-blue-500 text-blue-600'
-                : 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+    <div className="sticky top-16 z-30 -mx-4 border-b border-[#E2E8F0]/80 bg-[#EFFAF6]/95 px-4 backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:top-[4.5rem] lg:px-8">
+      <nav
+        className="flex gap-1 overflow-x-auto pb-px [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        aria-label="Provider profile sections"
+      >
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onTabChange(tab.id)}
+              className={`relative shrink-0 rounded-t-xl px-4 py-3 text-sm font-semibold transition-colors sm:px-5 sm:text-base ${
+                isActive ? 'text-[#059669]' : 'text-[#64748B] hover:text-[#0F172A]'
+              }`}
+            >
+              {tab.label}
+              {isActive && (
+                <motion.span
+                  layoutId={reduceMotion ? undefined : 'provider-tab-indicator'}
+                  className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-gradient-to-r from-[#10B981] to-[#059669]"
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                />
+              )}
+            </button>
+          );
+        })}
       </nav>
     </div>
   );

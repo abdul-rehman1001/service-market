@@ -7,7 +7,7 @@ interface Props {
 
 export default function ProvidersGrid({ providers }: Props) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+    <div className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
       {providers.map((provider) => (
         <ProviderCard key={provider.id} provider={provider} />
       ))}

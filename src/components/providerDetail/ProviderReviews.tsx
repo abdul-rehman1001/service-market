@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import ReviewCard from './ReviewCard';
 import { ReviewType } from '@/types/provider';
 import { Star, MessageSquare, Loader } from 'lucide-react';
@@ -28,12 +29,44 @@ interface ReviewResponse {
   };
 }
 
-export default function ProviderReviews({ 
+function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  action,
+}: {
+  icon: typeof MessageSquare;
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}) {
+  const reduceMotion = useReducedMotion();
+
+  return (
+    <motion.div
+      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-3xl border border-[#E2E8F0]/80 bg-white/95 px-6 py-12 text-center shadow-[0_4px_24px_rgba(15,23,42,0.04)] sm:py-16"
+    >
+      <div className="mx-auto max-w-md">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 ring-2 ring-[#10B981]/10">
+          <Icon className="h-8 w-8 text-[#10B981]" />
+        </div>
+        <h3 className="text-lg font-bold text-[#0F172A] sm:text-xl">{title}</h3>
+        <p className="mt-2 text-sm text-[#64748B]">{description}</p>
+        {action}
+      </div>
+    </motion.div>
+  );
+}
+
+export default function ProviderReviews({
   providerId,
   initialReviews = [],
   initialTotalReviews = 0,
-  initialAverageRating = 0
+  initialAverageRating = 0,
 }: Props) {
+  const reduceMotion = useReducedMotion();
   const [reviews, setReviews] = useState<ReviewType[]>(initialReviews);
   const [totalReviews, setTotalReviews] = useState(initialTotalReviews);
   const [averageRating, setAverageRating] = useState(initialAverageRating);
@@ -50,8 +83,10 @@ export default function ProviderReviews({
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await fetch(`/api/providers/${providerId}/reviews?page=${pageNum}&limit=10`);
+
+      const response = await fetch(
+        `/api/providers/${providerId}/reviews?page=${pageNum}&limit=10`
+      );
       const data: ReviewResponse = await response.json();
 
       if (!response.ok) {
@@ -83,95 +118,98 @@ export default function ProviderReviews({
 
   if (error && reviews.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-12 text-center">
-        <div className="max-w-md mx-auto">
-          <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <MessageSquare className="w-8 h-8 text-rose-400" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">Failed to Load Reviews</h3>
-          <p className="text-gray-500 text-sm">{error}</p>
+      <EmptyState
+        icon={MessageSquare}
+        title="Failed to Load Reviews"
+        description={error}
+        action={
           <button
+            type="button"
             onClick={() => fetchReviews(1)}
-            className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm"
+            className="mt-5 rounded-2xl bg-gradient-to-r from-[#10B981] to-[#059669] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:shadow-[0_0_20px_rgba(16,185,129,0.35)]"
           >
             Try Again
           </button>
-        </div>
-      </div>
+        }
+      />
     );
   }
 
   if (totalReviews === 0 && !loading) {
     return (
-      <div className="bg-white rounded-lg shadow p-12 text-center">
-        <div className="max-w-md mx-auto">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <MessageSquare className="w-8 h-8 text-gray-400" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">No Reviews Yet</h3>
-          <p className="text-gray-500 text-sm">This provider hasn't received any reviews yet.</p>
-        </div>
-      </div>
+      <EmptyState
+        icon={MessageSquare}
+        title="No Reviews Yet"
+        description="This provider hasn't received any reviews yet."
+      />
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Summary */}
-      <div className="bg-gradient-to-br from-emerald-50 to-blue-50 p-6 rounded-lg shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-5">
+      <motion.div
+        initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-3xl border border-[#E2E8F0]/80 bg-white/95 p-5 shadow-[0_4px_24px_rgba(15,23,42,0.04)] sm:p-6"
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">Customer Reviews</h3>
-            <p className="text-sm text-gray-600">Based on {totalReviews} {totalReviews === 1 ? 'review' : 'reviews'}</p>
+            <h3 className="text-lg font-bold tracking-tight text-[#0F172A] sm:text-xl">
+              Customer Reviews
+            </h3>
+            <p className="mt-1 text-sm text-[#64748B]">
+              Based on {totalReviews} {totalReviews === 1 ? 'review' : 'reviews'}
+            </p>
           </div>
-          <div className="flex flex-col items-center gap-2 mt-4 sm:mt-0">
+          <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-4xl font-bold text-gray-900">{averageRating.toFixed(1)}</span>
-              <Star className="w-8 h-8 fill-yellow-400 text-yellow-400" />
+              <span className="text-3xl font-extrabold text-[#0F172A] sm:text-4xl">
+                {averageRating.toFixed(1)}
+              </span>
+              <Star className="h-8 w-8 fill-amber-400 text-amber-400" />
             </div>
-            <div className="flex">
+            <div className="flex gap-0.5">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
                   key={i}
-                  className={`w-5 h-5 ${
-                    i < Math.floor(averageRating) 
-                      ? 'fill-yellow-400 text-yellow-400' 
-                      : 'text-gray-300'
+                  className={`h-4 w-4 sm:h-5 sm:w-5 ${
+                    i < Math.floor(averageRating)
+                      ? 'fill-amber-400 text-amber-400'
+                      : 'text-[#E2E8F0]'
                   }`}
                 />
               ))}
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Individual Reviews */}
       {loading && reviews.length === 0 ? (
         <div className="flex justify-center py-12">
           <div className="flex flex-col items-center gap-3">
-            <Loader className="w-8 h-8 text-emerald-600 animate-spin" />
-            <p className="text-slate-500 text-sm">Loading reviews...</p>
+            <Loader className="h-8 w-8 animate-spin text-[#10B981]" />
+            <p className="text-sm text-[#64748B]">Loading reviews...</p>
           </div>
         </div>
       ) : (
         <>
-          <div className="space-y-3">
-            {reviews.map((review) => (
-              <ReviewCard key={review.id} review={review} />
+          <div className="space-y-4">
+            {reviews.map((review, index) => (
+              <ReviewCard key={review.id} review={review} index={index} />
             ))}
           </div>
 
-          {/* Load More Button */}
           {hasMore && (
-            <div className="flex justify-center pt-4">
+            <div className="flex justify-center pt-2">
               <button
+                type="button"
                 onClick={loadMore}
                 disabled={loading}
-                className="px-6 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#10B981] to-[#059669] px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:shadow-[0_0_20px_rgba(16,185,129,0.35)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? (
                   <>
-                    <Loader className="w-4 h-4 animate-spin" />
+                    <Loader className="h-4 w-4 animate-spin" />
                     Loading...
                   </>
                 ) : (
@@ -182,7 +220,7 @@ export default function ProviderReviews({
           )}
 
           {reviews.length === 0 && totalReviews > 0 && !loading && (
-            <p className="text-center text-gray-500 text-sm py-4">
+            <p className="py-4 text-center text-sm text-[#64748B]">
               No detailed reviews available to display.
             </p>
           )}

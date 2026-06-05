@@ -93,7 +93,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen">
       <SearchSection onClearSearch={() => {
         setAiFilter({ active: false, category: null, categoryId: null, categoryName: null });
         window.dispatchEvent(
@@ -109,23 +109,25 @@ export default function HomePage() {
         );
       }} />
 
-      {(status === "denied" || status === "error" || status === "unsupported") && (
-        <div className="mx-auto mt-3 max-w-7xl px-4 sm:mt-4 sm:px-6 lg:px-8">
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-900 sm:px-4 sm:py-3 sm:text-sm">
-            {error || "Location is unavailable. Nearby ranking may be less accurate."}
+      <div className="bg-slate-50">
+        {(status === "denied" || status === "error" || status === "unsupported") && (
+          <div className="mx-auto mt-3 max-w-7xl px-4 sm:mt-4 sm:px-6 lg:px-8">
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-900 sm:px-4 sm:py-3 sm:text-sm">
+              {error || "Location is unavailable. Nearby ranking may be less accurate."}
+            </div>
           </div>
+        )}
+
+        {/* Hide Categories when AI search is driving the filter */}
+        {!aiFilter.active && <Categories />}
+
+        <div id="providers-section">
+          <FeaturedProviders userLocation={location ? { lat: location.lat, lng: location.lng } : null} />
         </div>
-      )}
 
-      {/* Hide Categories when AI search is driving the filter */}
-      {!aiFilter.active && <Categories />}
-
-      <div id="providers-section">
-        <FeaturedProviders userLocation={location ? { lat: location.lat, lng: location.lng } : null} />
-      </div>
-      
-      <div className="mt-8 sm:mt-12">
-        <Footer />
+        <div className="mt-8 sm:mt-12">
+          <Footer />
+        </div>
       </div>
     </div>
   );

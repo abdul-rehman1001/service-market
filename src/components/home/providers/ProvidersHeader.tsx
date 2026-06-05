@@ -1,4 +1,4 @@
-import { Filter } from "lucide-react";
+import { Filter, X } from "lucide-react";
 
 interface Props {
   category: string | null;
@@ -19,17 +19,17 @@ export default function ProvidersHeader({
   const heading = categoryName || "Featured Providers";
 
   return (
-    <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-start sm:justify-between">
+    <div className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600">
+        <p className="text-xs font-semibold uppercase tracking-wider text-[#10B981]">
           Providers
         </p>
-        <h2 className="text-xl font-bold text-slate-900 sm:text-2xl lg:text-3xl">
+        <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0F172A] sm:text-3xl lg:text-4xl">
           {heading}
         </h2>
 
         {category && !categoryName && (
-          <p className="mt-1 text-xs text-slate-600 sm:text-sm">
+          <p className="mt-2 text-sm text-[#64748B]">
             Showing results for {format(category)}
             {subcategory && ` → ${format(subcategory)}`}
           </p>
@@ -40,9 +40,9 @@ export default function ProvidersHeader({
         <button
           type="button"
           onClick={onClear}
-          className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 sm:w-auto"
+          className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl border border-[#E2E8F0] bg-white px-4 py-2.5 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:border-[#10B981]/40 hover:bg-emerald-50/50 hover:text-[#059669] sm:w-auto"
         >
-          <Filter className="h-4 w-4" />
+          <X className="h-4 w-4" />
           Clear filter
         </button>
       )}

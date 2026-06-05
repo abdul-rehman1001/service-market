@@ -202,8 +202,18 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
   };
 
   return (
-    <section className="bg-slate-50 py-8 sm:py-10 lg:py-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="relative overflow-hidden bg-[#EFFAF6] py-10 sm:py-12 lg:py-14">
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, rgba(16,185,129,0.07) 1px, transparent 1px)",
+          backgroundSize: "22px 22px",
+        }}
+      />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[#10B981]/10" />
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <ProvidersHeader
           category={active.category}
           categoryName={active.categoryName}
@@ -232,29 +242,29 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
         )}
 
         {loading ? (
-          <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+          <div className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="animate-pulse rounded-2xl border border-slate-100 bg-white p-4 sm:p-5"
+                className="animate-pulse rounded-3xl border border-[#E2E8F0]/80 bg-white/95 p-5 shadow-[0_4px_24px_rgba(15,23,42,0.04)] sm:p-6"
               >
-                <div className="flex gap-3">
-                  <div className="h-14 w-14 shrink-0 rounded-full bg-slate-200 sm:h-16 sm:w-16" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 w-3/4 rounded bg-slate-200" />
-                    <div className="h-3 w-1/2 rounded bg-slate-100" />
+                <div className="flex gap-4">
+                  <div className="h-14 w-14 shrink-0 rounded-2xl bg-[#E2E8F0]/60 sm:h-16 sm:w-16" />
+                  <div className="flex-1 space-y-2.5">
+                    <div className="h-4 w-3/4 rounded-lg bg-[#E2E8F0]/80" />
+                    <div className="h-3 w-1/2 rounded-lg bg-[#E2E8F0]/50" />
                   </div>
                 </div>
-                <div className="mt-4 space-y-2">
-                  <div className="h-3 w-full rounded bg-slate-100" />
-                  <div className="h-3 w-5/6 rounded bg-slate-100" />
+                <div className="mt-5 space-y-2">
+                  <div className="h-3 w-full rounded-lg bg-[#E2E8F0]/50" />
+                  <div className="h-3 w-5/6 rounded-lg bg-[#E2E8F0]/40" />
                 </div>
-                <div className="mt-4 h-10 rounded-xl bg-slate-200" />
+                <div className="mt-5 h-11 rounded-2xl bg-[#E2E8F0]/60" />
               </div>
             ))}
           </div>
         ) : error ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 sm:text-base">
+          <div className="rounded-2xl border border-red-200/80 bg-white/95 p-5 text-sm text-red-700 shadow-sm sm:text-base">
             {error}
           </div>
         ) : visibleProviders.length > 0 ? (
@@ -262,18 +272,18 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
             <ProvidersGrid providers={visibleProviders} />
 
             {active.categoryId && pagination.totalPages > 1 && (
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-1.5 sm:mt-10 sm:gap-2">
+              <div className="mt-10 flex flex-wrap items-center justify-center gap-2 sm:mt-12">
                 <button
                   type="button"
                   onClick={() => handlePageChange(pagination.page - 1)}
                   disabled={pagination.page === 1}
                   aria-label="Previous page"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white transition hover:border-emerald-400 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-10"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#E2E8F0] bg-white shadow-sm transition hover:border-[#10B981]/40 hover:bg-emerald-50/50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <ChevronLeft className="h-5 w-5 text-slate-700" />
+                  <ChevronLeft className="h-5 w-5 text-[#0F172A]" />
                 </button>
 
-                <div className="flex max-w-[min(100%,16rem)] items-center gap-1 overflow-x-auto sm:max-w-none sm:gap-2">
+                <div className="flex max-w-[min(100%,16rem)] items-center gap-1.5 overflow-x-auto sm:max-w-none sm:gap-2">
                   {[...Array(pagination.totalPages)].map((_, i) => {
                     const pageNum = i + 1;
                     const showPage =
@@ -284,7 +294,7 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
                     if (!showPage) {
                       if (pageNum === 2 || pageNum === pagination.totalPages - 1) {
                         return (
-                          <span key={i} className="px-1 text-slate-400 sm:px-2">
+                          <span key={i} className="px-1 text-[#64748B] sm:px-2">
                             …
                           </span>
                         );
@@ -297,10 +307,10 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
                         key={i}
                         type="button"
                         onClick={() => handlePageChange(pageNum)}
-                        className={`flex h-9 min-w-9 items-center justify-center rounded-lg text-sm font-semibold transition sm:h-10 sm:min-w-10 ${
+                        className={`flex h-10 min-w-10 items-center justify-center rounded-xl text-sm font-semibold transition ${
                           pagination.page === pageNum
-                            ? "bg-emerald-600 text-white shadow-md"
-                            : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-400 hover:bg-emerald-50"
+                            ? "bg-gradient-to-r from-[#10B981] to-[#059669] text-white shadow-lg shadow-emerald-500/25"
+                            : "border border-[#E2E8F0] bg-white text-[#0F172A] shadow-sm hover:border-[#10B981]/40 hover:bg-emerald-50/50"
                         }`}
                       >
                         {pageNum}
@@ -314,15 +324,15 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
                   onClick={() => handlePageChange(pagination.page + 1)}
                   disabled={!pagination.hasMore}
                   aria-label="Next page"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white transition hover:border-emerald-400 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-10"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#E2E8F0] bg-white shadow-sm transition hover:border-[#10B981]/40 hover:bg-emerald-50/50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <ChevronRight className="h-5 w-5 text-slate-700" />
+                  <ChevronRight className="h-5 w-5 text-[#0F172A]" />
                 </button>
               </div>
             )}
           </>
         ) : fetchedProviders.length > 0 && availability.isActive ? (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-8 text-center text-amber-900 sm:py-10">
+          <div className="rounded-3xl border border-amber-200/80 bg-white/95 px-4 py-8 text-center text-amber-900 shadow-sm sm:py-10">
             <p className="text-sm font-semibold sm:text-base">No providers available at that time</p>
             <p className="mt-2 text-xs text-amber-800 sm:text-sm">
               Try a different date or time, or clear the availability filter.

@@ -191,32 +191,45 @@ export default function BookingCard({ provider }: Props) {
     : false;
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 space-y-5 sticky top-6 border border-slate-200">
-      <div className="flex items-start justify-between">
+    <div className="space-y-5 rounded-3xl border border-[#E2E8F0]/80 bg-white/95 p-5 shadow-[0_4px_24px_rgba(15,23,42,0.06)] backdrop-blur-sm sm:p-6 lg:sticky lg:top-24 lg:self-start">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold">Book This Service</h3>
-          <p className="text-xs text-slate-500">Select date, pick a slot, reserve, then confirm.</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#10B981]">
+            Booking
+          </p>
+          <h3 className="mt-1 text-lg font-bold tracking-tight text-[#0F172A] sm:text-xl">
+            Book This Service
+          </h3>
+          <p className="mt-1 text-xs text-[#64748B] sm:text-sm">
+            Select date, pick a slot, reserve, then confirm.
+          </p>
         </div>
-        <div className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+        <div className="shrink-0 rounded-full bg-[#F8FAFC] px-3 py-1 text-xs font-semibold text-[#0F172A] ring-1 ring-[#E2E8F0]">
           {statusLabel(booking?.status)}
         </div>
       </div>
 
       {minPrice > 0 && (
-        <div className="flex items-center gap-2 text-emerald-600">
-          <Tag className="w-5 h-5" />
+        <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100">
+            <Tag className="h-5 w-5 text-[#10B981]" />
+          </div>
           <div>
-            <p className="text-2xl font-bold">{formatPKR(minPrice)}</p>
-            <p className="text-xs text-gray-500">Starting from</p>
+            <p className="text-xl font-extrabold text-[#059669] sm:text-2xl">
+              {formatPKR(minPrice)}
+            </p>
+            <p className="text-xs font-medium text-[#64748B]">Starting from</p>
           </div>
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Select Service *</label>
+          <label className="mb-1.5 block text-sm font-semibold text-[#0F172A]">
+            Select Service *
+          </label>
           <select
-            className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            className="w-full rounded-2xl border border-[#E2E8F0] bg-white p-3 text-sm text-[#0F172A] transition focus:border-[#10B981]/50 focus:outline-none focus:ring-4 focus:ring-[#10B981]/10"
             value={selectedServiceId}
             onChange={(e) => setSelectedServiceId(e.target.value)}
           >
@@ -230,26 +243,30 @@ export default function BookingCard({ provider }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Select Date *</label>
+          <label className="mb-1.5 block text-sm font-semibold text-[#0F172A]">
+            Select Date *
+          </label>
           <input
             type="date"
             min={minDate}
-            className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            className="w-full rounded-2xl border border-[#E2E8F0] bg-white p-3 text-sm text-[#0F172A] transition focus:border-[#10B981]/50 focus:outline-none focus:ring-4 focus:ring-[#10B981]/10"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Available Slots *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#0F172A]">
+            Available Slots *
+          </label>
           {slotsLoading ? (
-            <p className="text-sm text-slate-500">Loading slots...</p>
+            <p className="text-sm text-[#64748B]">Loading slots...</p>
           ) : slotsError ? (
             <p className="text-sm text-rose-600">{slotsError}</p>
           ) : slots.length === 0 ? (
-            <p className="text-sm text-slate-500">No slots available for the selected date.</p>
+            <p className="text-sm text-[#64748B]">No slots available for the selected date.</p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {slots.map((slot) => {
                 const isSelected = selectedSlot?.start === slot.start;
                 return (
@@ -257,10 +274,10 @@ export default function BookingCard({ provider }: Props) {
                     key={slot.start}
                     type="button"
                     onClick={() => setSelectedSlot(slot)}
-                    className={`px-3 py-2 rounded-lg text-xs font-semibold border transition ${
+                    className={`rounded-xl px-3 py-2.5 text-xs font-semibold transition sm:text-sm ${
                       isSelected
-                        ? 'bg-emerald-600 text-white border-emerald-600'
-                        : 'border-slate-200 text-slate-700 hover:border-emerald-400 hover:text-emerald-700'
+                        ? 'bg-gradient-to-r from-[#10B981] to-[#059669] text-white shadow-md shadow-emerald-500/25'
+                        : 'border border-[#E2E8F0] bg-white text-[#0F172A] hover:border-[#10B981]/40 hover:bg-emerald-50/50'
                     }`}
                   >
                     {slot.startTime} - {slot.endTime}
@@ -272,9 +289,11 @@ export default function BookingCard({ provider }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Location *</label>
+          <label className="mb-1.5 block text-sm font-semibold text-[#0F172A]">
+            Location *
+          </label>
           <input
-            className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            className="w-full rounded-2xl border border-[#E2E8F0] bg-white p-3 text-sm text-[#0F172A] transition focus:border-[#10B981]/50 focus:outline-none focus:ring-4 focus:ring-[#10B981]/10"
             placeholder="Street address or area"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
@@ -282,9 +301,11 @@ export default function BookingCard({ provider }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Problem Description *</label>
+          <label className="mb-1.5 block text-sm font-semibold text-[#0F172A]">
+            Problem Description *
+          </label>
           <textarea
-            className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            className="w-full rounded-2xl border border-[#E2E8F0] bg-white p-3 text-sm text-[#0F172A] transition focus:border-[#10B981]/50 focus:outline-none focus:ring-4 focus:ring-[#10B981]/10"
             placeholder="Describe your issue"
             rows={3}
             value={problemDescription}
@@ -294,14 +315,15 @@ export default function BookingCard({ provider }: Props) {
       </div>
 
       {statusMessage && (
-        <div className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+        <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#64748B]">
           {statusMessage}
         </div>
       )}
 
       <div className="space-y-3">
         <button
-          className="w-full bg-emerald-600 text-white py-2.5 rounded-lg hover:bg-emerald-700 transition-colors font-medium disabled:bg-slate-400"
+          type="button"
+          className="w-full rounded-2xl bg-gradient-to-r from-[#10B981] to-[#059669] py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:shadow-[0_0_20px_rgba(16,185,129,0.35)] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
           onClick={handleReserve}
           disabled={reserveLoading || !provider.isAvailable}
         >
@@ -310,7 +332,8 @@ export default function BookingCard({ provider }: Props) {
 
         {booking?.status === 'HOLD' && !holdExpired && (
           <button
-            className="w-full border-2 border-emerald-600 text-emerald-700 py-2.5 rounded-lg hover:bg-emerald-50 transition-colors font-medium disabled:opacity-60"
+            type="button"
+            className="w-full rounded-2xl border-2 border-[#10B981] py-3 text-sm font-semibold text-[#059669] transition hover:bg-emerald-50/50 disabled:opacity-60"
             onClick={handleConfirm}
             disabled={confirmLoading}
           >
@@ -320,20 +343,22 @@ export default function BookingCard({ provider }: Props) {
       </div>
 
       {booking?.status && (
-        <div className="space-y-3 pt-2 border-t border-slate-200">
-          <div className="flex items-center justify-between text-sm text-slate-600">
+        <div className="space-y-3 border-t border-[#E2E8F0]/80 pt-4">
+          <div className="flex items-center justify-between text-sm text-[#64748B]">
             <span>Reserved for</span>
-            <span className="font-medium text-slate-900">{toDateLabel(booking.scheduledStart)}</span>
+            <span className="font-semibold text-[#0F172A]">
+              {toDateLabel(booking.scheduledStart)}
+            </span>
           </div>
-          <div className="flex items-center justify-between text-sm text-slate-600">
+          <div className="flex items-center justify-between text-sm text-[#64748B]">
             <span>Time</span>
-            <span className="font-medium text-slate-900">
+            <span className="font-semibold text-[#0F172A]">
               {toTimeLabel(booking.scheduledStart)} - {toTimeLabel(booking.scheduledEnd)}
             </span>
           </div>
 
           {booking.status === 'HOLD' && booking.holdExpiresAt && (
-            <div className="flex items-center justify-between text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            <div className="flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
                 <span>Hold expires in</span>
@@ -346,7 +371,7 @@ export default function BookingCard({ provider }: Props) {
           )}
 
           {booking.status === 'PENDING' && booking.providerResponseDeadline && (
-            <div className="flex items-center justify-between text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            <div className="flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
                 <span>Waiting for provider</span>
@@ -368,10 +393,10 @@ export default function BookingCard({ provider }: Props) {
               return (
                 <div
                   key={step}
-                  className={`rounded-lg px-2 py-1 text-center border ${
+                  className={`rounded-xl px-2 py-2 text-center font-semibold ${
                     stepActive
-                      ? 'border-emerald-600 text-emerald-700 bg-emerald-50'
-                      : 'border-slate-200 text-slate-500'
+                      ? 'bg-emerald-50 text-[#059669] ring-1 ring-[#10B981]/30'
+                      : 'bg-[#F8FAFC] text-[#94A3B8] ring-1 ring-[#E2E8F0]'
                   }`}
                 >
                   {step}
@@ -382,18 +407,22 @@ export default function BookingCard({ provider }: Props) {
         </div>
       )}
 
-      <div className="pt-3 border-t space-y-2 text-sm text-slate-600">
+      <div className="space-y-2.5 border-t border-[#E2E8F0]/80 pt-4 text-sm text-[#64748B]">
         <div className="flex items-center justify-between">
           <span>Response window</span>
-          <span className="font-medium text-slate-900">30 minutes</span>
+          <span className="font-semibold text-[#0F172A]">30 minutes</span>
         </div>
         <div className="flex items-center justify-between">
-          <span>Jobs Completed</span>
-          <span className="font-medium text-slate-900">{provider.completedBookingsCount}</span>
+          <span>Jobs completed</span>
+          <span className="font-semibold text-[#0F172A]">
+            {provider.completedBookingsCount}
+          </span>
         </div>
         <div className="flex items-center justify-between">
           <span>Experience</span>
-          <span className="font-medium text-slate-900">{provider.yearsOfExperience} years</span>
+          <span className="font-semibold text-[#0F172A]">
+            {provider.yearsOfExperience} years
+          </span>
         </div>
       </div>
     </div>

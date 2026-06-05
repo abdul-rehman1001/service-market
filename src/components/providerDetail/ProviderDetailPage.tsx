@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ProviderHeader from './ProviderHeader';
@@ -18,13 +19,21 @@ interface Props {
   provider: ProviderProfileType;
 }
 
+const tabContentVariants = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 },
+};
+
 export default function ProviderDetailPage({ provider }: Props) {
   const router = useRouter();
+  const reduceMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Show all approved supporting documents in the certificates tab.
   const supportingDocuments = provider.documents.filter(
-    doc => doc.status === 'APPROVED' && (doc.documentType === 'CERTIFICATE' || doc.documentType === 'OTHER')
+    (doc) =>
+      doc.status === 'APPROVED' &&
+      (doc.documentType === 'CERTIFICATE' || doc.documentType === 'OTHER')
   );
 
   const handleBack = () => {
@@ -32,54 +41,93 @@ export default function ProviderDetailPage({ provider }: Props) {
       router.back();
       return;
     }
-
     router.push('/home');
   };
 
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return <ProviderOverview provider={provider} />;
+      case 'services':
+        return <ProviderServices provider={provider} />;
+      case 'certificates':
+        return (
+          <ProviderCertificates
+            certificates={supportingDocuments}
+            providerName={`${provider.user.firstName} ${provider.user.lastName}`}
+          />
+        );
+      case 'reviews':
+        return (
+          <ProviderReviews
+            providerId={provider.id}
+            initialReviews={provider.reviews}
+            initialTotalReviews={provider.totalReviews}
+            initialAverageRating={Number(provider.averageRating)}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="relative min-h-screen bg-[#EFFAF6]">
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle, rgba(16,185,129,0.07) 1px, transparent 1px)',
+          backgroundSize: '22px 22px',
+        }}
+      />
+
       <Header />
 
-      <div className="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8 py-8">
-        <div className="mb-4">
+      <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+        <motion.div
+          initial={reduceMotion ? false : { opacity: 0, x: -8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4 }}
+        >
           <button
+            type="button"
             onClick={handleBack}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700"
+            className="mb-5 inline-flex items-center gap-2 rounded-2xl border border-[#E2E8F0] bg-white/95 px-4 py-2.5 text-sm font-semibold text-[#0F172A] shadow-sm transition hover:border-[#10B981]/40 hover:bg-emerald-50/50 sm:mb-6"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4" />
             Back
           </button>
-        </div>
+        </motion.div>
 
-        {/* Provider Header */}
         <ProviderHeader provider={provider} />
 
-        {/* Tabs */}
-        <ProviderTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        {/* Mobile booking — shown above tabs for quicker access */}
+        <div className="mt-6 lg:hidden">
+          <BookingCard provider={provider} />
+        </div>
 
-        {/* Main Content */}
-        <div className="flex flex-col lg:flex-row gap-8 mt-6">
-          <main className="flex-1 space-y-8">
-            {activeTab === 'overview' && <ProviderOverview provider={provider} />}
-            {activeTab === 'services' && <ProviderServices provider={provider} />}
-            {activeTab === 'certificates' && (
-              <ProviderCertificates 
-                certificates={supportingDocuments}
-                providerName={`${provider.user.firstName} ${provider.user.lastName}`}
-              />
-            )}
-            {activeTab === 'reviews' && (
-              <ProviderReviews
-                providerId={provider.id}
-                initialReviews={provider.reviews}
-                initialTotalReviews={provider.totalReviews}
-                initialAverageRating={Number(provider.averageRating)}
-              />
-            )}
+        <div className="mt-6 sm:mt-8">
+          <ProviderTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        </div>
+
+        <div className="mt-6 flex flex-col gap-6 lg:mt-8 lg:flex-row lg:gap-8">
+          <main className="min-w-0 flex-1">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                variants={reduceMotion ? undefined : tabContentVariants}
+                initial={reduceMotion ? false : 'initial'}
+                animate={reduceMotion ? undefined : 'animate'}
+                exit={reduceMotion ? undefined : 'exit'}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              >
+                {renderTabContent()}
+              </motion.div>
+            </AnimatePresence>
           </main>
 
-          {/* Right Sidebar */}
-          <aside className="w-full lg:w-2/5">
+          <aside className="hidden w-full shrink-0 lg:block lg:w-[380px] xl:w-[400px]">
             <BookingCard provider={provider} />
           </aside>
         </div>
