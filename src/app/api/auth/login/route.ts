@@ -1,23 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import  prisma  from '@/lib/prisma';
 import bcrypt from 'bcrypt';
-import { signToken } from '@/lib/jwt';
-import { setTokenCookie } from '@/lib/cookies';
+import { setPreferredModeCookie } from '@/lib/cookies';
+import { resolveInitialActiveMode } from '@/lib/auth';
+import { establishAuthSession } from '@/lib/session';
 
 export async function POST(req: NextRequest) {
-  const { email, password } = await req.json();
+  const { email, password, rememberMe } = await req.json();
 
   if (!email || !password) {
     return NextResponse.json({ error: 'Missing email or password' }, { status: 400 });
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: {
+      providerProfile: {
+        select: { id: true },
+      },
+    },
+  });
   if (!user) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
 
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
 
-  // Block suspended accounts before issuing tokens
   if (user.status === 'SUSPENDED') {
     return NextResponse.json(
       { error: 'Your account is suspended. Please contact the Servizo team for further details.' },
@@ -25,7 +32,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const token = signToken({ userId: user.id, role: user.role });
+  const hasProviderProfile = Boolean(user.providerProfile);
+  const preferredMode = req.cookies.get('preferredMode')?.value ?? null;
+  const activeMode = resolveInitialActiveMode({
+    accountRole: user.role,
+    hasProviderProfile,
+    preferredMode,
+  });
 
   const fullName = `${user.firstName} ${user.lastName}`.trim();
 
@@ -36,10 +49,20 @@ export async function POST(req: NextRequest) {
       fullName,
       firstName: user.firstName,
       lastName: user.lastName,
-      role: user.role,
+      role: activeMode,
+      accountRole: user.role,
+      hasProviderProfile,
+      canSwitchMode: user.role !== 'ADMIN' && hasProviderProfile,
     },
+    rememberMe: Boolean(rememberMe),
   });
 
-  setTokenCookie(res, token);
+  await establishAuthSession(res, {
+    userId: user.id,
+    activeMode,
+    rememberMe: Boolean(rememberMe),
+  });
+
+  setPreferredModeCookie(res, activeMode);
   return res;
 }

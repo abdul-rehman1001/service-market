@@ -1,11 +1,27 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import {
-  DashboardSidebar,
   getProviderTabLabel,
   type ProviderDashboardTab,
 } from '@/components/provider/DashboardSidebar';
+
+const DashboardSidebar = dynamic(
+  () =>
+    import('@/components/provider/DashboardSidebar').then((mod) => ({
+      default: mod.DashboardSidebar,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <aside
+        className="provider-sidebar fixed inset-y-0 left-0 z-50 hidden w-[min(100%,17.5rem)] shrink-0 -translate-x-full flex-col border-r border-[#6FCF97]/40 bg-gradient-to-b from-[#1F6F5F] via-[#1a5c52] to-[#1F6F5F] text-white shadow-2xl lg:static lg:z-auto lg:flex lg:w-[17.5rem] lg:translate-x-0"
+        aria-hidden
+      />
+    ),
+  }
+);
 import { ProviderDashboardHeader } from '@/components/provider/ProviderDashboardHeader';
 import { ServicesPanel } from '@/components/provider/ServicesPanel';
 import { AnalyticsPanel } from '@/components/provider/AnalyticsPanel';

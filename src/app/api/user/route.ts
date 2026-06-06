@@ -2,23 +2,18 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyToken } from '@/lib/jwt';
+import { getAuthFromRequest } from '@/lib/auth';
 
 // GET /api/user — get the current logged-in user's basic info
 export async function GET(req: NextRequest) {
   try {
-    const token = req.cookies.get('token')?.value;
-    if (!token) {
+    const auth = getAuthFromRequest(req);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token) as { userId: string; role: string } | null;
-    if (!decoded?.userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: auth.userId },
       select: {
         id: true,
         firstName: true,
@@ -26,6 +21,12 @@ export async function GET(req: NextRequest) {
         email: true,
         role: true,
         profileImage: true,
+        providerProfile: {
+          select: {
+            id: true,
+            verificationStatus: true,
+          },
+        },
       },
     });
 
@@ -33,13 +34,19 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    const hasProviderProfile = Boolean(user.providerProfile);
+
     return NextResponse.json({
       user: {
         id: user.id,
         name: [user.firstName, user.lastName].filter(Boolean).join(" "),
         email: user.email,
-        role: user.role,
+        role: auth.role,
+        accountRole: user.role,
         profileImage: user.profileImage,
+        hasProviderProfile,
+        canSwitchMode: user.role !== 'ADMIN' && hasProviderProfile,
+        providerVerificationStatus: user.providerProfile?.verificationStatus ?? null,
       },
     });
   } catch (error) {

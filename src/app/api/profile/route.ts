@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
-import { verifyToken } from '@/lib/jwt';
+import { getAuthFromRequest } from '@/lib/auth';
 import { geocodeAddress } from '@/lib/geocoding';
 
 // GET - Fetch current user profile
@@ -13,14 +13,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token) as { userId: string; role: string } | null;
+    const auth = getAuthFromRequest(req);
 
-    if (!decoded || !decoded.userId) {
+    if (!auth) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: auth.userId },
       select: {
         id: true,
         firstName: true,
@@ -39,6 +39,12 @@ export async function GET(req: NextRequest) {
         phoneVerifiedAt: true,
         createdAt: true,
         updatedAt: true,
+        providerProfile: {
+          select: {
+            id: true,
+            verificationStatus: true,
+          },
+        },
       },
     });
 
@@ -46,7 +52,18 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ user }, { status: 200 });
+    const { providerProfile, ...userFields } = user;
+    const hasProviderProfile = Boolean(providerProfile);
+
+    return NextResponse.json({
+      user: {
+        ...userFields,
+        activeMode: auth.role,
+        hasProviderProfile,
+        canSwitchMode: user.role !== 'ADMIN' && hasProviderProfile,
+        providerVerificationStatus: providerProfile?.verificationStatus ?? null,
+      },
+    }, { status: 200 });
   } catch (error) {
     console.error('Get profile error:', error);
     return NextResponse.json(
@@ -65,11 +82,20 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token) as { userId: string; role: string } | null;
+    const auth = getAuthFromRequest(req);
 
-    if (!decoded || !decoded.userId) {
+    if (!auth) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { id: auth.userId },
+      select: {
+        providerProfile: { select: { id: true } },
+      },
+    });
+
+    const hasProviderProfile = Boolean(existingUser?.providerProfile);
 
     const { firstName, lastName, city, address, bio, profileImage } = await req.json();
 
@@ -86,14 +112,10 @@ export async function PUT(req: NextRequest) {
     let resolvedLongitude: number | null = null;
     let resolvedLatitude: number | null = null;
 
-    if (decoded.role === 'PROVIDER') {
-      if (!normalizedAddress) {
-        return NextResponse.json(
-          { error: 'Address is required for providers' },
-          { status: 400 }
-        );
-      }
+    const shouldGeocodeProvider =
+      hasProviderProfile && (auth.role === 'PROVIDER' || normalizedAddress);
 
+    if (shouldGeocodeProvider && normalizedAddress) {
       try {
         const geocodeData = await geocodeAddress(normalizedAddress);
         resolvedAddress = geocodeData.formatted_address;
@@ -105,6 +127,11 @@ export async function PUT(req: NextRequest) {
           { status: 400 }
         );
       }
+    } else if (auth.role === 'PROVIDER' && hasProviderProfile && !normalizedAddress) {
+      return NextResponse.json(
+        { error: 'Address is required for providers' },
+        { status: 400 }
+      );
     }
 
     const updatedUser = await prisma.$transaction(async (tx) => {
@@ -117,13 +144,13 @@ export async function PUT(req: NextRequest) {
         profileImage: profileImage || null,
       };
 
-      if (decoded.role === 'PROVIDER' && resolvedLongitude !== null && resolvedLatitude !== null) {
+      if (hasProviderProfile && resolvedLongitude !== null && resolvedLatitude !== null) {
         userData.longitude = new Prisma.Decimal(resolvedLongitude);
         userData.latitude = new Prisma.Decimal(resolvedLatitude);
       }
 
       const user = await tx.user.update({
-        where: { id: decoded.userId },
+        where: { id: auth.userId },
         data: userData,
         select: {
           id: true,
@@ -146,9 +173,9 @@ export async function PUT(req: NextRequest) {
         },
       });
 
-      if (decoded.role === 'PROVIDER' && resolvedLongitude !== null && resolvedLatitude !== null) {
+      if (hasProviderProfile && resolvedLongitude !== null && resolvedLatitude !== null) {
         await tx.serviceProvider.updateMany({
-          where: { userId: decoded.userId },
+          where: { userId: auth.userId },
           data: {
             baseAddress: resolvedAddress,
             longitude: new Prisma.Decimal(resolvedLongitude),
@@ -161,7 +188,15 @@ export async function PUT(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { message: 'Profile updated successfully', user: updatedUser },
+      {
+        message: 'Profile updated successfully',
+        user: {
+          ...updatedUser,
+          activeMode: auth.role,
+          hasProviderProfile,
+          canSwitchMode: updatedUser.role !== 'ADMIN' && hasProviderProfile,
+        },
+      },
       { status: 200 }
     );
   } catch (error) {

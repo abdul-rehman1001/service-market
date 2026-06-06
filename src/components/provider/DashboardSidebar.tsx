@@ -131,7 +131,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         })}
       </nav>
 
-      <div className="border-t border-white/10 px-4 py-4 text-[11px] text-white/50">
+      <div className="border-t border-white/10 px-4 py-4 text-center text-[11px] text-white/50">
         Manage services, bookings &amp; availability
       </div>
     </aside>

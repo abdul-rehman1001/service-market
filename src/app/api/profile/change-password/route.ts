@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
 import bcrypt from 'bcrypt';
+import { revokeAllUserRefreshTokens } from '@/lib/session';
 
 export async function POST(req: NextRequest) {
   try {
@@ -70,11 +71,12 @@ export async function POST(req: NextRequest) {
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Update password
     await prisma.user.update({
       where: { id: decoded.userId },
       data: { password: hashedPassword },
     });
+
+    await revokeAllUserRefreshTokens(decoded.userId);
 
     return NextResponse.json(
       { message: 'Password changed successfully' },

@@ -10,6 +10,7 @@ import PasswordInput from '@/components/auth/PasswordInput';
 export default function LoginPage() {
   const router = useRouter();
   const [form, setForm] = useState({ email: '', password: '' });
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -32,7 +33,12 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        credentials: 'include',
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+          rememberMe,
+        }),
       });
 
       const data = await res.json();
@@ -43,15 +49,11 @@ export default function LoginPage() {
         return;
       }
 
-      // Store JWT token if provided
-      if (data.token) localStorage.setItem('token', data.token);
+      const activeMode = String(data?.user?.role || '').toUpperCase();
 
-      // Redirect based on role
-      const normalizedRole = String(data?.user?.role || data?.role || '').toUpperCase();
-
-      if (normalizedRole === 'PROVIDER') {
+      if (activeMode === 'PROVIDER') {
         router.push('/provider/dashboard');
-      } else if (normalizedRole === 'ADMIN') {
+      } else if (activeMode === 'ADMIN') {
         router.push('/admin');
       } else {
         router.push('/home');
@@ -108,6 +110,21 @@ export default function LoginPage() {
             onChange={handleChange}
             required
           />
+
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 transition hover:border-emerald-200 hover:bg-emerald-50">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
+            />
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-slate-800">Remember me</span>
+              <span className="mt-0.5 block text-xs leading-relaxed text-slate-600">
+                Stay signed in securely for up to 30 days on this device
+              </span>
+            </span>
+          </label>
 
           <button
             type="submit"

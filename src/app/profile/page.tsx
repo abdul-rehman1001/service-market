@@ -18,7 +18,11 @@ import {
   Loader2,
   Eye,
   EyeOff,
+  Briefcase,
 } from 'lucide-react';
+import Link from 'next/link';
+import { getModeDisplayLabel } from '@/lib/auth';
+import ProfileModeSwitcher from '@/components/profile/ProfileModeSwitcher';
 
 interface UserProfile {
   id: string;
@@ -27,6 +31,9 @@ interface UserProfile {
   email: string;
   phone: string;
   role: string;
+  activeMode?: string;
+  hasProviderProfile?: boolean;
+  canSwitchMode?: boolean;
   status: string;
   city?: string;
   address?: string;
@@ -226,7 +233,7 @@ export default function ProfilePage() {
                 <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start sm:gap-3">
                   <span className="inline-flex items-center gap-1 rounded-full border border-[#A7F3D0] bg-[#D1FAE5] px-3 py-1 text-xs font-semibold text-[#007A52] sm:text-sm">
                     <Shield className="h-4 w-4" />
-                    {user.role}
+                    {getModeDisplayLabel(user.activeMode || user.role)}
                   </span>
                   <span
                     className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold sm:text-sm ${
@@ -241,6 +248,35 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+
+          <div className="mb-6">
+            <ProfileModeSwitcher
+              activeMode={user.activeMode || user.role}
+              canSwitchMode={user.canSwitchMode}
+              onSwitched={fetchProfile}
+              theme="light"
+            />
+          </div>
+
+          {!user.hasProviderProfile && user.role !== 'ADMIN' && (
+            <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-emerald-800">Offer services on Servizo</p>
+                  <p className="mt-1 text-sm text-emerald-700">
+                    Use the same account to become a provider and switch between customer and provider mode anytime.
+                  </p>
+                </div>
+                <Link
+                  href="/become-provider"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                >
+                  <Briefcase className="h-4 w-4" />
+                  Become a provider
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* Tabs */}
           <div className="mb-6 rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] p-2 shadow-[0_10px_28px_-24px_rgba(31,41,55,0.45)]">

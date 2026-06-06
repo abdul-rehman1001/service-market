@@ -63,9 +63,12 @@ export default function Header() {
     }
   };
 
+  const activeMode = user?.role;
+  const isProviderMode = activeMode === "PROVIDER";
+
   const navItems = isGuest
     ? guestNavItems
-    : user?.role === "PROVIDER"
+    : isProviderMode
       ? providerNavItems
       : seekerNavItems;
 
@@ -175,7 +178,18 @@ export default function Header() {
               )}
             </button>
 
-            <Link href={isGuest ? "/home" : "/"} className="transition-all hover:opacity-80">
+            <Link
+              href={
+                isGuest
+                  ? "/home"
+                  : user?.role === "PROVIDER"
+                    ? "/provider/dashboard"
+                    : user?.role === "ADMIN"
+                      ? "/admin"
+                      : "/home"
+              }
+              className="transition-all hover:opacity-80"
+            >
               <Image
                 src="/images/Servizo.jpeg"
                 alt="Servizo Logo"

@@ -6,7 +6,9 @@ export default function RegisterChooseRole() {
     <div className="min-h-screen flex justify-center items-center bg-[#f5f7f8]">
       <AuthCard>
         <h2 className="text-3xl font-bold text-center">Create Your Account</h2>
-        <p className="text-center mt-1 text-gray-500">Choose your account type</p>
+        <p className="text-center mt-1 text-gray-500">
+          Start as a customer. You can add provider services later from the same account.
+        </p>
 
         <div className="flex gap-4 mt-6">
           <RoleCard

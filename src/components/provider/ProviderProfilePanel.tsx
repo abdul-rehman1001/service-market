@@ -16,6 +16,8 @@ import {
   EyeOff,
   XCircle,
 } from 'lucide-react';
+import { getModeDisplayLabel } from '@/lib/auth';
+import ProfileModeSwitcher from '@/components/profile/ProfileModeSwitcher';
 
 interface UserProfile {
   id: string;
@@ -24,6 +26,9 @@ interface UserProfile {
   email: string;
   phone: string;
   role: string;
+  activeMode?: string;
+  hasProviderProfile?: boolean;
+  canSwitchMode?: boolean;
   status: string;
   city?: string;
   address?: string;
@@ -204,7 +209,7 @@ export const ProviderProfilePanel: React.FC = () => {
               <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
                 <span className="inline-flex items-center gap-1 rounded-full border border-[#6FCF97]/40 bg-[#6FCF97]/20 px-3 py-1 text-xs font-semibold text-[#1F6F5F]">
                   <Shield className="h-3.5 w-3.5" />
-                  {user.role}
+                  {getModeDisplayLabel(user.activeMode || user.role)}
                 </span>
                 <span
                   className={`rounded-full border px-3 py-1 text-xs font-semibold ${
@@ -220,6 +225,13 @@ export const ProviderProfilePanel: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <ProfileModeSwitcher
+        activeMode={user.activeMode || user.role}
+        canSwitchMode={user.canSwitchMode}
+        onSwitched={fetchProfile}
+        theme="dashboard"
+      />
 
       <div className="rounded-2xl border border-[#6FCF97]/35 bg-white p-2 shadow-sm">
         <div className="flex flex-col gap-2 sm:flex-row">

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthCard from '@/components/auth/AuthCard';
 import Input from '@/components/auth/Input';
@@ -19,6 +19,7 @@ type TouchedFields = Record<AuthField, boolean>;
 
 export default function RegisterProvider() {
   const router = useRouter();
+  const [checkingSession, setCheckingSession] = useState(true);
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -34,6 +35,29 @@ export default function RegisterProvider() {
     email: false,
     password: false,
   });
+
+  useEffect(() => {
+    const redirectIfAuthenticated = async () => {
+      try {
+        const response = await fetch('/api/user', { cache: 'no-store' });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        if (data.user?.hasProviderProfile) {
+          router.replace('/provider/dashboard');
+          return;
+        }
+
+        router.replace('/become-provider');
+      } catch {
+        // Allow new registration flow
+      } finally {
+        setCheckingSession(false);
+      }
+    };
+
+    redirectIfAuthenticated();
+  }, [router]);
 
   const validateEmailField = (emailValue: string, showRequired: boolean): string => {
     const trimmedEmail = emailValue.trim();
@@ -149,11 +173,19 @@ export default function RegisterProvider() {
     }
   };
 
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen flex justify-center items-center bg-[#f5f7f8]">
+        <p className="text-sm text-gray-500">Checking your account...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex justify-center items-center bg-[#f5f7f8] px-4 py-10 md:py-16 lg:py-20">
       <AuthCard>
         <h2 className="text-3xl font-bold text-center">Service Provider</h2>
-        <p className="text-center mt-1 text-gray-500">Offer your services</p>
+        <p className="text-center mt-1 text-gray-500">Offer your services with a new account</p>
 
         {error && <p className="text-red-500 text-center mt-2">{error}</p>}
 

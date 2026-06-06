@@ -1,8 +1,15 @@
-import { NextResponse } from 'next/server';
-import { removeTokenCookie } from '@/lib/cookies';
+import { NextRequest, NextResponse } from 'next/server';
+import { REFRESH_TOKEN_COOKIE } from '@/lib/cookies';
+import { clearAuthSessionCookies, revokeRefreshToken } from '@/lib/session';
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const refreshToken = req.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
+
+  if (refreshToken) {
+    await revokeRefreshToken(refreshToken);
+  }
+
   const res = NextResponse.json({ message: 'Logged out' });
-  removeTokenCookie(res);
+  clearAuthSessionCookies(res);
   return res;
 }

@@ -57,6 +57,7 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
   const [lastKnownLocation, setLastKnownLocation] = useState<LocationState | null>(null);
   const [locationMessage, setLocationMessage] = useState('Location sync idle');
   const [locationSyncing, setLocationSyncing] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { notifications, markAsRead } = useNotifications();
   const notificationRef = useRef<HTMLDivElement>(null);
   const watchIdRef = useRef<number | null>(null);
@@ -65,18 +66,21 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   useEffect(() => {
+    setIsMounted(true);
     fetchProviderData();
     fetchLocationState();
+  }, []);
 
-    if (typeof window !== 'undefined') {
-      const savedMode = window.localStorage.getItem(LOCATION_MODE_STORAGE_KEY);
-      if (savedMode === 'current' || savedMode === 'default') {
-        setLocationMode(savedMode);
-      }
+  useEffect(() => {
+    if (!isMounted) return;
+
+    const savedMode = window.localStorage.getItem(LOCATION_MODE_STORAGE_KEY);
+    if (savedMode === 'current' || savedMode === 'default') {
+      setLocationMode(savedMode);
     }
 
     setLocationModeHydrated(true);
-  }, []);
+  }, [isMounted]);
 
   useEffect(() => {
     return () => {
@@ -352,10 +356,7 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
       const response = await fetch('/api/provider/dashboard');
       if (response.ok) {
         const data = await response.json();
-        console.log('Provider data fetched:', data);
         setProvider(data.provider);
-      } else {
-        console.error('Failed to fetch provider data:', response.status);
       }
     } catch (error) {
       console.error('Failed to fetch provider data:', error);
@@ -471,8 +472,11 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
           <p className="text-xs font-semibold leading-snug text-[#1F6F5F] sm:max-w-[280px] sm:truncate lg:max-w-[320px]">
             {locationSyncing ? 'Syncing location…' : locationMessage}
           </p>
-          <p className="mt-0.5 text-[11px] leading-snug text-[#1F6F5F]/65 sm:max-w-[280px] sm:truncate lg:max-w-[320px]">
-            {getLastKnownTimeLabel()}
+          <p
+            suppressHydrationWarning
+            className="mt-0.5 text-[11px] leading-snug text-[#1F6F5F]/65 sm:max-w-[280px] sm:truncate lg:max-w-[320px]"
+          >
+            {isMounted ? getLastKnownTimeLabel() : 'Last known location unavailable'}
           </p>
         </div>
       </div>

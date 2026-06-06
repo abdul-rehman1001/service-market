@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcrypt';
+import { revokeAllUserRefreshTokens } from '@/lib/session';
 
 export async function POST(req: NextRequest) {
   try {
@@ -62,10 +63,11 @@ export async function POST(req: NextRequest) {
       data: { password: hashedPassword },
     });
 
-    // Delete the used reset token
     await prisma.passwordResetToken.delete({
       where: { id: resetToken.id },
     });
+
+    await revokeAllUserRefreshTokens(resetToken.userId);
 
     return NextResponse.json(
       { message: 'Password has been reset successfully' },

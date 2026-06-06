@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import  prisma  from '@/lib/prisma';
 import bcrypt from 'bcrypt';
-import { signToken } from '@/lib/jwt';
-import { setTokenCookie } from '@/lib/cookies';
+import { setPreferredModeCookie } from '@/lib/cookies';
+import { resolveInitialActiveMode } from '@/lib/auth';
+import { establishAuthSession } from '@/lib/session';
+import { createServiceProviderProfile } from '@/lib/providerProfile';
 import { sendEmail } from '@/lib/email';
 import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
@@ -129,25 +131,17 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // If registering as PROVIDER, create ServiceProvider profile
   if (role === 'PROVIDER') {
     try {
-      const providerData: Prisma.ServiceProviderCreateInput = {
-        user: { connect: { id: user.id } },
-        yearsOfExperience: 0,
-        cnic: null,
-        verificationStatus: 'PENDING',
-        baseAddress: resolvedAddress,
-        longitude: new Prisma.Decimal(resolvedLongitude),
-        latitude: new Prisma.Decimal(resolvedLatitude),
-      };
-
-      await prisma.serviceProvider.create({
-        data: providerData,
+      await createServiceProviderProfile({
+        userId: user.id,
+        address: normalizedAddress,
+        formattedAddress: resolvedAddress,
+        longitude: resolvedLongitude,
+        latitude: resolvedLatitude,
       });
     } catch (providerError) {
       console.error('Error creating provider profile:', providerError);
-      // Continue anyway - provider profile can be updated later
     }
   }
 
@@ -192,22 +186,32 @@ export async function POST(req: NextRequest) {
     // Don't fail registration if email fails, user can resend
   }
 
-  // Create JWT token for session
-  const token = signToken({ userId: user.id, role: user.role });
-
+  const hasProviderProfile = role === 'PROVIDER';
+  const activeMode = resolveInitialActiveMode({
+    accountRole: user.role,
+    hasProviderProfile,
+  });
   const res = NextResponse.json({
     user: { 
       id: user.id, 
       email: user.email, 
       name: `${user.firstName} ${user.lastName}`, 
-      role: user.role,
+      role: activeMode,
+      accountRole: user.role,
+      hasProviderProfile,
+      canSwitchMode: hasProviderProfile,
       emailVerified: user.emailVerified,
       phoneVerified: user.phoneVerified,
     },
     message: 'Registration successful. Please verify your email.',
   });
 
-  setTokenCookie(res, token);
+  await establishAuthSession(res, {
+    userId: user.id,
+    activeMode,
+    rememberMe: false,
+  });
+  setPreferredModeCookie(res, activeMode);
   return res;
   } catch (error: unknown) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {

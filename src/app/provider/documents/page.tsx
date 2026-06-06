@@ -63,8 +63,14 @@ export default function DocumentsPage() {
       }
 
       const userData = await userRes.json();
+      const activeMode = userData.user.activeMode || userData.user.role;
 
-      if (userData.user.role !== 'PROVIDER') {
+      if (!userData.user.hasProviderProfile) {
+        router.push('/become-provider');
+        return;
+      }
+
+      if (activeMode !== 'PROVIDER') {
         router.push('/home');
         return;
       }
