@@ -118,6 +118,14 @@ export default function LoginPage() {
           </button>
         </form>
 
+        <button
+          type="button"
+          onClick={() => router.push('/home')}
+          className="mt-3 w-full rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+        >
+          Continue as guest
+        </button>
+
         <p className="text-center mt-4 text-sm text-gray-600">
           Don’t have an account?{' '}
           <a

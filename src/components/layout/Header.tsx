@@ -7,19 +7,33 @@ import { Menu, LogOut, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import NotificationBell from "./NotificationBell";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
-interface UserData {
-  id: string;
-  firstName: string;
-  lastName: string;
-  profileImage?: string;
-  role?: string;
-}
+const guestNavItems = [
+  { label: "Home", href: "/home" },
+  { label: "Services", href: "/services" },
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
+];
+
+const seekerNavItems = [
+  { label: "Home", href: "/home" },
+  { label: "Services", href: "/services" },
+  { label: "My Bookings", href: "/bookings" },
+  { label: "Messages", href: "/messages" },
+];
+
+const providerNavItems = [
+  { label: "Home", href: "/home" },
+  { label: "Services", href: "/services" },
+  { label: "Messages", href: "/messages" },
+  { label: "Dashboard", href: "/provider/dashboard" },
+];
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<UserData | null>(null);
+  const { user, isGuest, isAuthenticated, isLoading } = useCurrentUser();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -40,52 +54,20 @@ export default function Header() {
     };
   }, [mobileOpen]);
 
-  useEffect(() => {
-    // Fetch current user profile for avatar
-    fetch('/api/profile')
-      .then((res) => {
-        if (res.ok) return res.json();
-        return null;
-      })
-      .then((data) => {
-        if (data?.user) {
-          setUser({
-            id: data.user.id,
-            firstName: data.user.firstName,
-            lastName: data.user.lastName,
-            profileImage: data.user.profileImage,
-            role: data.user.role,
-          });
-        }
-      })
-      .catch(() => {
-        // Silent fail - user might not be logged in
-      });
-  }, []);
-
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      router.push('/login');
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error("Logout failed:", error);
     }
   };
 
-  const navItems =
-    user?.role === 'PROVIDER'
-      ? [
-          { label: 'Home', href: '/home' },
-          { label: 'Services', href: '/services' },
-          { label: 'Messages', href: '/messages' },
-          { label: 'Dashboard', href: '/provider/dashboard' },
-        ]
-      : [
-          { label: 'Home', href: '/home' },
-          { label: 'Services', href: '/services' },
-          { label: 'My Bookings', href: '/bookings' },
-          { label: 'Messages', href: '/messages' },
-        ];
+  const navItems = isGuest
+    ? guestNavItems
+    : user?.role === "PROVIDER"
+      ? providerNavItems
+      : seekerNavItems;
 
   const mobileMenu =
     mobileOpen && mounted
@@ -136,17 +118,36 @@ export default function Header() {
                 </ul>
 
                 <div className="mt-6 border-t border-slate-100 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMobileOpen(false);
-                      handleLogout();
-                    }}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3.5 text-base font-semibold text-white transition hover:bg-emerald-700"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Logout
-                  </button>
+                  {isAuthenticated && user ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileOpen(false);
+                        handleLogout();
+                      }}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3.5 text-base font-semibold text-white transition hover:bg-emerald-700"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      <Link
+                        href="/login"
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center justify-center rounded-xl border border-slate-200 px-4 py-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                      >
+                        Login
+                      </Link>
+                      <Link
+                        href="/register"
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                      >
+                        Register
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
             </nav>
@@ -157,96 +158,102 @@ export default function Header() {
 
   return (
     <>
-    <header className="sticky top-0 z-50 w-full bg-white/95 shadow-[0_1px_0_0_rgba(226,232,240,0.9)] backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            type="button"
-            onClick={() => setMobileOpen((open) => !open)}
-            className="rounded-lg p-2 transition hover:bg-slate-100 lg:hidden"
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-            aria-expanded={mobileOpen}
-          >
-            {mobileOpen ? (
-              <X className="h-5 w-5 text-slate-700 sm:h-6 sm:w-6" />
-            ) : (
-              <Menu className="h-5 w-5 text-slate-600 sm:h-6 sm:w-6" />
-            )}
-          </button>
-
-          {/* Logo */}
-          <Link
-            href="/"
-            className="hover:opacity-80 transition-all"
-          >
-            <Image
-              src="/images/Servizo.jpeg"
-              alt="Servizo Logo"
-              width={40}
-              height={40}
-              className="h-9 w-auto sm:h-10"
-            />
-          </Link>
-        </div>
-
-        <nav className="hidden items-center gap-6 lg:flex lg:gap-8">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`text-sm font-medium relative transition-colors ${
-                pathname === item.href
-                  ? "text-emerald-600 after:content-[''] after:block after:w-full after:h-0.5 after:bg-emerald-600 after:rounded-full after:absolute after:-bottom-1"
-                  : "text-gray-600 hover:text-emerald-600"
-              }`}
+      <header className="sticky top-0 z-50 w-full bg-white/95 shadow-[0_1px_0_0_rgba(226,232,240,0.9)] backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={() => setMobileOpen((open) => !open)}
+              className="rounded-lg p-2 transition hover:bg-slate-100 lg:hidden"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
             >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+              {mobileOpen ? (
+                <X className="h-5 w-5 text-slate-700 sm:h-6 sm:w-6" />
+              ) : (
+                <Menu className="h-5 w-5 text-slate-600 sm:h-6 sm:w-6" />
+              )}
+            </button>
 
-        {/* Right Icons / Buttons */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Notification Bell */}
-          {user && <NotificationBell />}
-
-          {/* User Avatar - Clickable to Profile */}
-          <Link
-            href="/profile"
-            className="group relative"
-            title="Go to Profile"
-          >
-            {user?.profileImage ? (
-              <img
-                src={user.profileImage}
-                alt={`${user.firstName} ${user.lastName}`}
-                className="w-10 h-10 rounded-full object-cover shadow-md ring-2 ring-gray-200 group-hover:ring-emerald-500 transition-all cursor-pointer"
+            <Link href={isGuest ? "/home" : "/"} className="transition-all hover:opacity-80">
+              <Image
+                src="/images/Servizo.jpeg"
+                alt="Servizo Logo"
+                width={40}
+                height={40}
+                className="h-9 w-auto sm:h-10"
               />
-            ) : user ? (
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-semibold shadow-md ring-2 ring-gray-200 group-hover:ring-emerald-500 transition-all cursor-pointer">
-                {user.firstName[0]}{user.lastName[0]}
-              </div>
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-semibold shadow-inner ring-1 ring-gray-200 group-hover:ring-emerald-500 transition-all cursor-pointer">
-                U
-              </div>
-            )}
-          </Link>
+            </Link>
+          </div>
 
-          {/* Logout Button */}
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="hidden items-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 py-2 text-white shadow-sm transition hover:bg-emerald-700 sm:gap-2 sm:px-3 lg:flex"
-            aria-label="Logout"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden text-sm font-medium sm:inline">Logout</span>
-          </button>
+          <nav className="hidden items-center gap-6 lg:flex lg:gap-8">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`relative text-sm font-medium transition-colors ${
+                  pathname === item.href
+                    ? "text-emerald-600 after:absolute after:-bottom-1 after:block after:h-0.5 after:w-full after:rounded-full after:bg-emerald-600 after:content-['']"
+                    : "text-gray-600 hover:text-emerald-600"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            {isLoading ? (
+              <div className="h-10 w-10 animate-pulse rounded-full bg-slate-200" />
+            ) : isAuthenticated && user ? (
+              <>
+                <NotificationBell />
+
+                <Link href="/profile" className="group relative" title="Go to Profile">
+                  {user.profileImage ? (
+                    <img
+                      src={user.profileImage}
+                      alt={`${user.firstName} ${user.lastName}`}
+                      className="h-10 w-10 cursor-pointer rounded-full object-cover shadow-md ring-2 ring-gray-200 transition-all group-hover:ring-emerald-500"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 font-semibold text-white shadow-md ring-2 ring-gray-200 transition-all group-hover:ring-emerald-500">
+                      {user.firstName[0]}
+                      {user.lastName[0]}
+                    </div>
+                  )}
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="hidden items-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 py-2 text-white shadow-sm transition hover:bg-emerald-700 sm:gap-2 sm:px-3 lg:flex"
+                  aria-label="Logout"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden text-sm font-medium sm:inline">Logout</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="hidden rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 sm:inline-flex"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/register"
+                  className="inline-flex rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 sm:px-4"
+                >
+                  Register
+                </Link>
+              </>
+            )}
+          </div>
         </div>
-      </div>
-    </header>
-    {mobileMenu}
+      </header>
+      {mobileMenu}
     </>
   );
 }

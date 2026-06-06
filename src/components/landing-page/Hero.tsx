@@ -94,6 +94,14 @@ export default function Hero() {
                 Become a provider
                 <BadgeCheck className="h-5 w-5 transition-transform group-hover:scale-110" />
               </Button>
+
+              <Button
+                href="/home"
+                className="inline-flex items-center justify-center rounded-xl px-6 sm:px-8 py-3 sm:py-3.5 text-base font-semibold text-slate-600 transition hover:text-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 w-full sm:w-auto"
+                aria-label="Continue as guest"
+              >
+                Continue as guest
+              </Button>
             </motion.div>
 
             {/* Key metrics grid */}

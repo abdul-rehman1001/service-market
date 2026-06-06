@@ -44,6 +44,13 @@ export default function LandingHeader() {
 
         <div className="hidden items-center gap-3 md:flex">
           <Button
+            href="/home"
+            className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-emerald-700"
+          >
+            Continue as guest
+          </Button>
+
+          <Button
             href="/login"
             className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
           >
@@ -77,9 +84,14 @@ export default function LandingHeader() {
             <Link href="/landing#features" onClick={() => setMobileOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Features</Link>
             <Link href="/landing#how-it-works" onClick={() => setMobileOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">How It Works</Link>
             <Link href="/landing#testimonials" onClick={() => setMobileOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Testimonials</Link>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <Button href="/login" className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-center text-sm font-semibold text-slate-700">Login</Button>
-              <Button href="/register" className="w-full rounded-xl bg-emerald-600 px-4 py-2 text-center text-sm font-semibold text-white">Sign Up</Button>
+            <div className="mt-3 space-y-2">
+              <Button href="/home" className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-center text-sm font-semibold text-slate-700">
+                Continue as guest
+              </Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button href="/login" className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-center text-sm font-semibold text-slate-700">Login</Button>
+                <Button href="/register" className="w-full rounded-xl bg-emerald-600 px-4 py-2 text-center text-sm font-semibold text-white">Sign Up</Button>
+              </div>
             </div>
           </nav>
         </div>
