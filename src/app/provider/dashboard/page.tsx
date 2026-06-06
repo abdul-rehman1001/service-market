@@ -2,7 +2,8 @@
 
 import dynamic from 'next/dynamic';
 import { Suspense, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import {
   getProviderTabLabel,
   type ProviderDashboardTab,
@@ -51,9 +52,24 @@ import { ChatPanel } from '@/components/provider/ChatPanel';
 import { ProviderProfilePanel } from '@/components/provider/ProviderProfilePanel';
 
 function ProviderDashboardContent() {
+  const router = useRouter();
+  const { user, isLoading, isAuthenticated } = useCurrentUser();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<ProviderDashboardTab>('services');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (isLoading || !isAuthenticated || !user) return;
+
+    const mode = String(user.role).toUpperCase();
+    if (mode === 'SEEKER') {
+      router.replace('/home');
+      return;
+    }
+    if (mode === 'ADMIN') {
+      router.replace('/admin');
+    }
+  }, [isAuthenticated, isLoading, router, user]);
 
   useEffect(() => {
     const tab = searchParams.get('tab');

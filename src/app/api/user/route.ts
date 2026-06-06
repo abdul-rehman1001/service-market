@@ -3,7 +3,7 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthFromRequest } from '@/lib/auth';
-import { setSessionModeCookie } from '@/lib/cookies';
+import { setPreferredModeCookie, setSessionModeCookie } from '@/lib/cookies';
 
 // GET /api/user — get the current logged-in user's basic info
 export async function GET(req: NextRequest) {
@@ -52,6 +52,7 @@ export async function GET(req: NextRequest) {
     });
 
     setSessionModeCookie(res, auth.role);
+    setPreferredModeCookie(res, auth.role);
     return res;
   } catch (error) {
     console.error('User GET error:', error);

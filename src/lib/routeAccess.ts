@@ -38,18 +38,15 @@ function resolveActiveModeFromRequest(request: NextRequest): ActiveMode | null {
   const roleFromAccess = getAccessTokenRole(accessToken);
   if (roleFromAccess) return roleFromAccess;
 
+  const preferredMode = getSessionModeFromCookie(
+    request.cookies.get(PREFERRED_MODE_COOKIE)?.value
+  );
+  if (preferredMode) return preferredMode;
+
   const sessionMode = getSessionModeFromCookie(
     request.cookies.get(SESSION_MODE_COOKIE)?.value
   );
   if (sessionMode) return sessionMode;
-
-  const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
-  if (!refreshToken) return null;
-
-  const preferred = getSessionModeFromCookie(
-    request.cookies.get(PREFERRED_MODE_COOKIE)?.value
-  );
-  if (preferred) return preferred;
 
   return null;
 }
@@ -97,16 +94,30 @@ export function evaluateRouteAccess(request: NextRequest): NextResponse | null {
     return null;
   }
 
-  if (!activeMode) {
-    return null;
+  if (access === 'provider') {
+    if (activeMode === 'PROVIDER') {
+      return null;
+    }
+    if (!hasSession) {
+      return redirectToLogin(request, pathname);
+    }
+    if (activeMode) {
+      return redirectForActiveMode(activeMode, request);
+    }
+    return NextResponse.redirect(new URL('/home', request.url));
   }
 
-  if (access === 'provider' && activeMode !== 'PROVIDER') {
-    return redirectForActiveMode(activeMode, request);
-  }
-
-  if (access === 'admin' && activeMode !== 'ADMIN') {
-    return redirectForActiveMode(activeMode, request);
+  if (access === 'admin') {
+    if (activeMode === 'ADMIN') {
+      return null;
+    }
+    if (!hasSession) {
+      return redirectToLogin(request, pathname);
+    }
+    if (activeMode) {
+      return redirectForActiveMode(activeMode, request);
+    }
+    return NextResponse.redirect(new URL('/home', request.url));
   }
 
   return null;
