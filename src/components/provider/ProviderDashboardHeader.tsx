@@ -484,7 +484,7 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
   );
 
   return (
-    <header className="sticky top-0 z-30 w-full max-w-full overflow-hidden border-b border-[#6FCF97]/40 bg-gradient-to-r from-[#EEEEEE] via-white to-[#EEEEEE] shadow-[0_8px_28px_-22px_rgba(31,111,95,0.65)] backdrop-blur-sm">
+    <header className="sticky top-0 z-30 w-full max-w-full overflow-hidden border-b border-[#E5E7EB] bg-white shadow-sm">
       <div className="w-full max-w-full px-3 py-3 sm:px-4 sm:py-3.5 lg:px-5">
         {/* Top row */}
         <div className="flex items-center justify-between gap-2 sm:gap-4">

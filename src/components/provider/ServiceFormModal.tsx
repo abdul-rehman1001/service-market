@@ -257,7 +257,7 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="shrink-0 border-b border-[#6FCF97]/30 bg-gradient-to-r from-[#EEEEEE] via-white to-[#EEEEEE] px-4 py-4 sm:px-6">
+        <div className="shrink-0 border-b border-[#E5E7EB] bg-[#F5F7F8] px-4 py-4 sm:px-6">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-start gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#2FA084] text-white shadow-md">
