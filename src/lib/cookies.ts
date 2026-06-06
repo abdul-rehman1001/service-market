@@ -5,6 +5,8 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 export const ACCESS_TOKEN_COOKIE = 'token';
 export const REFRESH_TOKEN_COOKIE = 'refreshToken';
+export const SESSION_MODE_COOKIE = 'sessionMode';
+export const PREFERRED_MODE_COOKIE = 'preferredMode';
 
 export const ACCESS_TOKEN_MAX_AGE_SECONDS = 15 * 60;
 
@@ -39,10 +41,14 @@ export function setTokenCookie(res: NextResponse, token: string) {
   setAccessTokenCookie(res, token);
 }
 
+export function setSessionModeCookie(res: NextResponse, mode: ActiveMode) {
+  res.cookies.set(SESSION_MODE_COOKIE, mode, baseCookieOptions(30 * 24 * 60 * 60));
+}
+
 export function setPreferredModeCookie(res: NextResponse, mode: ActiveMode) {
   if (mode === 'ADMIN') return;
 
-  res.cookies.set('preferredMode', mode, {
+  res.cookies.set(PREFERRED_MODE_COOKIE, mode, {
     httpOnly: false,
     secure: IS_PRODUCTION,
     sameSite: 'lax',
@@ -54,6 +60,8 @@ export function setPreferredModeCookie(res: NextResponse, mode: ActiveMode) {
 export function clearAuthCookies(res: NextResponse) {
   res.cookies.set(ACCESS_TOKEN_COOKIE, '', { maxAge: 0, path: '/' });
   res.cookies.set(REFRESH_TOKEN_COOKIE, '', { maxAge: 0, path: '/' });
+  res.cookies.set(SESSION_MODE_COOKIE, '', { maxAge: 0, path: '/' });
+  res.cookies.set(PREFERRED_MODE_COOKIE, '', { maxAge: 0, path: '/' });
 }
 
 /** @deprecated Use clearAuthCookies */

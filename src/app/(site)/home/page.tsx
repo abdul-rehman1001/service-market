@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import SearchSection from "@/components/home/SearchSection";
 import Categories from "@/components/home/Categories";
 import FeaturedProviders from "@/components/home/providers/FeaturedProviders";
 import Footer from "@/components/layout/Footer";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUserLocation } from "@/hooks/useUserLocation";
 
 type AiFilterState = {
@@ -15,6 +17,8 @@ type AiFilterState = {
 };
 
 export default function HomePage() {
+  const router = useRouter();
+  const { user, isLoading, isAuthenticated } = useCurrentUser();
   const [aiFilter, setAiFilter] = useState<AiFilterState>({
     active: false,
     category: null,
@@ -23,6 +27,19 @@ export default function HomePage() {
   });
 
   const { location, status, error } = useUserLocation({ requestOnMount: true });
+
+  useEffect(() => {
+    if (isLoading || !isAuthenticated || !user) return;
+
+    const mode = String(user.role).toUpperCase();
+    if (mode === "PROVIDER") {
+      router.replace("/provider/dashboard");
+      return;
+    }
+    if (mode === "ADMIN") {
+      router.replace("/admin");
+    }
+  }, [isAuthenticated, isLoading, router, user]);
 
   // Auto-scroll to providers section whenever a provider filter is applied.
   useEffect(() => {

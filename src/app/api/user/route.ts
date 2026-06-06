@@ -3,6 +3,7 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthFromRequest } from '@/lib/auth';
+import { setSessionModeCookie } from '@/lib/cookies';
 
 // GET /api/user — get the current logged-in user's basic info
 export async function GET(req: NextRequest) {
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest) {
 
     const hasProviderProfile = Boolean(user.providerProfile);
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       user: {
         id: user.id,
         name: [user.firstName, user.lastName].filter(Boolean).join(" "),
@@ -49,6 +50,9 @@ export async function GET(req: NextRequest) {
         providerVerificationStatus: user.providerProfile?.verificationStatus ?? null,
       },
     });
+
+    setSessionModeCookie(res, auth.role);
+    return res;
   } catch (error) {
     console.error('User GET error:', error);
     return NextResponse.json({ error: 'Failed to fetch user' }, { status: 500 });

@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import AuthCard from '@/components/auth/AuthCard';
 import Input from '@/components/auth/Input';
 import PasswordInput from '@/components/auth/PasswordInput';
+import { resolvePostLoginPath } from '@/lib/routes';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [form, setForm] = useState({ email: '', password: '' });
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
@@ -49,15 +51,12 @@ export default function LoginPage() {
         return;
       }
 
-      const activeMode = String(data?.user?.role || '').toUpperCase();
-
-      if (activeMode === 'PROVIDER') {
-        router.push('/provider/dashboard');
-      } else if (activeMode === 'ADMIN') {
-        router.push('/admin');
-      } else {
-        router.push('/home');
-      }
+      const activeMode = String(data?.user?.role || 'SEEKER').toUpperCase();
+      const destination = resolvePostLoginPath(
+        activeMode,
+        searchParams.get('next')
+      );
+      router.push(destination);
     } catch (err) {
       setError('Something went wrong. Try again.');
     } finally {
@@ -163,5 +162,19 @@ export default function LoginPage() {
         </p>
       </AuthCard>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 to-green-100">
+          <p className="text-sm text-gray-500">Loading...</p>
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

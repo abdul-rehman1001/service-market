@@ -10,7 +10,7 @@ if (appEnv === 'production' && productionUrl) {
   process.env.DATABASE_URL = localUrl
 }
 
-const prismaClientSingleton = () => {
+const prismaClientSingleton = (): PrismaClient => {
   const enableQueryLog =
     process.env.PRISMA_LOG_QUERIES === '1' ||
     process.env.PRISMA_LOG_QUERIES?.toLowerCase() === 'true'

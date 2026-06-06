@@ -7,6 +7,7 @@ import {
   clearAuthCookies,
   setAccessTokenCookie,
   setRefreshTokenCookie,
+  setSessionModeCookie,
 } from '@/lib/cookies';
 import type { ActiveMode } from '@/lib/auth';
 
@@ -72,10 +73,11 @@ export async function createAuthSession(params: {
 
 export function applyAuthSessionCookies(
   res: NextResponse,
-  session: Pick<AuthSessionResult, 'accessToken' | 'refreshToken' | 'rememberMe'>
+  session: Pick<AuthSessionResult, 'accessToken' | 'refreshToken' | 'rememberMe' | 'activeMode'>
 ) {
   setAccessTokenCookie(res, session.accessToken);
   setRefreshTokenCookie(res, session.refreshToken, session.rememberMe);
+  setSessionModeCookie(res, session.activeMode);
 }
 
 export async function establishAuthSession(

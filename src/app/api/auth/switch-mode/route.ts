@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { REFRESH_TOKEN_COOKIE, setAccessTokenCookie, setPreferredModeCookie } from '@/lib/cookies';
+import {
+  REFRESH_TOKEN_COOKIE,
+  setAccessTokenCookie,
+  setPreferredModeCookie,
+  setSessionModeCookie,
+} from '@/lib/cookies';
 import {
   type ActiveMode,
   canUseActiveMode,
@@ -85,6 +90,7 @@ export async function POST(req: NextRequest) {
     });
 
     setAccessTokenCookie(res, accessToken);
+    setSessionModeCookie(res, requestedMode);
     setPreferredModeCookie(res, requestedMode);
     return res;
   } catch (error) {

@@ -4,6 +4,7 @@ import {
   REFRESH_TOKEN_COOKIE,
   setAccessTokenCookie,
   setPreferredModeCookie,
+  setSessionModeCookie,
 } from '@/lib/cookies';
 import { getAuthFromRequest } from '@/lib/auth';
 import { createServiceProviderProfile } from '@/lib/providerProfile';
@@ -90,6 +91,7 @@ export async function POST(req: NextRequest) {
     });
 
     setAccessTokenCookie(res, accessToken);
+    setSessionModeCookie(res, 'PROVIDER');
     setPreferredModeCookie(res, 'PROVIDER');
     return res;
   } catch (error: unknown) {
