@@ -78,12 +78,20 @@ function FooterColumn({
   );
 }
 
-export default function Footer() {
+interface FooterProps {
+  flush?: boolean;
+}
+
+export default function Footer({ flush = false }: FooterProps) {
   const reduceMotion = useReducedMotion();
 
   return (
-    <footer className="relative mt-16 overflow-hidden bg-gray-900 text-gray-300">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#10B981]/40 to-transparent" />
+    <footer
+      className={`relative overflow-hidden bg-gray-900 text-gray-300 ${flush ? 'mt-0' : 'mt-16'}`}
+    >
+      {!flush && (
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#10B981]/40 to-transparent" />
+      )}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.15]"
         style={{

@@ -202,7 +202,7 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
   };
 
   return (
-    <section className="relative overflow-hidden bg-[#EFFAF6] py-10 sm:py-12 lg:py-14">
+    <section className="relative overflow-hidden bg-[#f5f7f8] py-10 sm:py-12 lg:py-14">
       <div
         className="pointer-events-none absolute inset-0"
         style={{

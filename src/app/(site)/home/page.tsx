@@ -109,7 +109,7 @@ export default function HomePage() {
         );
       }} />
 
-      <div className="bg-slate-50">
+      <div className="bg-[#f5f7f8]">
         {(status === "denied" || status === "error" || status === "unsupported") && (
           <div className="mx-auto mt-3 max-w-7xl px-4 sm:mt-4 sm:px-6 lg:px-8">
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-900 sm:px-4 sm:py-3 sm:text-sm">
@@ -125,9 +125,7 @@ export default function HomePage() {
           <FeaturedProviders userLocation={location ? { lat: location.lat, lng: location.lng } : null} />
         </div>
 
-        <div className="mt-8 sm:mt-12">
-          <Footer />
-        </div>
+        <Footer flush />
       </div>
     </div>
   );

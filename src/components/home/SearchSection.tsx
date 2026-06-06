@@ -243,7 +243,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
       initial={reduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
-      className="relative w-full overflow-hidden border-b border-[#D1E7DD] bg-[#EFFAF6] pt-10 pb-12 sm:pt-14 sm:pb-16 lg:pt-16 lg:pb-20 -mt-px"
+      className="relative w-full overflow-hidden border-b border-[#D1E7DD] bg-[#f5f7f8] pt-10 pb-12 sm:pt-14 sm:pb-16 lg:pt-16 lg:pb-20 -mt-px"
     >
       {/* Uniform texture — even tone across the full section */}
       <div
