@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2, Plus, Edit, Trash2, Tag, Clock, ImageIcon } from 'lucide-react';
 import ServiceFormModal from './ServiceFormModal';
+import VerificationRequiredModal from './VerificationRequiredModal';
 import { formatPKR } from '@/lib/utils';
 
 function CategoryIcon({ icon }: { icon: string }) {
@@ -50,8 +51,12 @@ export const ServicesPanel: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+
+  const isVerified = verificationStatus === 'APPROVED';
 
   const fetchServices = async () => {
     try {
@@ -72,11 +77,29 @@ export const ServicesPanel: React.FC = () => {
     }
   };
 
+  const fetchVerificationStatus = async () => {
+    try {
+      const res = await fetch('/api/provider/dashboard');
+      if (!res.ok) return;
+
+      const data = await res.json();
+      setVerificationStatus(data.provider?.verificationStatus ?? 'PENDING');
+    } catch {
+      setVerificationStatus('PENDING');
+    }
+  };
+
   useEffect(() => {
     fetchServices();
+    fetchVerificationStatus();
   }, []);
 
   const handleAddNew = () => {
+    if (!isVerified) {
+      setShowVerificationPrompt(true);
+      return;
+    }
+
     setEditingService(null);
     setShowModal(true);
   };
@@ -151,6 +174,22 @@ export const ServicesPanel: React.FC = () => {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
     >
+      {!isVerified && verificationStatus && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 sm:px-5">
+          <p className="text-sm font-semibold text-amber-900">Identity verification required</p>
+          <p className="mt-1 text-sm text-amber-800/90">
+            Complete document verification before adding services to your profile.
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowVerificationPrompt(true)}
+            className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#2FA084] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1F6F5F]"
+          >
+            Verify first
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -309,6 +348,13 @@ export const ServicesPanel: React.FC = () => {
         <ServiceFormModal
           service={editingService}
           onClose={handleModalClose}
+        />
+      )}
+
+      {showVerificationPrompt && (
+        <VerificationRequiredModal
+          verificationStatus={verificationStatus ?? 'PENDING'}
+          onClose={() => setShowVerificationPrompt(false)}
         />
       )}
     </motion.div>

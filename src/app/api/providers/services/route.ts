@@ -44,6 +44,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (provider.verificationStatus !== 'APPROVED') {
+      return NextResponse.json(
+        {
+          error: 'Please verify your identity before adding services.',
+          code: 'VERIFICATION_REQUIRED',
+          verificationStatus: provider.verificationStatus,
+        },
+        { status: 403 }
+      );
+    }
+
     // 4. Parse & validate body
     const body = await req.json();
     const { name, description, categoryId, minPrice, maxPrice, defaultDurationMinutes, isActive, images } = body;

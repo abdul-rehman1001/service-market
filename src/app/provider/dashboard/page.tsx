@@ -1,11 +1,28 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   getProviderTabLabel,
   type ProviderDashboardTab,
 } from '@/components/provider/DashboardSidebar';
+
+const DASHBOARD_TABS: ProviderDashboardTab[] = [
+  'services',
+  'analytics',
+  'work-history',
+  'reviews',
+  'availability',
+  'bookings',
+  'documents',
+  'messages',
+  'profile',
+];
+
+function isDashboardTab(value: string | null): value is ProviderDashboardTab {
+  return Boolean(value && DASHBOARD_TABS.includes(value as ProviderDashboardTab));
+}
 
 const DashboardSidebar = dynamic(
   () =>
@@ -33,9 +50,17 @@ import { DocumentManagementPanel } from '@/components/provider/DocumentManagemen
 import { ChatPanel } from '@/components/provider/ChatPanel';
 import { ProviderProfilePanel } from '@/components/provider/ProviderProfilePanel';
 
-export default function ProviderDashboardPage() {
+function ProviderDashboardContent() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<ProviderDashboardTab>('services');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (isDashboardTab(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   return (
     <div className="flex min-h-screen overflow-x-hidden bg-[#EEEEEE]">
@@ -89,5 +114,13 @@ export default function ProviderDashboardPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function ProviderDashboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#EEEEEE]" />}>
+      <ProviderDashboardContent />
+    </Suspense>
   );
 }
