@@ -85,17 +85,17 @@ function StatPill({
 
   return (
     <div
-      className={`rounded-2xl border p-4 shadow-[0_2px_12px_rgba(17,24,39,0.05)] transition-all duration-200 hover:shadow-[0_8px_24px_rgba(16,185,129,0.08)] sm:p-5 ${styles.card}`}
+      className={`flex items-center justify-between gap-3 rounded-xl border p-3 shadow-[0_2px_12px_rgba(17,24,39,0.05)] transition-all duration-200 hover:shadow-[0_8px_24px_rgba(16,185,129,0.08)] sm:block sm:rounded-2xl sm:p-5 ${styles.card}`}
     >
-      <div className="mb-2.5 flex items-center gap-2.5">
+      <div className="flex min-w-0 items-center gap-2.5 sm:mb-2.5">
         <div
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${styles.iconWrap}`}
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9 sm:rounded-xl ${styles.iconWrap}`}
         >
           <Icon className="h-4 w-4" />
         </div>
-        <p className={`text-xs font-semibold sm:text-sm ${styles.label}`}>{label}</p>
+        <p className={`truncate text-xs font-semibold sm:text-sm ${styles.label}`}>{label}</p>
       </div>
-      <p className={`text-2xl font-bold sm:text-3xl ${styles.value}`}>{value}</p>
+      <p className={`shrink-0 text-xl font-bold sm:text-2xl md:text-3xl ${styles.value}`}>{value}</p>
     </div>
   );
 }
@@ -368,7 +368,7 @@ export const AvailabilityPanel: React.FC = () => {
       </div>
 
       {/* Quick stats */}
-      <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-3 sm:gap-4">
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-4">
         <StatPill label="Active days" value={`${summary.daysWithHours}/7`} icon={Calendar} variant="green" />
         <StatPill label="Time slots" value={summary.totalSlots} icon={Clock} variant="navy" />
         <StatPill label="Blocked dates" value={summary.blockedDates} icon={Ban} variant="red" />
