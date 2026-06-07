@@ -7,7 +7,7 @@ import HeroCarousel from "@/components/landing-page/HeroCarousel";
 
 export default function LandingPage() {
   return (
-    <main className="overflow-x-hidden bg-white text-slate-900">
+    <main className="overflow-x-hidden bg-[#F5F7F8] text-[#111827]">
       <Hero />
       <HeroCarousel />
       <Features />

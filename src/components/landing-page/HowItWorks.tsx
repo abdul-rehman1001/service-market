@@ -19,19 +19,19 @@ interface Step {
 
 const seekerSteps: Step[] = [
   {
-    icon: <Search className="h-5 w-5 text-emerald-600" />,
+    icon: <Search className="h-5 w-5 text-[#10B981]" />,
     title: "Describe your problem",
     desc: "Tell us what you need in plain words. Our AI identifies the right service category and shows relevant providers near you.",
     step: 1,
   },
   {
-    icon: <CheckCircle2 className="h-5 w-5 text-emerald-600" />,
+    icon: <CheckCircle2 className="h-5 w-5 text-[#10B981]" />,
     title: "Compare verified providers",
     desc: "View profiles, ratings, real-time availability, and filter by location, price, or experience.",
     step: 2,
   },
   {
-    icon: <CalendarCheck2 className="h-5 w-5 text-emerald-600" />,
+    icon: <CalendarCheck2 className="h-5 w-5 text-[#10B981]" />,
     title: "Book and track your service",
     desc: "Select a time slot, confirm the booking, chat with provider, track job status, and review after completion.",
     step: 3,
@@ -40,19 +40,19 @@ const seekerSteps: Step[] = [
 
 const providerSteps: Step[] = [
   {
-    icon: <UserRoundPlus className="h-5 w-5 text-emerald-600" />,
+    icon: <UserRoundPlus className="h-5 w-5 text-[#10B981]" />,
     title: "Register and verify",
     desc: "Complete registration, upload CNIC for verification, and add your certifications.",
     step: 1,
   },
   {
-    icon: <BellRing className="h-5 w-5 text-emerald-600" />,
+    icon: <BellRing className="h-5 w-5 text-[#10B981]" />,
     title: "Receive booking requests",
     desc: "Get notified when customers book your services. Accept or reject within 30 minutes.",
     step: 2,
   },
   {
-    icon: <WalletCards className="h-5 w-5 text-emerald-600" />,
+    icon: <WalletCards className="h-5 w-5 text-[#10B981]" />,
     title: "Complete jobs and grow",
     desc: "Update job status, chat with customers, complete work, collect reviews, and build your reputation.",
     step: 3,
@@ -73,7 +73,7 @@ export default function HowItWorks() {
   return (
     <motion.section
       id="how-it-works"
-      className="bg-slate-50 py-16 sm:py-20 md:py-24"
+      className="bg-white py-16 sm:py-20 md:py-24"
       variants={container}
       initial={reduceMotion ? false : "hidden"}
       whileInView={reduceMotion ? undefined : "show"}
@@ -82,13 +82,13 @@ export default function HowItWorks() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <motion.div variants={item} className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700">
+          <span className="inline-flex items-center rounded-full border border-[#D1FAE5] bg-[#D1FAE5]/50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#059669]">
             How it works
           </span>
-          <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
+          <h2 className="mt-4 text-3xl font-bold tracking-tight text-[#1E3A5F] sm:text-4xl md:text-5xl">
             Three simple steps for seekers and providers
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
+          <p className="mt-4 text-base leading-relaxed text-[#6B7280] sm:text-lg">
             Whether you need a service or provide one, our platform makes the entire process straightforward.
           </p>
         </motion.div>
@@ -127,9 +127,9 @@ function StepPanel({
   return (
     <motion.div
       variants={variants}
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"
+      className="rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-5 shadow-[0_2px_12px_rgba(17,24,39,0.04)] sm:p-7"
     >
-      <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-sm font-semibold text-emerald-800">
+      <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#D1FAE5] bg-white px-4 py-1.5 text-sm font-semibold text-[#1E3A5F] shadow-sm">
         {icon}
         {label}
       </div>
@@ -138,19 +138,19 @@ function StepPanel({
         {steps.map((step) => (
           <div
             key={step.step}
-            className="group flex gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4 transition-all duration-200 hover:border-emerald-100 hover:bg-emerald-50/40 hover:shadow-sm"
+            className="group flex gap-4 rounded-xl border border-[#E5E7EB] bg-white p-4 transition-all duration-200 hover:border-[#10B981]/30 hover:shadow-md"
           >
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-white text-emerald-600 shadow-sm">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#D1FAE5] bg-[#D1FAE5]/40 text-[#059669] shadow-sm">
               {step.icon}
             </div>
             <div className="min-w-0 flex-1">
               <div className="mb-1 flex items-center gap-2">
-                <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-emerald-700 border border-emerald-100">
+                <span className="rounded-full border border-[#D1FAE5] bg-[#D1FAE5]/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#059669]">
                   Step {step.step}
                 </span>
               </div>
-              <h4 className="text-base font-bold text-slate-900">{step.title}</h4>
-              <p className="mt-1 text-sm leading-relaxed text-slate-600">{step.desc}</p>
+              <h4 className="text-base font-bold text-[#111827]">{step.title}</h4>
+              <p className="mt-1 text-sm leading-relaxed text-[#6B7280]">{step.desc}</p>
             </div>
           </div>
         ))}

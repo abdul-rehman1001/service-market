@@ -48,7 +48,7 @@ export default function Testimonials() {
   return (
     <motion.section
       id="testimonials"
-      className="bg-white py-16 sm:py-20 md:py-24"
+      className="bg-[#F5F7F8] py-16 sm:py-20 md:py-24"
       variants={container}
       initial={reduceMotion ? false : "hidden"}
       whileInView={reduceMotion ? undefined : "show"}
@@ -57,58 +57,53 @@ export default function Testimonials() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <motion.div variants={item} className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700">
+          <span className="inline-flex items-center rounded-full border border-[#D1FAE5] bg-[#D1FAE5]/50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#059669]">
             Customer reviews
           </span>
-          <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
+          <h2 className="mt-4 text-3xl font-bold tracking-tight text-[#1E3A5F] sm:text-4xl md:text-5xl">
             Trusted by customers across Pakistan
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
+          <p className="mt-4 text-base leading-relaxed text-[#6B7280] sm:text-lg">
             Real experiences from people who found the right professionals for their needs.
           </p>
         </motion.div>
 
         {/* Review cards */}
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 md:grid-cols-3 sm:gap-6">
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 sm:gap-6 md:grid-cols-3">
           {reviews.map((review) => (
             <motion.article
               key={review.name}
               variants={card}
-              whileHover={reduceMotion ? undefined : { y: -8, transition: { type: "spring", stiffness: 320, damping: 24 } }}
-              className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:border-emerald-200 hover:shadow-lg sm:p-7"
+              whileHover={reduceMotion ? undefined : { y: -6, transition: { type: "spring", stiffness: 320, damping: 24 } }}
+              className="group flex flex-col rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-[0_2px_12px_rgba(17,24,39,0.04)] transition-all duration-300 hover:border-[#10B981]/25 hover:shadow-[0_10px_32px_rgba(16,185,129,0.08)] sm:p-7"
             >
-              <motion.div
-                animate={reduceMotion ? undefined : { y: [0, -3, 0] }}
-                transition={reduceMotion ? undefined : { duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <Quote className="mb-4 h-8 w-8 text-emerald-200" aria-hidden />
-              </motion.div>
+              <Quote className="mb-4 h-7 w-7 text-[#D1FAE5]" aria-hidden />
 
               {/* Stars */}
               <div className="mb-4 flex gap-0.5">
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <Star key={s} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  <Star key={s} className="h-4 w-4 fill-[#F59E0B] text-[#F59E0B]" />
                 ))}
               </div>
 
               {/* Review text */}
-              <p className="flex-1 text-sm leading-relaxed text-slate-700 sm:text-base">
+              <p className="flex-1 text-sm leading-relaxed text-[#374151] sm:text-base">
                 &ldquo;{review.text}&rdquo;
               </p>
 
               {/* Metric */}
-              <div className="mt-5 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition-colors duration-300 group-hover:bg-emerald-100">
+              <div className="mt-5 rounded-lg border border-[#D1FAE5] bg-[#D1FAE5]/30 px-3 py-2 text-xs font-semibold text-[#059669]">
                 {review.metric}
               </div>
 
               {/* Author */}
-              <div className="mt-5 flex items-center gap-3 border-t border-slate-100 pt-5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">
+              <div className="mt-5 flex items-center gap-3 border-t border-[#E5E7EB] pt-5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1E3A5F] text-sm font-bold text-white">
                   {review.initials}
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-900">{review.name}</p>
-                  <p className="text-xs text-slate-500">{review.role}</p>
+                  <p className="text-sm font-bold text-[#111827]">{review.name}</p>
+                  <p className="text-xs text-[#6B7280]">{review.role}</p>
                 </div>
               </div>
             </motion.article>
