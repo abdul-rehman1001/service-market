@@ -11,7 +11,9 @@ import { Prisma } from '@prisma/client';
 import { geocodeAddress } from '@/lib/geocoding';
 import {
   normalizeEmail,
+  normalizePakistanPhone,
   validateEmail,
+  validatePakistanPhone,
   validatePassword,
 } from '@/lib/validation/authValidation';
 
@@ -66,20 +68,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Address is required' }, { status: 400 });
   }
 
-  // Validate phone format
-  if (!phone.startsWith('+')) {
+  const phoneValidation = validatePakistanPhone(phone);
+  if (!phoneValidation.isValid) {
     return NextResponse.json(
-      { error: 'Phone must include country code (e.g., +92300123456)' },
+      { error: phoneValidation.error || 'Invalid phone number' },
       { status: 400 }
     );
   }
+
+  const normalizedPhone = normalizePakistanPhone(phone);
 
   const existingUserByEmail = await prisma.user.findUnique({ where: { email } });
   if (existingUserByEmail) {
     return NextResponse.json({ error: 'Email already registered' }, { status: 400 });
   }
 
-  const existingUserByPhone = await prisma.user.findUnique({ where: { phone } });
+  const existingUserByPhone = await prisma.user.findUnique({
+    where: { phone: normalizedPhone },
+  });
   if (existingUserByPhone) {
     return NextResponse.json({ error: 'Phone number already registered' }, { status: 400 });
   }
@@ -123,7 +129,7 @@ export async function POST(req: NextRequest) {
       password: hashedPassword,
       role: role as 'SEEKER' | 'PROVIDER',
       profileImage: profileImage || null,
-      phone,
+      phone: normalizedPhone,
       address: resolvedAddress,
       longitude: new Prisma.Decimal(resolvedLongitude),
       latitude: new Prisma.Decimal(resolvedLatitude),

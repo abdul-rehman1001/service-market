@@ -89,3 +89,53 @@ export function validatePassword(password: string): ValidationResult {
 
   return { isValid: true };
 }
+
+/** Pakistan mobile in E.164: +92 followed by 10 digits starting with 3 */
+const PAKISTAN_MOBILE_E164_REGEX = /^\+923\d{9}$/;
+
+/**
+ * Normalizes common Pakistan mobile inputs to +923XXXXXXXXX.
+ * Accepts: +923001234567, 923001234567, 03001234567, 3001234567
+ */
+export function normalizePakistanPhone(phone: string): string {
+  const raw = phone.trim().replace(/[\s\-().]/g, '');
+  if (!raw) return '';
+
+  if (raw.startsWith('+92')) {
+    const national = raw.slice(3).replace(/\D/g, '');
+    return `+92${national}`;
+  }
+
+  const digits = raw.replace(/\D/g, '');
+
+  if (digits.startsWith('92') && digits.length >= 12) {
+    return `+92${digits.slice(2, 12)}`;
+  }
+  if (digits.startsWith('0') && digits.length >= 11) {
+    return `+92${digits.slice(1, 11)}`;
+  }
+  if (digits.startsWith('3') && digits.length >= 10) {
+    return `+92${digits.slice(0, 10)}`;
+  }
+
+  return raw.startsWith('+') ? raw : `+${digits}`;
+}
+
+export function validatePakistanPhone(phone: string): ValidationResult {
+  const trimmed = phone.trim();
+
+  if (!trimmed) {
+    return { isValid: false, error: 'Phone number is required' };
+  }
+
+  const normalized = normalizePakistanPhone(trimmed);
+
+  if (!PAKISTAN_MOBILE_E164_REGEX.test(normalized)) {
+    return {
+      isValid: false,
+      error: 'Enter a valid Pakistan mobile number (e.g. 03001234567 or +923001234567)',
+    };
+  }
+
+  return { isValid: true };
+}

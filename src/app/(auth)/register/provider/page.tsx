@@ -12,12 +12,14 @@ import Input from '@/components/auth/Input';
 import PasswordInput from '@/components/auth/PasswordInput';
 import PasswordRequirements from '@/components/auth/PasswordRequirements';
 import {
+  normalizePakistanPhone,
   validateEmail,
+  validatePakistanPhone,
   validatePassword,
 } from '@/lib/validation/authValidation';
 import { cn } from '@/lib/utils';
 
-type AuthField = 'email' | 'password';
+type AuthField = 'email' | 'password' | 'phone';
 type FieldErrors = Partial<Record<AuthField, string>>;
 type TouchedFields = Record<AuthField, boolean>;
 
@@ -38,6 +40,7 @@ export default function RegisterProvider() {
   const [touchedFields, setTouchedFields] = useState<TouchedFields>({
     email: false,
     password: false,
+    phone: false,
   });
 
   useEffect(() => {
@@ -85,11 +88,26 @@ export default function RegisterProvider() {
       : validation.error || 'Please choose a stronger password';
   };
 
+  const validatePhoneField = (phoneValue: string, showRequired: boolean): string => {
+    if (!phoneValue.trim() && !showRequired) {
+      return '';
+    }
+
+    const validation = validatePakistanPhone(phoneValue);
+    return validation.isValid
+      ? ''
+      : validation.error || 'Enter a valid Pakistan mobile number';
+  };
+
   const updateFieldValidation = (field: AuthField, value: string, showRequired: boolean) => {
-    const nextError =
-      field === 'email'
-        ? validateEmailField(value, showRequired)
-        : validatePasswordField(value, showRequired);
+    let nextError = '';
+    if (field === 'email') {
+      nextError = validateEmailField(value, showRequired);
+    } else if (field === 'password') {
+      nextError = validatePasswordField(value, showRequired);
+    } else if (field === 'phone') {
+      nextError = validatePhoneField(value, showRequired);
+    }
 
     setFieldErrors((prev) => ({ ...prev, [field]: nextError }));
   };
@@ -99,7 +117,7 @@ export default function RegisterProvider() {
 
     setForm({ ...form, [name]: value });
 
-    if (name === 'email' || name === 'password') {
+    if (name === 'email' || name === 'password' || name === 'phone') {
       updateFieldValidation(name, value, touchedFields[name]);
     }
   };
@@ -107,7 +125,7 @@ export default function RegisterProvider() {
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    if (name !== 'email' && name !== 'password') {
+    if (name !== 'email' && name !== 'password' && name !== 'phone') {
       return;
     }
 
@@ -126,15 +144,18 @@ export default function RegisterProvider() {
     const nextFieldErrors: FieldErrors = {
       email: validateEmailField(form.email, true),
       password: validatePasswordField(form.password, true),
+      phone: validatePhoneField(form.phone, true),
     };
 
-    setTouchedFields({ email: true, password: true });
+    setTouchedFields({ email: true, password: true, phone: true });
     setFieldErrors(nextFieldErrors);
 
-    if (nextFieldErrors.email || nextFieldErrors.password) {
+    if (nextFieldErrors.email || nextFieldErrors.password || nextFieldErrors.phone) {
       setError('Please fix the highlighted fields before creating your account.');
       return;
     }
+
+    const normalizedPhone = normalizePakistanPhone(form.phone);
 
     setIsLoading(true);
 
@@ -146,7 +167,7 @@ export default function RegisterProvider() {
           name: form.name,
           email: form.email,
           password: form.password,
-          phone: form.phone,
+          phone: normalizedPhone,
           profileImage: form.profileImage,
           address: form.address,
           role: 'PROVIDER',
@@ -230,13 +251,19 @@ export default function RegisterProvider() {
             <p className="-mt-2 text-sm text-[#EF4444]">{fieldErrors.email}</p>
           ) : null}
           <Input
-            placeholder="Phone number (e.g., +923001234567)"
+            placeholder="Phone number (e.g. 03001234567)"
             name="phone"
             type="tel"
             value={form.phone}
             onChange={handleChange}
+            onBlur={handleBlur}
+            autoComplete="tel"
+            aria-invalid={Boolean(fieldErrors.phone)}
             required
           />
+          {fieldErrors.phone ? (
+            <p className="-mt-2 text-sm text-[#EF4444]">{fieldErrors.phone}</p>
+          ) : null}
           <Input
             placeholder="Address"
             name="address"
