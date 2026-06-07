@@ -21,7 +21,7 @@ interface RichTextEditorProps {
 }
 
 const toolbarBtn =
-  "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--admin-green-dark)]/70 transition-colors hover:border-[var(--admin-beige)] hover:bg-white hover:text-[var(--admin-green-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--admin-green)]/20 disabled:opacity-40";
+  "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[#6B7280] transition-all hover:border-[#E5E7EB] hover:bg-white hover:text-[#1E3A5F] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 disabled:opacity-40";
 
 export default function RichTextEditor({
   value,
@@ -63,8 +63,8 @@ export default function RichTextEditor({
   };
 
   return (
-    <div className="admin-card overflow-hidden rounded-2xl border border-[var(--admin-beige)]/60">
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-[var(--admin-beige)]/50 bg-[var(--admin-green-muted)]/30 px-2 py-2">
+    <div className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-[0_2px_12px_rgba(17,24,39,0.05)]">
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-[#E5E7EB] bg-[#F9FAFB] px-2 py-2 sm:px-3">
         <button type="button" className={toolbarBtn} title="Bold" onClick={() => runCommand("bold")}>
           <Bold size={16} />
         </button>
@@ -74,7 +74,7 @@ export default function RichTextEditor({
         <button type="button" className={toolbarBtn} title="Underline" onClick={() => runCommand("underline")}>
           <Underline size={16} />
         </button>
-        <span className="mx-1 h-5 w-px bg-[var(--admin-beige)]/80" aria-hidden />
+        <span className="mx-1 h-5 w-px bg-[#E5E7EB]" aria-hidden />
         <button type="button" className={toolbarBtn} title="Heading 2" onClick={() => runCommand("formatBlock", "h2")}>
           <Heading2 size={16} />
         </button>
@@ -84,7 +84,7 @@ export default function RichTextEditor({
         <button type="button" className={toolbarBtn} title="Paragraph" onClick={() => runCommand("formatBlock", "p")}>
           <Pilcrow size={16} />
         </button>
-        <span className="mx-1 h-5 w-px bg-[var(--admin-beige)]/80" aria-hidden />
+        <span className="mx-1 h-5 w-px bg-[#E5E7EB]" aria-hidden />
         <button
           type="button"
           className={toolbarBtn}
@@ -116,7 +116,7 @@ export default function RichTextEditor({
         onBlur={syncFromEditor}
         suppressContentEditableWarning
         data-placeholder={placeholder}
-        className={`rich-text-editor prose prose-sm max-w-none px-4 py-4 text-[var(--admin-green-dark)]/90 focus:outline-none prose-headings:text-[var(--admin-green-dark)] prose-p:text-[var(--admin-green-dark)]/80 sm:px-6 sm:py-5 ${minHeightClass}`}
+        className={`rich-text-editor prose prose-sm max-w-none px-4 py-4 text-[#374151] focus:outline-none prose-headings:text-[#1E3A5F] prose-p:text-[#374151] sm:px-6 sm:py-5 ${minHeightClass}`}
       />
     </div>
   );

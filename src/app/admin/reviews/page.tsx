@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Star, MessageSquare, ThumbsUp } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { AlertCircle, Star, MessageSquare, ThumbsUp } from "lucide-react";
 import ReviewsTable from "@/components/admin/reviews/ReviewsTable";
 import ReviewFilters from "@/components/admin/reviews/ReviewFilters";
+import StatCard from "@/components/admin/StatCard";
+import { authenticatedFetch } from "@/lib/authenticatedFetch";
 
 export interface ReviewFiltersState {
   search: string;
@@ -60,6 +63,7 @@ const defaultFilters: ReviewFiltersState = {
 };
 
 export default function AdminReviewsPage() {
+  const router = useRouter();
   const [filters, setFilters] = useState<ReviewFiltersState>(defaultFilters);
   const [reviews, setReviews] = useState<AdminReview[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
@@ -69,10 +73,12 @@ export default function AdminReviewsPage() {
     totalPages: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchReviews = useCallback(
     async (page = 1) => {
       setLoading(true);
+      setError(null);
       try {
         const params = new URLSearchParams();
         params.set("page", String(page));
@@ -82,18 +88,31 @@ export default function AdminReviewsPage() {
         if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
         if (filters.dateTo) params.set("dateTo", filters.dateTo);
 
-        const res = await fetch(`/api/admin/reviews?${params.toString()}`);
-        if (!res.ok) throw new Error("Failed to fetch reviews");
+        const res = await authenticatedFetch(`/api/admin/reviews?${params.toString()}`, {
+          cache: "no-store",
+        });
+
+        if (res.status === 401) {
+          router.push("/login?next=/admin/reviews");
+          return;
+        }
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setError(data.error || "Failed to fetch reviews");
+          return;
+        }
+
         const data = await res.json();
         setReviews(data.reviews);
         setPagination(data.pagination);
-      } catch (err) {
-        console.error(err);
+      } catch {
+        setError("Failed to fetch reviews. Please try again.");
       } finally {
         setLoading(false);
       }
     },
-    [filters]
+    [filters, router]
   );
 
   useEffect(() => {
@@ -114,83 +133,83 @@ export default function AdminReviewsPage() {
 
   const handleDelete = async (reviewId: string) => {
     try {
-      const res = await fetch(`/api/admin/reviews/${reviewId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete review");
+      const res = await authenticatedFetch(`/api/admin/reviews/${reviewId}`, {
+        method: "DELETE",
+      });
+
+      if (res.status === 401) {
+        router.push("/login?next=/admin/reviews");
+        return;
+      }
+
+      if (!res.ok) {
+        setError("Failed to delete review");
+        return;
+      }
+
       fetchReviews(pagination.page);
-    } catch (err) {
-      console.error(err);
+    } catch {
+      setError("Failed to delete review. Please try again.");
     }
   };
 
   return (
     <section className="space-y-5 md:space-y-7">
-      <div className="animate-admin-fade-in-up flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-4">
-          <div className="hidden rounded-2xl bg-[var(--admin-green)] p-3 text-white shadow-lg sm:block">
-            <Star size={26} />
+      <div className="animate-admin-fade-in-up flex flex-col gap-4 rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
+          <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#D1FAE5] bg-[#D1FAE5]/60 text-[#059669] sm:flex">
+            <Star size={20} />
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-[var(--admin-green-dark)] sm:text-3xl">
-              Review Management
-            </h2>
-            <p className="mt-1 text-sm text-[var(--admin-green)]/75 sm:text-base">
+          <div className="min-w-0">
+            <h2 className="text-2xl font-bold text-[#1E3A5F] sm:text-3xl">Review Management</h2>
+            <p className="mt-1 text-sm text-[#6B7280] sm:text-base">
               Monitor and manage all service reviews across the platform
             </p>
           </div>
         </div>
         {!loading && (
-          <div className="animate-admin-scale-in self-start rounded-xl border border-[var(--admin-beige)]/60 bg-white/80 px-4 py-2.5 text-sm shadow-sm">
-            <span className="font-bold text-[var(--admin-green-dark)]">
+          <div className="animate-admin-scale-in self-start rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm shadow-sm">
+            <span className="font-bold text-[#111827]">
               {pagination.total.toLocaleString()}
             </span>
-            <span className="ml-1 text-[var(--admin-green)]/70">reviews total</span>
+            <span className="ml-1 text-[#6B7280]">reviews total</span>
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-        {[
-          {
-            label: "Total",
-            value: loading ? "—" : pagination.total.toLocaleString(),
-            icon: Star,
-            stagger: "admin-stagger-1",
-          },
-          {
-            label: "Avg Rating (page)",
-            value: loading ? "—" : pageStats.avgRating,
-            icon: ThumbsUp,
-            stagger: "admin-stagger-2",
-          },
-          {
-            label: "5-Star (page)",
-            value: loading ? "—" : pageStats.fiveStar,
-            icon: Star,
-            stagger: "admin-stagger-3",
-          },
-          {
-            label: "With Comment (page)",
-            value: loading ? "—" : pageStats.withComment,
-            icon: MessageSquare,
-            stagger: "admin-stagger-4",
-          },
-        ].map((stat) => (
-          <div
-            key={stat.label}
-            className={`admin-card animate-admin-fade-in-up ${stat.stagger} flex items-center gap-3 rounded-2xl p-4`}
-          >
-            <div className="rounded-xl bg-[var(--admin-green-muted)] p-2.5 text-[var(--admin-green)]">
-              <stat.icon size={20} />
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-xs font-medium text-[var(--admin-green)]/70">
-                {stat.label}
-              </p>
-              <p className="text-xl font-bold text-[var(--admin-green-dark)]">{stat.value}</p>
-            </div>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-4">
+        <StatCard
+          title="Total Reviews"
+          value={loading ? "—" : pagination.total.toLocaleString()}
+          icon={<Star size={20} />}
+          staggerClass="admin-stagger-1"
+        />
+        <StatCard
+          title="Avg Rating (page)"
+          value={loading ? "—" : pageStats.avgRating}
+          icon={<ThumbsUp size={20} />}
+          staggerClass="admin-stagger-2"
+        />
+        <StatCard
+          title="5-Star (page)"
+          value={loading ? "—" : pageStats.fiveStar}
+          icon={<Star size={20} />}
+          staggerClass="admin-stagger-3"
+        />
+        <StatCard
+          title="With Comment (page)"
+          value={loading ? "—" : pageStats.withComment}
+          icon={<MessageSquare size={20} />}
+          staggerClass="admin-stagger-4"
+        />
       </div>
+
+      {error && (
+        <div className="flex items-start gap-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-4">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#EF4444]" />
+          <p className="text-sm text-[#EF4444]">{error}</p>
+        </div>
+      )}
 
       <div className="animate-admin-fade-in-up admin-stagger-2">
         <ReviewFilters filters={filters} onFilterChange={setFilters} />

@@ -13,6 +13,7 @@ import {
   Users,
   Mail,
   Phone,
+  AlertCircle,
 } from "lucide-react";
 import type { AdminUser, Pagination } from "@/app/admin/users/page";
 
@@ -26,20 +27,20 @@ interface UsersTableProps {
 }
 
 const statusBadge: Record<string, string> = {
-  ACTIVE: "bg-[var(--admin-green-muted)] text-[var(--admin-green-dark)] border border-[var(--admin-beige)]",
-  SUSPENDED: "bg-red-50 text-red-700 border border-red-200",
-  UNVERIFIED: "bg-amber-50 text-amber-800 border border-amber-200",
+  ACTIVE: "border-[#BBF7D0] bg-[#D1FAE5] text-[#059669]",
+  SUSPENDED: "border-[#FECACA] bg-[#FEF2F2] text-[#DC2626]",
+  UNVERIFIED: "border-[#FED7AA] bg-[#FEF3C7] text-[#B45309]",
 };
 
 const verificationBadge: Record<string, string> = {
-  PENDING: "bg-amber-50 text-amber-800 border border-amber-200",
-  APPROVED: "bg-[var(--admin-green-muted)] text-[var(--admin-green-dark)] border border-[var(--admin-beige)]",
-  REJECTED: "bg-red-50 text-red-700 border border-red-200",
+  PENDING: "border-[#FED7AA] bg-[#FEF3C7] text-[#B45309]",
+  APPROVED: "border-[#BBF7D0] bg-[#F0FDF4] text-[#166534]",
+  REJECTED: "border-[#FECACA] bg-[#FEF2F2] text-[#DC2626]",
 };
 
 const roleBadge: Record<string, string> = {
-  SEEKER: "bg-blue-50 text-blue-700 border border-blue-200",
-  PROVIDER: "bg-[var(--admin-green-muted)] text-[var(--admin-green-dark)] border border-[var(--admin-beige)]",
+  SEEKER: "border-[#DBEAFE] bg-[#EFF6FF] text-[#1E3A5F]",
+  PROVIDER: "border-[#BBF7D0] bg-[#D1FAE5] text-[#059669]",
 };
 
 function UserAvatar({ user }: { user: AdminUser }) {
@@ -48,12 +49,12 @@ function UserAvatar({ user }: { user: AdminUser }) {
       <img
         src={user.profileImage}
         alt=""
-        className="h-10 w-10 shrink-0 rounded-xl object-cover ring-2 ring-[var(--admin-beige)]/80"
+        className="h-10 w-10 shrink-0 rounded-xl object-cover ring-2 ring-[#E5E7EB]"
       />
     );
   }
   return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--admin-green)] to-[var(--admin-green-dark)] text-xs font-bold text-white shadow-sm">
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#1E3A5F] to-[#10B981] text-xs font-bold text-white shadow-sm">
       {user.firstName[0]}
       {user.lastName[0]}
     </div>
@@ -75,7 +76,7 @@ function UserActions({
     <div className="flex items-center gap-1.5">
       <Link
         href={`/admin/users/${user.id}`}
-        className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--admin-beige)]/60 bg-white text-[var(--admin-green)] transition-all hover:border-[var(--admin-green)] hover:bg-[var(--admin-green-muted)] hover:shadow-sm"
+        className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-[#059669] shadow-sm transition-all hover:border-[#10B981]/40 hover:bg-[#D1FAE5]/40 hover:shadow-md"
         title="View details"
       >
         <Eye size={16} />
@@ -86,8 +87,8 @@ function UserActions({
         disabled={actionLoading === user.id}
         className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-all disabled:opacity-50 ${
           user.status === "SUSPENDED"
-            ? "border-[var(--admin-beige)] bg-[var(--admin-green-muted)] text-[var(--admin-green)] hover:shadow-sm"
-            : "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+            ? "border-[#D1FAE5] bg-[#D1FAE5]/50 text-[#059669] hover:shadow-md"
+            : "border-[#FED7AA] bg-[#FEF3C7] text-[#B45309] hover:bg-[#FDE68A]"
         }`}
         title={user.status === "SUSPENDED" ? "Activate user" : "Suspend user"}
       >
@@ -103,7 +104,7 @@ function UserActions({
         type="button"
         onClick={onDeleteClick}
         disabled={actionLoading === user.id}
-        className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition-all hover:bg-red-100 disabled:opacity-50"
+        className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#FECACA] bg-[#FEF2F2] text-[#EF4444] transition-all hover:bg-[#FEE2E2] disabled:opacity-50"
         title="Delete user"
       >
         <Trash2 size={16} />
@@ -139,23 +140,21 @@ export default function UsersTable({
 
   if (loading) {
     return (
-      <div className="admin-card flex flex-col items-center justify-center gap-3 rounded-2xl p-16">
-        <Loader2 className="animate-spin text-[var(--admin-green)]" size={36} />
-        <p className="text-sm font-medium text-[var(--admin-green)]/70">Loading users…</p>
+      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-16 shadow-sm">
+        <Loader2 className="animate-spin text-[#10B981]" size={36} />
+        <p className="text-sm font-medium text-[#6B7280]">Loading users…</p>
       </div>
     );
   }
 
   if (users.length === 0) {
     return (
-      <div className="admin-card animate-admin-scale-in flex flex-col items-center justify-center rounded-2xl p-12 text-center">
-        <div className="mb-4 rounded-2xl bg-[var(--admin-green-muted)] p-4 text-[var(--admin-green)]">
-          <Users size={32} />
+      <div className="animate-admin-scale-in flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#E5E7EB] bg-white p-12 text-center shadow-sm">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D1FAE5] bg-[#D1FAE5]/50 text-[#059669]">
+          <Users size={28} />
         </div>
-        <p className="font-semibold text-[var(--admin-green-dark)]">No users found</p>
-        <p className="mt-1 text-sm text-[var(--admin-green)]/60">
-          Try adjusting your search or filters
-        </p>
+        <p className="font-semibold text-[#1E3A5F]">No users found</p>
+        <p className="mt-1 text-sm text-[#6B7280]">Try adjusting your search or filters</p>
       </div>
     );
   }
@@ -163,33 +162,33 @@ export default function UsersTable({
   return (
     <div className="space-y-4">
       {/* Desktop table */}
-      <div className="admin-card animate-admin-scale-in hidden overflow-hidden rounded-2xl md:block">
+      <div className="animate-admin-scale-in hidden overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-[0_2px_12px_rgba(17,24,39,0.05)] md:block">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-[var(--admin-beige)]/50 bg-gradient-to-r from-[var(--admin-green-muted)] to-[var(--admin-beige)]/20">
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+              <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#1E3A5F]">
                   User
                 </th>
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#1E3A5F]">
                   Email
                 </th>
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#1E3A5F]">
                   Phone
                 </th>
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#1E3A5F]">
                   Role
                 </th>
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#1E3A5F]">
                   Status
                 </th>
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#1E3A5F]">
                   Verification
                 </th>
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#1E3A5F]">
                   Joined
                 </th>
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#1E3A5F]">
                   Actions
                 </th>
               </tr>
@@ -198,31 +197,29 @@ export default function UsersTable({
               {users.map((u, index) => (
                 <tr
                   key={u.id}
-                  className="animate-admin-fade-in-up border-t border-[var(--admin-beige)]/30 transition-colors hover:bg-[var(--admin-green-muted)]/30"
+                  className="animate-admin-fade-in-up border-t border-[#E5E7EB] transition-colors hover:bg-[#F9FAFB]"
                   style={{ animationDelay: `${Math.min(index, 8) * 0.04}s` }}
                 >
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <UserAvatar user={u} />
-                      <span className="font-semibold text-[var(--admin-green-dark)]">
+                      <span className="font-semibold text-[#111827]">
                         {u.firstName} {u.lastName}
                       </span>
                     </div>
                   </td>
-                  <td className="max-w-[180px] truncate px-5 py-4 text-[var(--admin-green-dark)]/75">
-                    {u.email}
-                  </td>
-                  <td className="px-5 py-4 text-[var(--admin-green-dark)]/75">{u.phone}</td>
+                  <td className="max-w-[180px] truncate px-5 py-4 text-[#6B7280]">{u.email}</td>
+                  <td className="px-5 py-4 text-[#6B7280]">{u.phone}</td>
                   <td className="px-5 py-4">
                     <span
-                      className={`inline-block rounded-lg px-2.5 py-1 text-xs font-semibold capitalize ${roleBadge[u.role] || "bg-gray-100 text-gray-700"}`}
+                      className={`inline-block rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${roleBadge[u.role] || "border-[#E5E7EB] bg-[#F9FAFB] text-[#6B7280]"}`}
                     >
                       {u.role.toLowerCase()}
                     </span>
                   </td>
                   <td className="px-5 py-4">
                     <span
-                      className={`inline-block rounded-lg px-2.5 py-1 text-xs font-semibold ${statusBadge[u.status] || "bg-gray-100 text-gray-700"}`}
+                      className={`inline-block rounded-full border px-2.5 py-1 text-xs font-semibold ${statusBadge[u.status] || "border-[#E5E7EB] bg-[#F9FAFB] text-[#6B7280]"}`}
                     >
                       {u.status}
                     </span>
@@ -230,15 +227,15 @@ export default function UsersTable({
                   <td className="px-5 py-4">
                     {u.role === "PROVIDER" && u.providerProfile ? (
                       <span
-                        className={`inline-block rounded-lg px-2.5 py-1 text-xs font-semibold ${verificationBadge[u.providerProfile.verificationStatus] || "bg-gray-100 text-gray-700"}`}
+                        className={`inline-block rounded-full border px-2.5 py-1 text-xs font-semibold ${verificationBadge[u.providerProfile.verificationStatus] || "border-[#E5E7EB] bg-[#F9FAFB] text-[#6B7280]"}`}
                       >
                         {u.providerProfile.verificationStatus}
                       </span>
                     ) : (
-                      <span className="text-xs text-[var(--admin-green)]/40">N/A</span>
+                      <span className="text-xs text-[#9CA3AF]">N/A</span>
                     )}
                   </td>
-                  <td className="whitespace-nowrap px-5 py-4 text-xs text-[var(--admin-green)]/70">
+                  <td className="whitespace-nowrap px-5 py-4 text-xs text-[#6B7280]">
                     {new Date(u.createdAt).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "short",
@@ -265,21 +262,21 @@ export default function UsersTable({
         {users.map((u, index) => (
           <article
             key={u.id}
-            className="admin-card animate-admin-fade-in-up rounded-2xl p-4"
+            className="animate-admin-fade-in-up rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-[0_2px_12px_rgba(17,24,39,0.05)] transition-all duration-200 hover:border-[#10B981]/25 hover:shadow-[0_8px_24px_rgba(16,185,129,0.08)]"
             style={{ animationDelay: `${Math.min(index, 6) * 0.05}s` }}
           >
             <div className="flex items-start gap-3">
               <UserAvatar user={u} />
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-[var(--admin-green-dark)]">
+                <p className="font-semibold text-[#111827]">
                   {u.firstName} {u.lastName}
                 </p>
-                <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-[var(--admin-green)]/70">
-                  <Mail size={12} className="shrink-0" />
+                <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-[#6B7280]">
+                  <Mail size={12} className="shrink-0 text-[#10B981]" />
                   {u.email}
                 </p>
-                <p className="mt-0.5 flex items-center gap-1 text-xs text-[var(--admin-green)]/70">
-                  <Phone size={12} className="shrink-0" />
+                <p className="mt-0.5 flex items-center gap-1 text-xs text-[#6B7280]">
+                  <Phone size={12} className="shrink-0 text-[#10B981]" />
                   {u.phone}
                 </p>
               </div>
@@ -287,25 +284,25 @@ export default function UsersTable({
 
             <div className="mt-3 flex flex-wrap gap-2">
               <span
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold capitalize ${roleBadge[u.role] || ""}`}
+                className={`rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${roleBadge[u.role] || ""}`}
               >
                 {u.role.toLowerCase()}
               </span>
               <span
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${statusBadge[u.status] || ""}`}
+                className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusBadge[u.status] || ""}`}
               >
                 {u.status}
               </span>
               {u.role === "PROVIDER" && u.providerProfile && (
                 <span
-                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${verificationBadge[u.providerProfile.verificationStatus] || ""}`}
+                  className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${verificationBadge[u.providerProfile.verificationStatus] || ""}`}
                 >
                   {u.providerProfile.verificationStatus}
                 </span>
               )}
             </div>
 
-            <p className="mt-2 text-[11px] text-[var(--admin-green)]/55">
+            <p className="mt-2 text-[11px] text-[#9CA3AF]">
               Joined{" "}
               {new Date(u.createdAt).toLocaleDateString("en-US", {
                 year: "numeric",
@@ -314,7 +311,7 @@ export default function UsersTable({
               })}
             </p>
 
-            <div className="mt-4 border-t border-[var(--admin-beige)]/40 pt-3">
+            <div className="mt-4 border-t border-[#E5E7EB] pt-3">
               <UserActions
                 user={u}
                 actionLoading={actionLoading}
@@ -327,36 +324,33 @@ export default function UsersTable({
       </div>
 
       {/* Pagination */}
-      <div className="admin-card animate-admin-fade-in-up flex flex-col gap-3 rounded-2xl px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-        <span className="text-center text-sm text-[var(--admin-green)]/75 sm:text-left">
+      <div className="animate-admin-fade-in-up flex flex-col gap-3 rounded-2xl border border-[#E5E7EB] bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <span className="text-center text-sm text-[#6B7280] sm:text-left">
           Showing{" "}
-          <span className="font-semibold text-[var(--admin-green-dark)]">
+          <span className="font-semibold text-[#111827]">
             {(pagination.page - 1) * pagination.limit + 1}–
             {Math.min(pagination.page * pagination.limit, pagination.total)}
           </span>{" "}
           of{" "}
-          <span className="font-semibold text-[var(--admin-green-dark)]">
-            {pagination.total}
-          </span>{" "}
-          users
+          <span className="font-semibold text-[#111827]">{pagination.total}</span> users
         </span>
         <div className="flex items-center justify-center gap-2">
           <button
             type="button"
             onClick={() => onPageChange(pagination.page - 1)}
             disabled={pagination.page <= 1}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--admin-beige)] bg-white text-[var(--admin-green-dark)] transition-all hover:border-[var(--admin-green)] hover:bg-[var(--admin-green-muted)] disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-[#374151] shadow-sm transition-all hover:border-[#10B981]/40 hover:bg-[#F5F7F8] disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronLeft size={18} />
           </button>
-          <span className="min-w-[7rem] text-center text-sm font-medium text-[var(--admin-green-dark)]">
+          <span className="min-w-[7rem] text-center text-sm font-semibold text-[#1E3A5F]">
             Page {pagination.page} of {pagination.totalPages}
           </span>
           <button
             type="button"
             onClick={() => onPageChange(pagination.page + 1)}
             disabled={pagination.page >= pagination.totalPages}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--admin-beige)] bg-white text-[var(--admin-green-dark)] transition-all hover:border-[var(--admin-green)] hover:bg-[var(--admin-green-muted)] disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-[#374151] shadow-sm transition-all hover:border-[#10B981]/40 hover:bg-[#F5F7F8] disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronRight size={18} />
           </button>
@@ -365,20 +359,22 @@ export default function UsersTable({
 
       {/* Delete confirmation modal */}
       {confirmDeleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--admin-green-dark)]/50 p-4 backdrop-blur-sm animate-admin-fade-in-up">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#111827]/50 p-0 backdrop-blur-sm animate-admin-fade-in-up sm:items-center sm:p-4">
           <div
-            className="admin-card w-full max-w-sm animate-admin-scale-in space-y-4 rounded-2xl p-6"
+            className="w-full max-w-sm animate-admin-scale-in space-y-4 rounded-t-2xl border border-[#E5E7EB] bg-white p-6 shadow-2xl sm:rounded-2xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-user-title"
           >
-            <h3
-              id="delete-user-title"
-              className="text-lg font-bold text-red-600"
-            >
-              Delete User
-            </h3>
-            <p className="text-sm text-[var(--admin-green-dark)]/75">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#FECACA] bg-[#FEF2F2]">
+                <AlertCircle className="h-5 w-5 text-[#EF4444]" />
+              </div>
+              <h3 id="delete-user-title" className="text-lg font-bold text-[#1E3A5F]">
+                Delete User
+              </h3>
+            </div>
+            <p className="text-sm text-[#6B7280]">
               Are you sure you want to permanently delete this user? This action cannot be
               undone. A confirmation email will be sent to the user.
             </p>
@@ -386,7 +382,7 @@ export default function UsersTable({
               <button
                 type="button"
                 onClick={() => setConfirmDeleteId(null)}
-                className="rounded-xl border border-[var(--admin-beige)] px-4 py-2.5 text-sm font-medium text-[var(--admin-green-dark)] transition-colors hover:bg-[var(--admin-green-muted)]"
+                className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-4 py-2.5 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#F3F4F6]"
               >
                 Cancel
               </button>
@@ -394,7 +390,7 @@ export default function UsersTable({
                 type="button"
                 onClick={() => handleDeleteConfirm(confirmDeleteId)}
                 disabled={actionLoading === confirmDeleteId}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#EF4444] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(239,68,68,0.3)] transition-colors hover:bg-[#DC2626] disabled:opacity-50"
               >
                 {actionLoading === confirmDeleteId && (
                   <Loader2 size={14} className="animate-spin" />

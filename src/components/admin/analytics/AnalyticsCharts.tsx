@@ -46,14 +46,14 @@ interface AnalyticsChartsProps {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  HOLD: "#94a3b8",
-  PENDING: "#f59e0b",
-  CONFIRMED: "#3b82f6",
-  EN_ROUTE: "#8b5cf6",
-  IN_PROGRESS: "#06b6d4",
-  COMPLETED: "#2fa084",
-  CANCELLED: "#ef4444",
-  AUTO_CANCELLED: "#f97316",
+  HOLD: "#9CA3AF",
+  PENDING: "#F59E0B",
+  CONFIRMED: "#1E3A5F",
+  EN_ROUTE: "#10B981",
+  IN_PROGRESS: "#059669",
+  COMPLETED: "#22C55E",
+  CANCELLED: "#EF4444",
+  AUTO_CANCELLED: "#F97316",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -67,9 +67,9 @@ const STATUS_LABELS: Record<string, string> = {
   AUTO_CANCELLED: "Auto Cancelled",
 };
 
-const CHART_GREEN = "#2fa084";
-const CHART_GREEN_DARK = "#1f6f5f";
-const CHART_ACCENT = "#6fcf97";
+const CHART_GREEN = "#10B981";
+const CHART_GREEN_DARK = "#1E3A5F";
+const CHART_ACCENT = "#E5E7EB";
 
 function formatLabel(dateStr: string): string {
   const parts = dateStr.split("-");
@@ -98,8 +98,8 @@ export default function AnalyticsCharts({
       {/* Booking Trends */}
       <div className="admin-card rounded-2xl p-4 sm:p-6">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h3 className="text-lg font-bold text-[var(--admin-green-dark)]">Booking Trends</h3>
-          <div className="flex gap-1 self-start rounded-xl bg-[var(--admin-beige)]/40 p-1 sm:self-auto">
+          <h3 className="text-lg font-bold text-[#1E3A5F]">Booking Trends</h3>
+          <div className="flex gap-1 self-start rounded-xl border border-[#E5E7EB] bg-white p-1 shadow-sm sm:self-auto">
             {periodOptions.map((opt) => (
               <button
                 key={opt.value}
@@ -107,8 +107,8 @@ export default function AnalyticsCharts({
                 onClick={() => onTrendPeriodChange(opt.value)}
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
                   trendPeriod === opt.value
-                    ? "bg-[var(--admin-green)] text-white shadow-sm"
-                    : "text-[var(--admin-green-dark)]/70 hover:bg-white/60"
+                    ? "bg-[#10B981] text-white shadow-sm"
+                    : "text-[#374151] hover:bg-[#F5F7F8]"
                 }`}
               >
                 {opt.label}
@@ -119,10 +119,10 @@ export default function AnalyticsCharts({
 
         {loading ? (
           <div className="flex h-64 items-center justify-center sm:h-72">
-            <Loader2 className="animate-spin text-[var(--admin-green)]" size={28} />
+            <Loader2 className="animate-spin text-[#10B981]" size={28} />
           </div>
         ) : bookingTrends.length === 0 ? (
-          <div className="flex h-64 items-center justify-center text-[var(--admin-green)]/50 sm:h-72">
+          <div className="flex h-64 items-center justify-center text-[#6B7280] sm:h-72">
             No booking data available for this period
           </div>
         ) : (
@@ -130,22 +130,22 @@ export default function AnalyticsCharts({
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={bookingTrends}>
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_ACCENT} />
-                <XAxis dataKey="date" tickFormatter={formatLabel} fontSize={12} stroke={CHART_GREEN_DARK} />
-                <YAxis fontSize={12} stroke={CHART_GREEN_DARK} />
+                <XAxis dataKey="date" tickFormatter={formatLabel} fontSize={12} stroke="#6B7280" />
+                <YAxis fontSize={12} stroke="#6B7280" />
                 <Tooltip
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   labelFormatter={((label: any) => formatLabel(String(label))) as any}
                   contentStyle={{
                     borderRadius: "12px",
-                    border: `1px solid ${CHART_ACCENT}`,
-                    boxShadow: "0 4px 16px rgba(31, 111, 95, 0.1)",
+                    border: "1px solid #E5E7EB",
+                    boxShadow: "0 10px 30px rgba(17, 24, 39, 0.10)",
                   }}
                 />
                 <Legend />
                 <Line
                   type="monotone"
                   dataKey="total"
-                  stroke="#3b82f6"
+                  stroke={CHART_GREEN_DARK}
                   strokeWidth={2}
                   name="Total"
                   dot={false}
@@ -163,7 +163,7 @@ export default function AnalyticsCharts({
                 <Line
                   type="monotone"
                   dataKey="cancelled"
-                  stroke="#ef4444"
+                  stroke="#EF4444"
                   strokeWidth={2}
                   name="Cancelled"
                   dot={false}
@@ -178,11 +178,11 @@ export default function AnalyticsCharts({
       {/* User Growth + Status Distribution */}
       <div className="grid grid-cols-1 gap-5 md:gap-6 lg:grid-cols-2">
         <div className="admin-card rounded-2xl p-4 sm:p-6">
-          <h3 className="mb-4 text-lg font-bold text-[var(--admin-green-dark)]">
+          <h3 className="mb-4 text-lg font-bold text-[#1E3A5F]">
             User Growth (Last 12 Months)
           </h3>
           {userGrowth.length === 0 ? (
-            <div className="flex h-64 items-center justify-center text-[var(--admin-green)]/50 sm:h-72">
+            <div className="flex h-64 items-center justify-center text-[#6B7280] sm:h-72">
               No user growth data available
             </div>
           ) : (
@@ -190,19 +190,19 @@ export default function AnalyticsCharts({
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={userGrowth}>
                   <CartesianGrid strokeDasharray="3 3" stroke={CHART_ACCENT} />
-                  <XAxis dataKey="month" tickFormatter={formatLabel} fontSize={12} stroke={CHART_GREEN_DARK} />
-                  <YAxis fontSize={12} stroke={CHART_GREEN_DARK} />
+                  <XAxis dataKey="month" tickFormatter={formatLabel} fontSize={12} stroke="#6B7280" />
+                  <YAxis fontSize={12} stroke="#6B7280" />
                   <Tooltip
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     labelFormatter={((label: any) => formatLabel(String(label))) as any}
                     contentStyle={{
                       borderRadius: "12px",
-                      border: `1px solid ${CHART_ACCENT}`,
-                      boxShadow: "0 4px 16px rgba(13, 83, 14, 0.08)",
+                      border: "1px solid #E5E7EB",
+                      boxShadow: "0 10px 30px rgba(17, 24, 39, 0.10)",
                     }}
                   />
                   <Legend />
-                  <Bar dataKey="seekers" fill="#3b82f6" name="Seekers" radius={[6, 6, 0, 0]} animationDuration={800} />
+                  <Bar dataKey="seekers" fill={CHART_GREEN_DARK} name="Seekers" radius={[6, 6, 0, 0]} animationDuration={800} />
                   <Bar dataKey="providers" fill={CHART_GREEN} name="Providers" radius={[6, 6, 0, 0]} animationDuration={800} />
                 </BarChart>
               </ResponsiveContainer>
@@ -211,11 +211,11 @@ export default function AnalyticsCharts({
         </div>
 
         <div className="admin-card rounded-2xl p-4 sm:p-6">
-          <h3 className="mb-4 text-lg font-bold text-[var(--admin-green-dark)]">
+          <h3 className="mb-4 text-lg font-bold text-[#1E3A5F]">
             Booking Status Distribution
           </h3>
           {statusDistribution.length === 0 ? (
-            <div className="flex h-64 items-center justify-center text-[var(--admin-green)]/50 sm:h-72">
+            <div className="flex h-64 items-center justify-center text-[#6B7280] sm:h-72">
               No booking data available
             </div>
           ) : (
@@ -262,7 +262,7 @@ export default function AnalyticsCharts({
                       className="h-3 w-3 rounded-full"
                       style={{ backgroundColor: STATUS_COLORS[entry.status] || "#94a3b8" }}
                     />
-                    <span className="text-[var(--admin-green-dark)]/75">
+                    <span className="text-[#6B7280]">
                       {STATUS_LABELS[entry.status] || entry.status} ({entry.count})
                     </span>
                   </div>

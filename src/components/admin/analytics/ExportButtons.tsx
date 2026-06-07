@@ -8,7 +8,7 @@ interface ExportButtonsProps {
   data: AnalyticsData;
 }
 
-const PDF_GREEN: [number, number, number] = [47, 160, 132];
+const PDF_GREEN: [number, number, number] = [16, 185, 129];
 
 export default function ExportButtons({ data }: ExportButtonsProps) {
   const [exportingCSV, setExportingCSV] = useState(false);

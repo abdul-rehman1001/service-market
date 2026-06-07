@@ -63,8 +63,8 @@ export default function AnalyticsPage() {
   if (loading && !data) {
     return (
       <section className="flex h-72 flex-col items-center justify-center gap-4 sm:h-96">
-        <Loader2 className="animate-spin text-[var(--admin-green)]" size={44} />
-        <p className="text-sm font-medium text-[var(--admin-green)]/70 animate-admin-fade-in-up">
+        <Loader2 className="animate-spin text-[#10B981]" size={44} />
+        <p className="text-sm font-medium text-[#6B7280] animate-admin-fade-in-up">
           Loading analytics…
         </p>
       </section>
@@ -74,7 +74,7 @@ export default function AnalyticsPage() {
   if (!data) {
     return (
       <section className="admin-card animate-admin-scale-in rounded-2xl p-6">
-        <p className="text-red-600">Failed to load analytics data.</p>
+        <p className="text-[#EF4444]">Failed to load analytics data.</p>
       </section>
     );
   }
@@ -84,16 +84,16 @@ export default function AnalyticsPage() {
   return (
     <section className="space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="animate-admin-fade-in-up flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-4">
-          <div className="hidden rounded-2xl bg-[var(--admin-green)] p-3 text-white shadow-lg sm:block">
-            <BarChart3 size={28} />
+      <div className="animate-admin-fade-in-up flex flex-col gap-4 rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
+          <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#D1FAE5] bg-[#D1FAE5]/60 text-[#059669] sm:flex">
+            <BarChart3 size={20} />
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-[var(--admin-green-dark)] sm:text-3xl">
+          <div className="min-w-0">
+            <h2 className="text-2xl font-bold text-[#1E3A5F] sm:text-3xl">
               Analytics Dashboard
             </h2>
-            <p className="mt-1 text-sm text-[var(--admin-green)]/75 sm:text-base">
+            <p className="mt-1 text-sm text-[#6B7280] sm:text-base">
               Platform-wide overview &amp; reports
             </p>
           </div>
@@ -102,9 +102,9 @@ export default function AnalyticsPage() {
           type="button"
           onClick={fetchAnalytics}
           disabled={loading}
-          className="inline-flex items-center justify-center gap-2 self-start rounded-xl border border-[var(--admin-beige)] bg-white/80 px-4 py-2.5 text-sm font-medium text-[var(--admin-green-dark)] shadow-sm transition-all duration-200 hover:border-[var(--admin-green)]/30 hover:bg-white hover:shadow-md disabled:opacity-50 sm:self-auto"
+          className="inline-flex items-center justify-center gap-2 self-start rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm font-semibold text-[#111827] shadow-sm transition-all hover:border-[#10B981]/30 hover:bg-[#F5F7F8] disabled:opacity-50 sm:self-auto"
         >
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+          <RefreshCw size={16} className={`text-[#10B981] ${loading ? "animate-spin" : ""}`} />
           Refresh
         </button>
       </div>

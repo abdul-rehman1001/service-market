@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Calendar, Clock, CheckCircle, XCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { AlertCircle, Calendar, Clock, CheckCircle, XCircle } from "lucide-react";
 import BookingsTable from "@/components/admin/bookings/BookingsTable";
 import BookingFilters from "@/components/admin/bookings/BookingFilters";
+import StatCard from "@/components/admin/StatCard";
+import { authenticatedFetch } from "@/lib/authenticatedFetch";
 
 export interface BookingFiltersState {
   search: string;
@@ -63,6 +66,7 @@ const defaultFilters: BookingFiltersState = {
 const ACTIVE_STATUSES = ["HOLD", "PENDING", "CONFIRMED", "EN_ROUTE", "IN_PROGRESS"];
 
 export default function AdminBookingsPage() {
+  const router = useRouter();
   const [filters, setFilters] = useState<BookingFiltersState>(defaultFilters);
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
@@ -72,10 +76,12 @@ export default function AdminBookingsPage() {
     totalPages: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchBookings = useCallback(
     async (page = 1) => {
       setLoading(true);
+      setError(null);
       try {
         const params = new URLSearchParams();
         params.set("page", String(page));
@@ -86,18 +92,31 @@ export default function AdminBookingsPage() {
         if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
         if (filters.dateTo) params.set("dateTo", filters.dateTo);
 
-        const res = await fetch(`/api/admin/bookings?${params.toString()}`);
-        if (!res.ok) throw new Error("Failed to fetch bookings");
+        const res = await authenticatedFetch(`/api/admin/bookings?${params.toString()}`, {
+          cache: "no-store",
+        });
+
+        if (res.status === 401) {
+          router.push("/login?next=/admin/bookings");
+          return;
+        }
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setError(data.error || "Failed to fetch bookings");
+          return;
+        }
+
         const data = await res.json();
         setBookings(data.bookings);
         setPagination(data.pagination);
-      } catch (err) {
-        console.error(err);
+      } catch {
+        setError("Failed to fetch bookings. Please try again.");
       } finally {
         setLoading(false);
       }
     },
-    [filters]
+    [filters, router]
   );
 
   useEffect(() => {
@@ -115,87 +134,85 @@ export default function AdminBookingsPage() {
 
   const handleCancel = async (bookingId: string, reason: string) => {
     try {
-      const res = await fetch(`/api/admin/bookings/${bookingId}/cancel`, {
+      const res = await authenticatedFetch(`/api/admin/bookings/${bookingId}/cancel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason }),
       });
-      if (!res.ok) throw new Error("Failed to cancel booking");
+
+      if (res.status === 401) {
+        router.push("/login?next=/admin/bookings");
+        return;
+      }
+
+      if (!res.ok) {
+        setError("Failed to cancel booking");
+        return;
+      }
+
       fetchBookings(pagination.page);
-    } catch (err) {
-      console.error(err);
+    } catch {
+      setError("Failed to cancel booking. Please try again.");
     }
   };
 
   return (
     <section className="space-y-5 md:space-y-7">
-      <div className="animate-admin-fade-in-up flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-4">
-          <div className="hidden rounded-2xl bg-[var(--admin-green)] p-3 text-white shadow-lg sm:block">
-            <Calendar size={26} />
+      <div className="animate-admin-fade-in-up flex flex-col gap-4 rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
+          <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#D1FAE5] bg-[#D1FAE5]/60 text-[#059669] sm:flex">
+            <Calendar size={20} />
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-[var(--admin-green-dark)] sm:text-3xl">
-              Booking Management
-            </h2>
-            <p className="mt-1 text-sm text-[var(--admin-green)]/75 sm:text-base">
+          <div className="min-w-0">
+            <h2 className="text-2xl font-bold text-[#1E3A5F] sm:text-3xl">Booking Management</h2>
+            <p className="mt-1 text-sm text-[#6B7280] sm:text-base">
               View and manage all bookings across the platform
             </p>
           </div>
         </div>
         {!loading && (
-          <div className="animate-admin-scale-in self-start rounded-xl border border-[var(--admin-beige)]/60 bg-white/80 px-4 py-2.5 text-sm shadow-sm">
-            <span className="font-bold text-[var(--admin-green-dark)]">
+          <div className="animate-admin-scale-in self-start rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm shadow-sm">
+            <span className="font-bold text-[#111827]">
               {pagination.total.toLocaleString()}
             </span>
-            <span className="ml-1 text-[var(--admin-green)]/70">bookings total</span>
+            <span className="ml-1 text-[#6B7280]">bookings total</span>
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-        {[
-          {
-            label: "Total",
-            value: loading ? "—" : pagination.total.toLocaleString(),
-            icon: Calendar,
-            stagger: "admin-stagger-1",
-          },
-          {
-            label: "Active (page)",
-            value: loading ? "—" : pageStats.active,
-            icon: Clock,
-            stagger: "admin-stagger-2",
-          },
-          {
-            label: "Completed (page)",
-            value: loading ? "—" : pageStats.completed,
-            icon: CheckCircle,
-            stagger: "admin-stagger-3",
-          },
-          {
-            label: "Cancelled (page)",
-            value: loading ? "—" : pageStats.cancelled,
-            icon: XCircle,
-            stagger: "admin-stagger-4",
-          },
-        ].map((stat) => (
-          <div
-            key={stat.label}
-            className={`admin-card animate-admin-fade-in-up ${stat.stagger} flex items-center gap-3 rounded-2xl p-4`}
-          >
-            <div className="rounded-xl bg-[var(--admin-green-muted)] p-2.5 text-[var(--admin-green)]">
-              <stat.icon size={20} />
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-xs font-medium text-[var(--admin-green)]/70">
-                {stat.label}
-              </p>
-              <p className="text-xl font-bold text-[var(--admin-green-dark)]">{stat.value}</p>
-            </div>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-4">
+        <StatCard
+          title="Total Bookings"
+          value={loading ? "—" : pagination.total.toLocaleString()}
+          icon={<Calendar size={20} />}
+          staggerClass="admin-stagger-1"
+        />
+        <StatCard
+          title="Active (page)"
+          value={loading ? "—" : pageStats.active}
+          icon={<Clock size={20} />}
+          staggerClass="admin-stagger-2"
+        />
+        <StatCard
+          title="Completed (page)"
+          value={loading ? "—" : pageStats.completed}
+          icon={<CheckCircle size={20} />}
+          staggerClass="admin-stagger-3"
+        />
+        <StatCard
+          title="Cancelled (page)"
+          value={loading ? "—" : pageStats.cancelled}
+          icon={<XCircle size={20} />}
+          staggerClass="admin-stagger-4"
+        />
       </div>
+
+      {error && (
+        <div className="flex items-start gap-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-4">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#EF4444]" />
+          <p className="text-sm text-[#EF4444]">{error}</p>
+        </div>
+      )}
 
       <div className="animate-admin-fade-in-up admin-stagger-2">
         <BookingFilters filters={filters} onFilterChange={setFilters} />

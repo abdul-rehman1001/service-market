@@ -16,10 +16,9 @@ export default function ContentTabs() {
   const [activeTab, setActiveTab] = useState(contentPages[0].key);
 
   return (
-    <div className="admin-card overflow-hidden rounded-2xl">
-      {/* Tab headers — scrollable pills on mobile, bar on desktop */}
-      <div className="border-b border-[var(--admin-beige)]/50 bg-gradient-to-r from-[var(--admin-green-muted)]/40 to-transparent p-3 sm:p-0">
-        <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:gap-0 sm:overflow-visible sm:border-b sm:border-[var(--admin-beige)]/50 sm:pb-0">
+    <div className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-[0_2px_12px_rgba(17,24,39,0.05)]">
+      <div className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
+        <div className="flex gap-2 overflow-x-auto p-3 sm:flex-wrap sm:gap-1 sm:overflow-visible sm:px-4 sm:py-3">
           {contentPages.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;
@@ -28,13 +27,13 @@ export default function ContentTabs() {
                 key={tab.key}
                 type="button"
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-all duration-200 sm:rounded-none sm:border-b-2 sm:px-5 sm:py-3.5 ${
+                className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
                   isActive
-                    ? "bg-[var(--admin-green)] text-white shadow-md sm:border-[var(--admin-green)] sm:bg-transparent sm:text-[var(--admin-green)] sm:shadow-none"
-                    : "bg-white/80 text-[var(--admin-green-dark)]/70 hover:bg-white hover:text-[var(--admin-green)] sm:border-transparent sm:bg-transparent"
+                    ? "bg-[#10B981] text-white shadow-[0_4px_14px_rgba(16,185,129,0.35)]"
+                    : "border border-[#E5E7EB] bg-white text-[#6B7280] hover:border-[#10B981]/35 hover:bg-[#F5F7F8] hover:text-[#1E3A5F]"
                 }`}
               >
-                <Icon size={16} className={isActive ? "sm:text-[var(--admin-green)]" : ""} />
+                <Icon size={16} />
                 {tab.label}
               </button>
             );
@@ -42,8 +41,7 @@ export default function ContentTabs() {
         </div>
       </div>
 
-      {/* Tab content */}
-      <div className="animate-admin-fade-in-up p-4 sm:p-6">
+      <div className="animate-admin-fade-in-up p-4 sm:p-6 lg:p-8">
         {activeTab === "faq" ? <FAQManager /> : <ContentEditor pageKey={activeTab} />}
       </div>
     </div>

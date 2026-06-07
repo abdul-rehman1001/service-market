@@ -1,78 +1,47 @@
 "use client";
 
-import { MessageSquare, Clock, CheckCircle, XCircle, AlertCircle, Timer } from "lucide-react";
+import { MessageSquare, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import StatCard from "@/components/admin/StatCard";
 import type { QueryStatistics } from "@/app/admin/queries/page";
 
 interface QueryStatsProps {
   statistics: QueryStatistics;
+  loading?: boolean;
 }
 
-export default function QueryStats({ statistics }: QueryStatsProps) {
-  const stats = [
-    {
-      label: "Total Queries",
-      value: statistics.total.toLocaleString(),
-      icon: MessageSquare,
-      stagger: "admin-stagger-1",
-    },
-    {
-      label: "Open",
-      value: statistics.open.toLocaleString(),
-      icon: AlertCircle,
-      stagger: "admin-stagger-2",
-    },
-    {
-      label: "In Progress",
-      value: statistics.inProgress.toLocaleString(),
-      icon: Clock,
-      stagger: "admin-stagger-3",
-    },
-    {
-      label: "Resolved",
-      value: statistics.resolved.toLocaleString(),
-      icon: CheckCircle,
-      stagger: "admin-stagger-4",
-    },
-    {
-      label: "Closed",
-      value: statistics.closed.toLocaleString(),
-      icon: XCircle,
-      stagger: "admin-stagger-5",
-    },
-    {
-      label: "Avg Response",
-      value:
-        statistics.avgResponseTimeHours > 0
-          ? `${statistics.avgResponseTimeHours}h`
-          : "N/A",
-      icon: Timer,
-      stagger: "admin-stagger-6",
-    },
-  ];
-
+export default function QueryStats({ statistics, loading = false }: QueryStatsProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 sm:gap-4">
-      {stats.map((stat) => {
-        const Icon = stat.icon;
-        return (
-          <div
-            key={stat.label}
-            className={`admin-card animate-admin-fade-in-up ${stat.stagger} flex items-center gap-3 rounded-2xl p-4`}
-          >
-            <div className="rounded-xl bg-[var(--admin-green-muted)] p-2.5 text-[var(--admin-green)]">
-              <Icon size={18} />
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-xs font-medium text-[var(--admin-green)]/70">
-                {stat.label}
-              </p>
-              <p className="text-lg font-bold text-[var(--admin-green-dark)] sm:text-xl">
-                {stat.value}
-              </p>
-            </div>
-          </div>
-        );
-      })}
+    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5 sm:gap-4">
+      <StatCard
+        title="Total Queries"
+        value={loading ? "—" : statistics.total.toLocaleString()}
+        icon={<MessageSquare size={20} />}
+        staggerClass="admin-stagger-1"
+      />
+      <StatCard
+        title="Open"
+        value={loading ? "—" : statistics.open.toLocaleString()}
+        icon={<AlertCircle size={20} />}
+        staggerClass="admin-stagger-2"
+      />
+      <StatCard
+        title="In Progress"
+        value={loading ? "—" : statistics.inProgress.toLocaleString()}
+        icon={<Clock size={20} />}
+        staggerClass="admin-stagger-3"
+      />
+      <StatCard
+        title="Resolved"
+        value={loading ? "—" : statistics.resolved.toLocaleString()}
+        icon={<CheckCircle size={20} />}
+        staggerClass="admin-stagger-4"
+      />
+      <StatCard
+        title="Closed"
+        value={loading ? "—" : statistics.closed.toLocaleString()}
+        icon={<XCircle size={20} />}
+        staggerClass="admin-stagger-5"
+      />
     </div>
   );
 }

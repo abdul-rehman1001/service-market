@@ -11,7 +11,7 @@ interface QueryExportProps {
   statistics: QueryStatistics;
 }
 
-const PDF_GREEN: [number, number, number] = [47, 160, 132];
+const PDF_GREEN: [number, number, number] = [16, 185, 129];
 
 export default function QueryExport({ queries, statistics }: QueryExportProps) {
   const [exporting, setExporting] = useState<string | null>(null);
@@ -150,27 +150,27 @@ export default function QueryExport({ queries, statistics }: QueryExportProps) {
         type="button"
         onClick={exportCSV}
         disabled={exporting !== null || queries.length === 0}
-        className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--admin-beige)] bg-white px-3 py-2 text-sm font-medium text-[var(--admin-green-dark)] shadow-sm transition-all hover:border-[var(--admin-green)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center gap-1.5 rounded-xl border border-[#E5E7EB] bg-white px-3.5 py-2 text-sm font-semibold text-[#374151] shadow-sm transition-all hover:border-[#10B981]/40 hover:bg-[#F5F7F8] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {exporting === "csv" ? (
           <Loader2 size={16} className="animate-spin" />
         ) : (
-          <FileSpreadsheet size={16} />
+          <FileSpreadsheet size={16} className="text-[#059669]" />
         )}
-        {exporting === "csv" ? "Exporting…" : "CSV"}
+        {exporting === "csv" ? "Exporting…" : "Export CSV"}
       </button>
       <button
         type="button"
         onClick={exportPDF}
         disabled={exporting !== null || queries.length === 0}
-        className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--admin-green)] px-3 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-[var(--admin-green-dark)] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center gap-1.5 rounded-xl bg-[#10B981] px-3.5 py-2 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition-all duration-200 hover:bg-[#059669] hover:shadow-[0_6px_20px_rgba(16,185,129,0.45)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {exporting === "pdf" ? (
           <Loader2 size={16} className="animate-spin" />
         ) : (
           <FileDown size={16} />
         )}
-        {exporting === "pdf" ? "Exporting…" : "PDF"}
+        {exporting === "pdf" ? "Exporting…" : "Export PDF"}
       </button>
     </div>
   );

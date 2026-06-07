@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import CategoryRow, { CategoryCard } from "./CategoryRow";
-import { Loader2, Layers, FolderTree, CheckCircle } from "lucide-react";
+import StatCard from "@/components/admin/StatCard";
+import { authenticatedFetch } from "@/lib/authenticatedFetch";
+import { AlertCircle, Loader2, Layers, FolderTree, CheckCircle } from "lucide-react";
 
 export interface Category {
   id: string;
@@ -25,9 +28,10 @@ export interface Category {
 }
 
 export default function CategoryTable() {
+  const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const stats = useMemo(() => {
     const active = categories.filter((c) => c.isActive).length;
@@ -35,29 +39,35 @@ export default function CategoryTable() {
     return { active, topLevel, total: categories.length };
   }, [categories]);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      const res = await fetch("/api/admin/categories");
+      const res = await authenticatedFetch("/api/admin/categories", { cache: "no-store" });
+
+      if (res.status === 401) {
+        router.push("/login?next=/admin/categories");
+        return;
+      }
+
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Failed to fetch categories");
+        setError(data.error || "Failed to fetch categories");
+        return;
       }
 
       setCategories(data.categories);
-      setError("");
-    } catch (err: unknown) {
-      const e = err as Error;
-      setError(e.message);
+    } catch {
+      setError("Failed to fetch categories. Please try again.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [fetchCategories]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this category?")) {
@@ -65,9 +75,14 @@ export default function CategoryTable() {
     }
 
     try {
-      const res = await fetch(`/api/admin/categories/${id}`, {
+      const res = await authenticatedFetch(`/api/admin/categories/${id}`, {
         method: "DELETE",
       });
+
+      if (res.status === 401) {
+        router.push("/login?next=/admin/categories");
+        return;
+      }
 
       const data = await res.json();
 
@@ -86,11 +101,16 @@ export default function CategoryTable() {
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
     try {
-      const res = await fetch(`/api/admin/categories/${id}`, {
+      const res = await authenticatedFetch(`/api/admin/categories/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !currentStatus }),
       });
+
+      if (res.status === 401) {
+        router.push("/login?next=/admin/categories");
+        return;
+      }
 
       const data = await res.json();
 
@@ -107,81 +127,75 @@ export default function CategoryTable() {
 
   if (loading) {
     return (
-      <div className="admin-card flex flex-col items-center justify-center gap-3 rounded-2xl p-16">
-        <Loader2 className="animate-spin text-[var(--admin-green)]" size={36} />
-        <p className="text-sm font-medium text-[var(--admin-green)]/70">Loading categories…</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="admin-card animate-admin-scale-in rounded-2xl p-8 text-center">
-        <p className="font-semibold text-red-600">Error loading categories</p>
-        <p className="mt-1 text-sm text-[var(--admin-green-dark)]/70">{error}</p>
+      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-16 shadow-sm">
+        <Loader2 className="animate-spin text-[#10B981]" size={36} />
+        <p className="text-sm font-medium text-[#6B7280]">Loading categories…</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-5">
-      {/* Stats */}
-      {categories.length > 0 && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-          {[
-            { label: "Total", value: stats.total, icon: Layers, stagger: "admin-stagger-1" },
-            { label: "Active", value: stats.active, icon: CheckCircle, stagger: "admin-stagger-2" },
-            { label: "Top Level", value: stats.topLevel, icon: FolderTree, stagger: "admin-stagger-3" },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className={`admin-card animate-admin-fade-in-up ${stat.stagger} flex items-center gap-3 rounded-2xl p-4`}
-            >
-              <div className="rounded-xl bg-[var(--admin-green-muted)] p-2.5 text-[var(--admin-green)]">
-                <stat.icon size={20} />
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-xs font-medium text-[var(--admin-green)]/70">
-                  {stat.label}
-                </p>
-                <p className="text-xl font-bold text-[var(--admin-green-dark)]">{stat.value}</p>
-              </div>
-            </div>
-          ))}
+      {error && (
+        <div className="flex items-start gap-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-4">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#EF4444]" />
+          <p className="text-sm text-[#EF4444]">{error}</p>
         </div>
       )}
 
-      {categories.length === 0 ? (
-        <div className="admin-card animate-admin-scale-in flex flex-col items-center justify-center rounded-2xl p-12 text-center">
-          <div className="mb-4 rounded-2xl bg-[var(--admin-green-muted)] p-4 text-[var(--admin-green)]">
-            <Layers size={32} />
+      {categories.length > 0 && (
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-4">
+          <StatCard
+            title="Total Categories"
+            value={stats.total}
+            icon={<Layers size={20} />}
+            staggerClass="admin-stagger-1"
+          />
+          <StatCard
+            title="Active"
+            value={stats.active}
+            icon={<CheckCircle size={20} />}
+            staggerClass="admin-stagger-2"
+          />
+          <StatCard
+            title="Top Level"
+            value={stats.topLevel}
+            icon={<FolderTree size={20} />}
+            staggerClass="admin-stagger-3"
+          />
+        </div>
+      )}
+
+      {!error && categories.length === 0 ? (
+        <div className="animate-admin-scale-in flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#E5E7EB] bg-white p-12 text-center shadow-sm">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D1FAE5] bg-[#D1FAE5]/50 text-[#059669]">
+            <Layers size={28} />
           </div>
-          <p className="font-semibold text-[var(--admin-green-dark)]">No categories yet</p>
-          <p className="mt-1 text-sm text-[var(--admin-green)]/60">
-            Create your first category to get started
+          <p className="font-semibold text-[#1E3A5F]">No categories yet</p>
+          <p className="mt-1 text-sm text-[#6B7280]">
+            Create your first category to organize platform services
           </p>
         </div>
-      ) : (
+      ) : !error ? (
         <>
-          {/* Desktop table */}
-          <div className="admin-card animate-admin-scale-in hidden overflow-hidden rounded-2xl md:block">
+          <div className="animate-admin-scale-in hidden overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-[0_2px_12px_rgba(17,24,39,0.05)] md:block">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[var(--admin-beige)]/50 bg-gradient-to-r from-[var(--admin-green-muted)] to-[var(--admin-beige)]/20">
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                  <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
+                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#1E3A5F]">
                       Category
                     </th>
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#1E3A5F]">
                       Parent
                     </th>
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#1E3A5F]">
                       Status
                     </th>
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#1E3A5F]">
                       Usage
                     </th>
-                    <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-wider text-[var(--admin-green-dark)]">
+                    <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-wider text-[#1E3A5F]">
                       Actions
                     </th>
                   </tr>
@@ -201,7 +215,6 @@ export default function CategoryTable() {
             </div>
           </div>
 
-          {/* Mobile cards */}
           <div className="space-y-3 md:hidden">
             {categories.map((category, index) => (
               <CategoryCard
@@ -214,7 +227,7 @@ export default function CategoryTable() {
             ))}
           </div>
         </>
-      )}
+      ) : null}
     </div>
   );
 }
