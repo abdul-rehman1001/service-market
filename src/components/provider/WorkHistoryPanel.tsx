@@ -58,30 +58,32 @@ function StatPill({
 }) {
   const styles = {
     green: {
-      card: 'border-[#6FCF97]/40 bg-gradient-to-br from-white to-[#6FCF97]/12',
-      icon: 'bg-[#2FA084] text-white',
-      label: 'text-[#1F6F5F]/70',
-      value: 'text-[#1F6F5F]',
+      card: 'border-[#E5E7EB] bg-white',
+      iconWrap: 'border border-[#D1FAE5] bg-[#D1FAE5]/50 text-[#059669]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#111827]',
     },
     red: {
-      card: 'border-red-200/80 bg-gradient-to-br from-red-50/80 to-white',
-      icon: 'bg-red-500 text-white',
-      label: 'text-red-800/70',
-      value: 'text-red-900',
+      card: 'border-[#FECACA] bg-white',
+      iconWrap: 'border border-[#FECACA] bg-[#FEF2F2] text-[#EF4444]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#EF4444]',
     },
     gold: {
-      card: 'border-amber-200/70 bg-gradient-to-br from-amber-50/80 to-white',
-      icon: 'bg-amber-500 text-white',
-      label: 'text-amber-800/70',
-      value: 'text-amber-900',
+      card: 'border-[#FED7AA] bg-white',
+      iconWrap: 'border border-[#FED7AA] bg-[#FEF3C7] text-[#D97706]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#9A3412]',
     },
   }[variant];
 
   return (
-    <div className={`rounded-2xl border p-4 shadow-sm sm:p-5 ${styles.card}`}>
+    <div
+      className={`rounded-2xl border p-4 shadow-[0_2px_12px_rgba(17,24,39,0.05)] transition-all duration-200 hover:shadow-[0_8px_24px_rgba(16,185,129,0.08)] sm:p-5 ${styles.card}`}
+    >
       <div className="mb-2.5 flex items-center gap-2.5">
         <div
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${styles.icon}`}
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${styles.iconWrap}`}
         >
           <Icon className="h-4 w-4" />
         </div>
@@ -99,11 +101,11 @@ function StarRating({ rating }: { rating: number }) {
         <Star
           key={i}
           className={`h-4 w-4 ${
-            i < rating ? 'fill-amber-400 text-amber-400' : 'fill-[#EEEEEE] text-[#6FCF97]/50'
+            i < rating ? 'fill-[#F59E0B] text-[#F59E0B]' : 'fill-[#F3F4F6] text-[#E5E7EB]'
           }`}
         />
       ))}
-      <span className="ml-1.5 text-sm font-semibold text-[#1F6F5F]">{rating}/5</span>
+      <span className="ml-1.5 text-sm font-semibold text-[#111827]">{rating}/5</span>
     </div>
   );
 }
@@ -168,41 +170,48 @@ export const WorkHistoryPanel: React.FC = () => {
   return (
     <section className="space-y-5 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h2 className="text-xl font-bold text-[#1F6F5F] sm:text-2xl">Work History</h2>
-          <p className="mt-1 text-sm text-[#1F6F5F]/65">
-            Past completed and cancelled jobs with customer ratings
-          </p>
+      <div className="flex flex-col gap-4 rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#D1FAE5] bg-[#D1FAE5]/50 text-[#059669]">
+            <History className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-xl font-bold text-[#1E3A5F] sm:text-2xl">Work History</h2>
+            <p className="mt-1 text-sm text-[#6B7280]">
+              Past completed and cancelled jobs with customer ratings
+            </p>
+          </div>
         </div>
         <button
           type="button"
           onClick={fetchWorkHistory}
           disabled={loading}
-          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-[#6FCF97]/50 bg-white px-3.5 py-2 text-sm font-semibold text-[#1F6F5F] shadow-sm transition hover:border-[#2FA084] hover:bg-[#EEEEEE] disabled:opacity-50"
+          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm font-semibold text-[#111827] shadow-sm transition-all hover:border-[#10B981]/30 hover:bg-[#F5F7F8] disabled:opacity-50"
         >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 text-[#10B981] ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </button>
       </div>
 
       {error && (
-        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
-          <AlertCircle className="h-5 w-5 shrink-0 text-red-600" />
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="flex items-start gap-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-4">
+          <AlertCircle className="h-5 w-5 shrink-0 text-[#EF4444]" />
+          <p className="text-sm text-[#EF4444]">{error}</p>
         </div>
       )}
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#6FCF97]/35 bg-white py-16">
-          <Loader2 className="h-9 w-9 animate-spin text-[#2FA084]" />
-          <p className="text-sm text-[#1F6F5F]/65">Loading work history…</p>
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white py-16 shadow-sm">
+          <Loader2 className="h-9 w-9 animate-spin text-[#10B981]" />
+          <p className="text-sm text-[#6B7280]">Loading work history…</p>
         </div>
       ) : workHistory.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[#6FCF97]/50 bg-[#EEEEEE]/60 px-6 py-14 text-center">
-          <History className="mx-auto mb-3 h-10 w-10 text-[#6FCF97]" />
-          <p className="font-semibold text-[#1F6F5F]">No work history yet</p>
-          <p className="mt-1 text-sm text-[#1F6F5F]/60">
+        <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-white px-6 py-14 text-center shadow-sm">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D1FAE5] bg-[#D1FAE5]/40 text-[#059669]">
+            <History className="h-7 w-7" />
+          </div>
+          <p className="font-semibold text-[#1E3A5F]">No work history yet</p>
+          <p className="mt-1 text-sm text-[#6B7280]">
             Complete bookings to build your history and collect reviews.
           </p>
         </div>
@@ -236,7 +245,8 @@ export const WorkHistoryPanel: React.FC = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.03 }}
-                  className="overflow-hidden rounded-2xl border border-[#6FCF97]/35 bg-white shadow-[0_6px_24px_-16px_rgba(31,111,95,0.5)]"
+                  whileHover={{ y: -2 }}
+                  className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-[0_2px_12px_rgba(17,24,39,0.05)] transition-all duration-200 hover:border-[#10B981]/25 hover:shadow-[0_8px_24px_rgba(16,185,129,0.08)]"
                 >
                   <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:p-5">
                     <div className="min-w-0 flex-1 space-y-3">
@@ -244,8 +254,8 @@ export const WorkHistoryPanel: React.FC = () => {
                         <span
                           className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
                             isCompleted
-                              ? 'bg-[#6FCF97]/25 text-[#1F6F5F]'
-                              : 'bg-red-100 text-red-700'
+                              ? 'border border-[#D1FAE5] bg-[#D1FAE5]/50 text-[#059669]'
+                              : 'border border-[#FECACA] bg-[#FEF2F2] text-[#EF4444]'
                           }`}
                         >
                           {isCompleted ? (
@@ -255,37 +265,37 @@ export const WorkHistoryPanel: React.FC = () => {
                           )}
                           {job.status}
                         </span>
-                        <span className="inline-flex items-center gap-1 text-xs text-[#1F6F5F]/60">
+                        <span className="inline-flex items-center gap-1 text-xs text-[#6B7280]">
                           <Calendar className="h-3.5 w-3.5" />
                           {format(new Date(job.date), 'MMM d, yyyy')}
                         </span>
                       </div>
 
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EEEEEE]">
-                            <User className="h-4 w-4 text-[#2FA084]" />
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#E5E7EB] bg-[#F9FAFB]">
+                            <User className="h-4 w-4 text-[#10B981]" />
                           </div>
-                          <p className="truncate font-semibold text-[#1F6F5F]">{job.customer}</p>
+                          <p className="truncate font-semibold text-[#111827]">{job.customer}</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EEEEEE]">
-                            <Wrench className="h-4 w-4 text-[#2FA084]" />
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#E5E7EB] bg-[#F9FAFB]">
+                            <Wrench className="h-4 w-4 text-[#10B981]" />
                           </div>
-                          <p className="truncate text-sm text-[#1F6F5F]/75">{job.service}</p>
+                          <p className="truncate text-sm text-[#6B7280]">{job.service}</p>
                         </div>
                       </div>
 
                       {job.rating > 0 && (
-                        <div className="rounded-xl border border-[#6FCF97]/30 bg-[#EEEEEE]/60 px-3 py-2.5">
+                        <div className="rounded-xl border border-[#FED7AA] bg-[#FFFBEB] px-3 py-2.5">
                           <StarRating rating={job.rating} />
                         </div>
                       )}
 
                       {job.reviewComment && (
-                        <div className="flex gap-2 rounded-xl border-l-4 border-[#2FA084] bg-[#EEEEEE]/80 px-3 py-2.5">
-                          <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-[#2FA084]" />
-                          <p className="text-sm italic leading-relaxed text-[#1F6F5F]/80">
+                        <div className="flex gap-2 rounded-xl border border-[#E5E7EB] border-l-4 border-l-[#10B981] bg-[#F9FAFB] px-3 py-2.5">
+                          <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-[#10B981]" />
+                          <p className="text-sm italic leading-relaxed text-[#6B7280]">
                             &ldquo;{job.reviewComment}&rdquo;
                           </p>
                         </div>

@@ -40,7 +40,7 @@ function StarRating({ rating, size = 'md' }: { rating: number; size?: 'sm' | 'md
         <Star
           key={i}
           className={`${starClass} ${
-            i < rating ? 'fill-amber-400 text-amber-400' : 'fill-[#EEEEEE] text-[#6FCF97]/45'
+            i < rating ? 'fill-[#F59E0B] text-[#F59E0B]' : 'fill-[#F3F4F6] text-[#E5E7EB]'
           }`}
         />
       ))}
@@ -53,21 +53,42 @@ function StatPill({
   value,
   icon: Icon,
   children,
+  variant = 'green',
 }: {
   label: string;
   value: string | number;
   icon: React.ComponentType<{ className?: string }>;
   children?: React.ReactNode;
+  variant?: 'green' | 'gold';
 }) {
+  const styles = {
+    green: {
+      card: 'border-[#E5E7EB] bg-white',
+      iconWrap: 'border border-[#D1FAE5] bg-[#D1FAE5]/50 text-[#059669]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#111827]',
+    },
+    gold: {
+      card: 'border-[#FED7AA] bg-white',
+      iconWrap: 'border border-[#FED7AA] bg-[#FEF3C7] text-[#D97706]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#9A3412]',
+    },
+  }[variant];
+
   return (
-    <div className="rounded-2xl border border-[#6FCF97]/40 bg-gradient-to-br from-white to-[#6FCF97]/10 p-4 shadow-sm sm:p-5">
+    <div
+      className={`rounded-2xl border p-4 shadow-[0_2px_12px_rgba(17,24,39,0.05)] transition-all duration-200 hover:shadow-[0_8px_24px_rgba(16,185,129,0.08)] sm:p-5 ${styles.card}`}
+    >
       <div className="mb-2.5 flex items-center gap-2.5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#2FA084] text-white">
+        <div
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${styles.iconWrap}`}
+        >
           <Icon className="h-4 w-4" />
         </div>
-        <p className="text-xs font-semibold text-[#1F6F5F]/70 sm:text-sm">{label}</p>
+        <p className={`text-xs font-semibold sm:text-sm ${styles.label}`}>{label}</p>
       </div>
-      <p className="text-2xl font-bold text-[#1F6F5F] sm:text-3xl">{value}</p>
+      <p className={`text-2xl font-bold sm:text-3xl ${styles.value}`}>{value}</p>
       {children ? <div className="mt-2">{children}</div> : null}
     </div>
   );
@@ -179,41 +200,48 @@ export const ReviewsPanel: React.FC = () => {
   return (
     <section className="space-y-5 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h2 className="text-xl font-bold text-[#1F6F5F] sm:text-2xl">Customer Reviews</h2>
-          <p className="mt-1 text-sm text-[#1F6F5F]/65">
-            Feedback and ratings from your completed jobs
-          </p>
+      <div className="flex flex-col gap-4 rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#FED7AA] bg-[#FEF3C7] text-[#D97706]">
+            <Star className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-xl font-bold text-[#1E3A5F] sm:text-2xl">Customer Reviews</h2>
+            <p className="mt-1 text-sm text-[#6B7280]">
+              Feedback and ratings from your completed jobs
+            </p>
+          </div>
         </div>
         <button
           type="button"
           onClick={loadData}
           disabled={loading}
-          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-[#6FCF97]/50 bg-white px-3.5 py-2 text-sm font-semibold text-[#1F6F5F] shadow-sm transition hover:border-[#2FA084] hover:bg-[#EEEEEE] disabled:opacity-50"
+          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm font-semibold text-[#111827] shadow-sm transition-all hover:border-[#10B981]/30 hover:bg-[#F5F7F8] disabled:opacity-50"
         >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 text-[#10B981] ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </button>
       </div>
 
       {error && (
-        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
-          <AlertCircle className="h-5 w-5 shrink-0 text-red-600" />
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="flex items-start gap-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-4">
+          <AlertCircle className="h-5 w-5 shrink-0 text-[#EF4444]" />
+          <p className="text-sm text-[#EF4444]">{error}</p>
         </div>
       )}
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#6FCF97]/35 bg-white py-16">
-          <Loader2 className="h-9 w-9 animate-spin text-[#2FA084]" />
-          <p className="text-sm text-[#1F6F5F]/65">Loading reviews…</p>
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white py-16 shadow-sm">
+          <Loader2 className="h-9 w-9 animate-spin text-[#10B981]" />
+          <p className="text-sm text-[#6B7280]">Loading reviews…</p>
         </div>
       ) : reviews.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[#6FCF97]/50 bg-[#EEEEEE]/60 px-6 py-14 text-center">
-          <Star className="mx-auto mb-3 h-10 w-10 text-[#6FCF97]" />
-          <p className="font-semibold text-[#1F6F5F]">No reviews yet</p>
-          <p className="mt-1 text-sm text-[#1F6F5F]/60">
+        <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-white px-6 py-14 text-center shadow-sm">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#FED7AA] bg-[#FEF3C7] text-[#D97706]">
+            <Star className="h-7 w-7" />
+          </div>
+          <p className="font-semibold text-[#1E3A5F]">No reviews yet</p>
+          <p className="mt-1 text-sm text-[#6B7280]">
             Complete jobs and deliver great service to start collecting reviews.
           </p>
         </div>
@@ -221,8 +249,8 @@ export const ReviewsPanel: React.FC = () => {
         <>
           {/* Summary */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-            <StatPill label="Total reviews" value={summary.count} icon={Users} />
-            <StatPill label="Average rating" value={`${summary.average}/5`} icon={Star}>
+            <StatPill label="Total reviews" value={summary.count} icon={Users} variant="green" />
+            <StatPill label="Average rating" value={`${summary.average}/5`} icon={Star} variant="gold">
               <StarRating rating={Math.round(summary.average)} size="sm" />
             </StatPill>
           </div>
@@ -240,9 +268,10 @@ export const ReviewsPanel: React.FC = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.03 }}
+                  whileHover={{ y: -2 }}
                   className="list-none"
                 >
-                  <article className="overflow-hidden rounded-2xl border border-[#6FCF97]/35 bg-white shadow-[0_6px_24px_-16px_rgba(31,111,95,0.5)]">
+                  <article className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-[0_2px_12px_rgba(17,24,39,0.05)] transition-all duration-200 hover:border-[#10B981]/25 hover:shadow-[0_8px_24px_rgba(16,185,129,0.08)]">
                     <div className="p-4 sm:p-5">
                       {/* Top row */}
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
@@ -251,32 +280,32 @@ export const ReviewsPanel: React.FC = () => {
                             <img
                               src={review.reviewer.profileImage}
                               alt={review.customerName}
-                              className="h-11 w-11 shrink-0 rounded-xl border-2 border-[#6FCF97]/40 object-cover"
+                              className="h-11 w-11 shrink-0 rounded-xl border-2 border-[#E5E7EB] object-cover"
                             />
                           ) : (
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#2FA084] to-[#1F6F5F] text-sm font-bold text-white">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#1E3A5F] text-sm font-bold text-white">
                               {getInitials(review.customerName)}
                             </div>
                           )}
                           <div className="min-w-0">
-                            <p className="truncate font-semibold text-[#1F6F5F]">
+                            <p className="truncate font-semibold text-[#111827]">
                               {review.customerName}
                             </p>
                             {review.serviceName && (
-                              <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-[#1F6F5F]/60">
-                                <Wrench className="h-3 w-3 shrink-0" />
+                              <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-[#6B7280]">
+                                <Wrench className="h-3 w-3 shrink-0 text-[#10B981]" />
                                 {review.serviceName}
                               </p>
                             )}
-                            <p className="mt-1 flex items-center gap-1 text-xs text-[#1F6F5F]/55">
+                            <p className="mt-1 flex items-center gap-1 text-xs text-[#6B7280]">
                               <Calendar className="h-3 w-3 shrink-0" />
                               {formatDate(review.createdAt)}
                             </p>
                           </div>
                         </div>
-                        <div className="flex shrink-0 flex-col items-start gap-1 sm:items-end">
+                        <div className="flex shrink-0 flex-col items-start gap-1.5 sm:items-end">
                           <StarRating rating={review.rating} />
-                          <span className="rounded-full bg-[#6FCF97]/20 px-2.5 py-0.5 text-xs font-bold text-[#1F6F5F]">
+                          <span className="rounded-full border border-[#FED7AA] bg-[#FEF3C7] px-2.5 py-0.5 text-xs font-bold text-[#B45309]">
                             {review.rating}/5
                           </span>
                         </div>
@@ -284,9 +313,9 @@ export const ReviewsPanel: React.FC = () => {
 
                       {/* Comment */}
                       {review.comment?.trim() && (
-                        <div className="mt-4 flex gap-2.5 rounded-xl border border-[#6FCF97]/25 bg-[#EEEEEE]/70 px-3 py-3">
-                          <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-[#2FA084]" />
-                          <p className="text-sm leading-relaxed text-[#1F6F5F]/85">
+                        <div className="mt-4 flex gap-2.5 rounded-xl border border-[#E5E7EB] border-l-4 border-l-[#10B981] bg-[#F9FAFB] px-3 py-3">
+                          <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-[#10B981]" />
+                          <p className="text-sm leading-relaxed text-[#374151]">
                             {review.comment}
                           </p>
                         </div>
@@ -294,16 +323,16 @@ export const ReviewsPanel: React.FC = () => {
 
                       {/* Detail scores */}
                       {detailScores.length > 0 && (
-                        <div className="mt-4 grid grid-cols-2 gap-2 border-t border-[#EEEEEE] pt-4 sm:grid-cols-3 lg:grid-cols-5">
+                        <div className="mt-4 grid grid-cols-2 gap-2 border-t border-[#E5E7EB] pt-4 sm:grid-cols-3 lg:grid-cols-5">
                           {detailScores.map(({ key, label }) => (
                             <div
                               key={key}
-                              className="rounded-lg border border-[#6FCF97]/25 bg-[#EEEEEE]/50 px-2.5 py-2 text-center"
+                              className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-2.5 py-2 text-center transition-colors hover:border-[#10B981]/25"
                             >
-                              <p className="text-[10px] font-medium leading-tight text-[#1F6F5F]/60 sm:text-xs">
+                              <p className="text-[10px] font-medium leading-tight text-[#6B7280] sm:text-xs">
                                 {label}
                               </p>
-                              <p className="mt-0.5 text-sm font-bold text-[#1F6F5F]">
+                              <p className="mt-0.5 text-sm font-bold text-[#111827]">
                                 {review[key] as number}/5
                               </p>
                             </div>

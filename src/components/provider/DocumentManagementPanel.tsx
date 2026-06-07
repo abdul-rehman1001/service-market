@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Upload,
@@ -14,6 +15,9 @@ import {
   Shield,
   IdCard,
   ExternalLink,
+  FolderOpen,
+  FileCheck,
+  FileX,
 } from 'lucide-react';
 
 interface ProviderData {
@@ -35,38 +39,115 @@ interface ProviderDocument {
 }
 
 const inputClass =
-  'w-full rounded-xl border border-[#6FCF97]/45 bg-white px-4 py-2.5 text-sm text-[#1F6F5F] shadow-sm transition focus:border-[#2FA084] focus:outline-none focus:ring-2 focus:ring-[#2FA084]/25 disabled:cursor-not-allowed disabled:bg-[#EEEEEE]';
+  'w-full rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm text-[#111827] shadow-sm transition focus:border-[#10B981] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 disabled:cursor-not-allowed disabled:bg-[#F3F4F6]';
 
-const labelClass = 'mb-1.5 block text-sm font-semibold text-[#1F6F5F]';
+const labelClass = 'mb-1.5 block text-sm font-semibold text-[#374151]';
 
 const primaryBtnClass =
-  'inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#2FA084] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#1F6F5F] disabled:cursor-not-allowed disabled:opacity-50';
-
-/** Solid secondary text — avoids opacity-based “faded” look */
-const mutedTextClass = 'text-[#4A7268]';
-
-const cardHeaderClass = 'border-b border-[#6FCF97] bg-[#EEEEEE] px-4 py-3.5 sm:px-5';
+  'inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#10B981] px-4 py-3 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition hover:bg-[#059669] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] disabled:cursor-not-allowed disabled:opacity-50';
 
 function verificationBadgeStyles(status: string) {
   switch (status) {
     case 'APPROVED':
-      return 'bg-[#6FCF97]/25 text-[#1F6F5F] border-[#6FCF97]/40';
+      return 'border-[#BBF7D0] bg-[#D1FAE5] text-[#059669]';
     case 'REJECTED':
-      return 'bg-red-100 text-red-800 border-red-200';
+      return 'border-[#FECACA] bg-[#FEF2F2] text-[#DC2626]';
     default:
-      return 'bg-amber-100 text-amber-800 border-amber-200';
+      return 'border-[#FED7AA] bg-[#FEF3C7] text-[#B45309]';
   }
 }
 
 function docStatusStyles(status: string) {
   switch (status) {
     case 'APPROVED':
-      return 'bg-[#6FCF97]/25 text-[#1F6F5F] border-[#6FCF97]/40';
+      return 'border-[#BBF7D0] bg-[#F0FDF4] text-[#166534]';
     case 'REJECTED':
-      return 'bg-red-100 text-red-800 border-red-200';
+      return 'border-[#FECACA] bg-[#FEF2F2] text-[#DC2626]';
     default:
-      return 'bg-amber-100 text-amber-800 border-amber-200';
+      return 'border-[#FED7AA] bg-[#FEF3C7] text-[#B45309]';
   }
+}
+
+function StatPill({
+  label,
+  value,
+  icon: Icon,
+  variant,
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ComponentType<{ className?: string }>;
+  variant: 'green' | 'navy' | 'amber' | 'red';
+}) {
+  const styles = {
+    green: {
+      card: 'border-[#E5E7EB] bg-white',
+      iconWrap: 'border border-[#D1FAE5] bg-[#D1FAE5]/50 text-[#059669]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#111827]',
+    },
+    navy: {
+      card: 'border-[#E5E7EB] bg-white',
+      iconWrap: 'border border-[#DBEAFE] bg-[#EFF6FF] text-[#1E3A5F]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#1E3A5F]',
+    },
+    amber: {
+      card: 'border-[#E5E7EB] bg-white',
+      iconWrap: 'border border-[#FED7AA] bg-[#FEF3C7] text-[#D97706]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#9A3412]',
+    },
+    red: {
+      card: 'border-[#E5E7EB] bg-white',
+      iconWrap: 'border border-[#FECACA] bg-[#FEF2F2] text-[#EF4444]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#111827]',
+    },
+  }[variant];
+
+  return (
+    <div
+      className={`rounded-2xl border p-4 shadow-[0_2px_12px_rgba(17,24,39,0.05)] transition-all duration-200 hover:shadow-[0_8px_24px_rgba(16,185,129,0.08)] sm:p-5 ${styles.card}`}
+    >
+      <div className="mb-2.5 flex items-center gap-2.5">
+        <div
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${styles.iconWrap}`}
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+        <p className={`text-xs font-semibold sm:text-sm ${styles.label}`}>{label}</p>
+      </div>
+      <p className={`text-2xl font-bold sm:text-3xl ${styles.value}`}>{value}</p>
+    </div>
+  );
+}
+
+function SectionCard({
+  title,
+  subtitle,
+  icon: Icon,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-[0_2px_12px_rgba(17,24,39,0.05)]">
+      <div className="border-b border-[#E5E7EB] bg-[#F9FAFB] px-4 py-3.5 sm:px-5">
+        <h3 className="flex items-center gap-2.5 text-base font-bold text-[#1E3A5F] sm:text-lg">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D1FAE5] bg-[#D1FAE5]/50 text-[#059669]">
+            <Icon className="h-4 w-4" />
+          </div>
+          {title}
+        </h3>
+        {subtitle ? <p className="mt-1.5 pl-[2.625rem] text-xs text-[#6B7280] sm:text-sm">{subtitle}</p> : null}
+      </div>
+      {children}
+    </div>
+  );
 }
 
 export const DocumentManagementPanel: React.FC = () => {
@@ -358,13 +439,13 @@ export const DocumentManagementPanel: React.FC = () => {
   const StatusIcon = ({ status }: { status: string }) => {
     switch (status) {
       case 'APPROVED':
-        return <CheckCircle2 className="h-4 w-4 text-[#2FA084]" />;
+        return <CheckCircle2 className="h-4 w-4 text-[#22C55E]" />;
       case 'REJECTED':
-        return <XCircle className="h-4 w-4 text-red-600" />;
+        return <XCircle className="h-4 w-4 text-[#EF4444]" />;
       case 'PENDING':
-        return <Clock className="h-4 w-4 text-amber-600" />;
+        return <Clock className="h-4 w-4 text-[#F59E0B]" />;
       default:
-        return <AlertCircle className="h-4 w-4 text-[#1F6F5F]/50" />;
+        return <AlertCircle className="h-4 w-4 text-[#6B7280]" />;
     }
   };
 
@@ -393,13 +474,13 @@ export const DocumentManagementPanel: React.FC = () => {
       </label>
       <label
         htmlFor={id}
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#6FCF97] bg-[#EEEEEE] px-3 py-4 text-center transition hover:border-[#2FA084] hover:bg-[#6FCF97]/20 ${
+        className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#D1FAE5] bg-[#F9FAFB] px-3 py-4 text-center transition-all hover:border-[#10B981]/50 hover:bg-[#D1FAE5]/20 ${
           disabled ? 'pointer-events-none opacity-50' : ''
         }`}
       >
-        <Upload className="mb-1.5 h-5 w-5 text-[#2FA084]" />
-        <span className="text-xs font-semibold text-[#1F6F5F]">Tap to upload</span>
-        <span className={`mt-0.5 text-[10px] ${mutedTextClass}`}>JPEG or PNG, max 5MB</span>
+        <Upload className="mb-1.5 h-5 w-5 text-[#10B981]" />
+        <span className="text-xs font-semibold text-[#111827]">Tap to upload</span>
+        <span className="mt-0.5 text-[10px] text-[#6B7280]">JPEG or PNG, max 5MB</span>
         <input
           id={id}
           type="file"
@@ -410,16 +491,16 @@ export const DocumentManagementPanel: React.FC = () => {
         />
       </label>
       {file && (
-        <p className="mt-1.5 truncate text-xs font-medium text-[#2FA084]">{file.name}</p>
+        <p className="mt-1.5 truncate text-xs font-medium text-[#059669]">{file.name}</p>
       )}
     </div>
   );
 
   if (loading) {
     return (
-      <section className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#6FCF97]/35 bg-white py-16">
-        <Loader2 className="h-9 w-9 animate-spin text-[#2FA084]" />
-        <p className={`text-sm ${mutedTextClass}`}>Loading documents…</p>
+      <section className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white py-16 shadow-sm">
+        <Loader2 className="h-9 w-9 animate-spin text-[#10B981]" />
+        <p className="text-sm text-[#6B7280]">Loading documents…</p>
       </section>
     );
   }
@@ -429,61 +510,65 @@ export const DocumentManagementPanel: React.FC = () => {
   return (
     <section className="space-y-5 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h2 className="text-xl font-bold text-[#1F6F5F] sm:text-2xl">Documents</h2>
-          <p className={`mt-1 text-sm ${mutedTextClass}`}>
-            Submit CNIC for verification and upload supporting files
-          </p>
-          {provider && (
-            <span
-              className={`mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${verificationBadgeStyles(provider.verificationStatus)}`}
-            >
-              <Shield className="h-3.5 w-3.5" />
-              Verification: {provider.verificationStatus}
-            </span>
-          )}
+      <div className="flex flex-col gap-4 rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-5 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#D1FAE5] bg-[#D1FAE5]/60 text-[#059669]">
+            <Shield className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-xl font-bold text-[#1E3A5F] sm:text-2xl">Documents</h2>
+            <p className="mt-1 text-sm text-[#6B7280]">
+              Submit CNIC for verification and upload supporting files
+            </p>
+            {provider && (
+              <span
+                className={`mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${verificationBadgeStyles(provider.verificationStatus)}`}
+              >
+                <Shield className="h-3.5 w-3.5" />
+                Verification: {provider.verificationStatus}
+              </span>
+            )}
+          </div>
         </div>
         <button
           type="button"
           onClick={fetchProviderData}
           disabled={loading}
-          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-[#6FCF97]/50 bg-white px-3.5 py-2 text-sm font-semibold text-[#1F6F5F] shadow-sm transition hover:border-[#2FA084] hover:bg-[#EEEEEE] disabled:opacity-50"
+          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm font-semibold text-[#111827] shadow-sm transition-all hover:border-[#10B981]/30 hover:bg-[#F5F7F8] disabled:opacity-50"
         >
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw className={`h-4 w-4 text-[#10B981] ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </button>
       </div>
 
-      {/* Doc summary pills */}
+      {/* Doc summary */}
       {documents.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          <span className="rounded-full border border-[#6FCF97]/40 bg-[#EEEEEE] px-3 py-1 text-xs font-semibold text-[#1F6F5F]">
-            Total: {docSummary.total}
-          </span>
-          <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
-            Pending: {docSummary.pending}
-          </span>
-          <span className="rounded-full border border-[#6FCF97]/40 bg-[#6FCF97]/15 px-3 py-1 text-xs font-semibold text-[#1F6F5F]">
-            Approved: {docSummary.approved}
-          </span>
-          {docSummary.rejected > 0 && (
-            <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
-              Rejected: {docSummary.rejected}
-            </span>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+          <StatPill label="Total" value={docSummary.total} icon={FolderOpen} variant="navy" />
+          <StatPill label="Pending" value={docSummary.pending} icon={Clock} variant="amber" />
+          <StatPill label="Approved" value={docSummary.approved} icon={FileCheck} variant="green" />
+          {docSummary.rejected > 0 ? (
+            <StatPill label="Rejected" value={docSummary.rejected} icon={FileX} variant="red" />
+          ) : (
+            <StatPill label="Rejected" value={0} icon={FileX} variant="red" />
           )}
         </div>
       )}
 
       {message.text && (
         <div
-          className={`rounded-xl border p-4 text-sm ${
+          className={`flex items-start gap-3 rounded-xl border p-4 text-sm ${
             message.type === 'success'
-              ? 'border-[#6FCF97]/50 bg-[#6FCF97]/15 text-[#1F6F5F]'
-              : 'border-red-200 bg-red-50 text-red-800'
+              ? 'border-[#BBF7D0] bg-[#F0FDF4] text-[#166534]'
+              : 'border-[#FECACA] bg-[#FEF2F2] text-[#EF4444]'
           }`}
         >
-          {message.text}
+          {message.type === 'success' ? (
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#22C55E]" />
+          ) : (
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#EF4444]" />
+          )}
+          <p className="font-medium">{message.text}</p>
         </div>
       )}
 
@@ -491,21 +576,15 @@ export const DocumentManagementPanel: React.FC = () => {
         {/* Upload column */}
         <div className="space-y-5">
           {/* CNIC card */}
-          <div className="overflow-hidden rounded-2xl border border-[#6FCF97]/35 bg-white shadow-sm">
-            <div className={cardHeaderClass}>
-              <h3 className="flex items-center gap-2 text-base font-bold text-[#1F6F5F]">
-                <IdCard className="h-5 w-5 text-[#2FA084]" />
-                CNIC verification
-              </h3>
-              <p className={`mt-1 text-xs sm:text-sm ${mutedTextClass}`}>
-                Upload front and back in one request for admin review
-              </p>
-            </div>
-
+          <SectionCard
+            title="CNIC verification"
+            subtitle="Upload front and back in one request for admin review"
+            icon={IdCard}
+          >
             <form onSubmit={handleCnicRequestSubmit} className="space-y-4 p-4 sm:p-5">
               <div>
                 <label htmlFor="cnic-number" className={labelClass}>
-                  CNIC number <span className="text-red-500">*</span>
+                  CNIC number <span className="text-[#EF4444]">*</span>
                 </label>
                 <input
                   id="cnic-number"
@@ -523,7 +602,7 @@ export const DocumentManagementPanel: React.FC = () => {
                   className={inputClass}
                   required
                 />
-                <p className={`mt-1 text-xs ${mutedTextClass}`}>Exactly 13 digits, no dashes</p>
+                <p className="mt-1 text-xs text-[#6B7280]">Exactly 13 digits, no dashes</p>
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -559,23 +638,18 @@ export const DocumentManagementPanel: React.FC = () => {
                 )}
               </button>
             </form>
-          </div>
+          </SectionCard>
 
           {/* Supporting docs card */}
-          <div className="overflow-hidden rounded-2xl border border-[#6FCF97]/35 bg-white shadow-sm">
-            <div className={cardHeaderClass}>
-              <h3 className="flex items-center gap-2 text-base font-bold text-[#1F6F5F]">
-                <FileText className="h-5 w-5 text-[#2FA084]" />
-                Supporting documents
-              </h3>
-              <p className={`mt-1 text-xs sm:text-sm ${mutedTextClass}`}>
-                Certificates and other optional files
-              </p>
-            </div>
-
+          <SectionCard
+            title="Supporting documents"
+            subtitle="Certificates and other optional files"
+            icon={FileText}
+          >
             <div className="p-4 sm:p-5">
               {!isVerified && (
-                <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+                <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-[#FED7AA] bg-[#FEF3C7] px-3 py-2.5 text-sm text-[#B45309]">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                   Available after CNIC verification is approved.
                 </div>
               )}
@@ -609,12 +683,12 @@ export const DocumentManagementPanel: React.FC = () => {
                   </label>
                   <label
                     htmlFor="provider-supporting-doc-input"
-                    className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#6FCF97] bg-[#EEEEEE] px-3 py-5 text-center transition hover:border-[#2FA084] ${
+                    className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#D1FAE5] bg-[#F9FAFB] px-3 py-5 text-center transition-all hover:border-[#10B981]/50 hover:bg-[#D1FAE5]/20 ${
                       !isVerified ? 'pointer-events-none opacity-50' : ''
                     }`}
                   >
-                    <ImageIcon className="mb-2 h-6 w-6 text-[#2FA084]" />
-                    <span className="text-xs font-semibold text-[#1F6F5F]">Tap to select files</span>
+                    <ImageIcon className="mb-2 h-6 w-6 text-[#10B981]" />
+                    <span className="text-xs font-semibold text-[#111827]">Tap to select files</span>
                     <input
                       id="provider-supporting-doc-input"
                       type="file"
@@ -629,18 +703,18 @@ export const DocumentManagementPanel: React.FC = () => {
 
                 {supportingForm.files.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-[#1F6F5F]">
+                    <p className="text-xs font-semibold text-[#374151]">
                       Selected ({supportingForm.files.length})
                     </p>
                     {supportingForm.files.map((file, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-2.5 rounded-lg border border-[#6FCF97] bg-[#EEEEEE] px-3 py-2"
+                        className="flex items-center gap-2.5 rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 transition-colors hover:border-[#10B981]/25"
                       >
-                        <ImageIcon className="h-4 w-4 shrink-0 text-[#2FA084]" />
+                        <ImageIcon className="h-4 w-4 shrink-0 text-[#10B981]" />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-[#1F6F5F]">{file.name}</p>
-                          <p className={`text-xs ${mutedTextClass}`}>{formatFileSize(file.size)}</p>
+                          <p className="truncate text-sm font-medium text-[#111827]">{file.name}</p>
+                          <p className="text-xs text-[#6B7280]">{formatFileSize(file.size)}</p>
                         </div>
                       </div>
                     ))}
@@ -673,44 +747,46 @@ export const DocumentManagementPanel: React.FC = () => {
                 </button>
               </form>
             </div>
-          </div>
+          </SectionCard>
         </div>
 
         {/* Documents list */}
-        <div className="overflow-hidden rounded-2xl border border-[#6FCF97]/35 bg-white shadow-sm">
-          <div className={cardHeaderClass}>
-            <h3 className="text-base font-bold text-[#1F6F5F] sm:text-lg">Uploaded documents</h3>
-          </div>
-
+        <SectionCard title="Uploaded documents" icon={FolderOpen}>
           <div className="p-4 sm:p-5">
             {documents.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[#6FCF97] bg-[#EEEEEE] py-10 text-center">
-                <FileText className="mx-auto mb-2 h-8 w-8 text-[#2FA084]" />
-                <p className={`text-sm ${mutedTextClass}`}>No documents uploaded yet</p>
+              <div className="rounded-xl border border-dashed border-[#E5E7EB] bg-[#F9FAFB] py-10 text-center">
+                <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl border border-[#D1FAE5] bg-[#D1FAE5]/50">
+                  <FileText className="h-6 w-6 text-[#059669]" />
+                </div>
+                <p className="text-sm text-[#6B7280]">No documents uploaded yet</p>
               </div>
             ) : (
               <div className="max-h-[min(70vh,640px)] space-y-3 overflow-y-auto pr-0.5">
-                {documents.map((doc) => (
-                  <div
+                {documents.map((doc, index) => (
+                  <motion.div
                     key={doc.id}
-                    className="rounded-xl border border-[#6FCF97] bg-[#EEEEEE] p-3.5 sm:p-4"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                    whileHover={{ y: -1 }}
+                    className="rounded-xl border border-[#E5E7EB] bg-white p-3.5 shadow-sm transition-all duration-200 hover:border-[#10B981]/25 hover:shadow-[0_4px_16px_rgba(16,185,129,0.08)] sm:p-4"
                   >
                     <div className="flex gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#6FCF97]/35">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#D1FAE5] bg-[#D1FAE5]/50">
                         {doc.mimeType.startsWith('image/') ? (
-                          <ImageIcon className="h-5 w-5 text-[#2FA084]" />
+                          <ImageIcon className="h-5 w-5 text-[#059669]" />
                         ) : (
-                          <FileText className="h-5 w-5 text-[#2FA084]" />
+                          <FileText className="h-5 w-5 text-[#059669]" />
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                           <div className="min-w-0">
-                            <h4 className="text-sm font-semibold text-[#1F6F5F]">
+                            <h4 className="text-sm font-semibold text-[#111827]">
                               {doc.documentType.replace(/_/g, ' ')}
                             </h4>
-                            <p className={`truncate text-xs ${mutedTextClass}`}>{doc.fileName}</p>
-                            <p className={`mt-0.5 text-[10px] ${mutedTextClass}`}>
+                            <p className="truncate text-xs text-[#6B7280]">{doc.fileName}</p>
+                            <p className="mt-0.5 text-[10px] text-[#9CA3AF]">
                               {formatFileSize(doc.fileSize)} ·{' '}
                               {new Date(doc.createdAt).toLocaleDateString()}
                             </p>
@@ -724,7 +800,7 @@ export const DocumentManagementPanel: React.FC = () => {
                         </div>
 
                         {doc.status === 'REJECTED' && doc.rejectionReason && (
-                          <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs text-red-700">
+                          <p className="mt-2 rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-2.5 py-2 text-xs text-[#DC2626]">
                             {doc.rejectionReason}
                           </p>
                         )}
@@ -732,19 +808,19 @@ export const DocumentManagementPanel: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleViewDocument(doc.fileUrl)}
-                          className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#2FA084] hover:underline"
+                          className="mt-2 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-[#059669] transition-colors hover:bg-[#D1FAE5]/40"
                         >
                           <ExternalLink className="h-3.5 w-3.5" />
                           View document
                         </button>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             )}
           </div>
-        </div>
+        </SectionCard>
       </div>
     </section>
   );

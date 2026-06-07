@@ -24,6 +24,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+
 interface BookingData {
   id: string;
   status: string;
@@ -35,21 +36,21 @@ interface BookingData {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  COMPLETED: '#2FA084',
-  IN_PROGRESS: '#6FCF97',
-  EN_ROUTE: '#6FCF97',
-  CONFIRMED: '#1F6F5F',
-  CANCELLED: '#ef4444',
-  AUTO_CANCELLED: '#f97316',
-  PENDING: '#94a3b8',
+  COMPLETED: '#10B981',
+  IN_PROGRESS: '#059669',
+  EN_ROUTE: '#22C55E',
+  CONFIRMED: '#1E3A5F',
+  CANCELLED: '#EF4444',
+  AUTO_CANCELLED: '#F97316',
+  PENDING: '#9CA3AF',
 };
 
 const CHART_TOOLTIP_STYLE = {
-  backgroundColor: '#fff',
-  border: '1px solid rgba(111, 207, 151, 0.45)',
+  backgroundColor: '#FFFFFF',
+  border: '1px solid #E5E7EB',
   borderRadius: '12px',
   fontSize: '12px',
-  boxShadow: '0 8px 24px -12px rgba(31, 111, 95, 0.35)',
+  boxShadow: '0 8px 24px rgba(17, 24, 39, 0.08)',
 };
 
 function StatCard({
@@ -65,32 +66,32 @@ function StatCard({
 }) {
   const styles = {
     green: {
-      card: 'border-[#6FCF97]/40 bg-gradient-to-br from-white to-[#6FCF97]/15',
-      icon: 'bg-[#2FA084] text-white',
-      label: 'text-[#1F6F5F]/70',
-      value: 'text-[#1F6F5F]',
+      card: 'border-[#E5E7EB] bg-white',
+      iconWrap: 'border border-[#D1FAE5] bg-[#D1FAE5]/50 text-[#059669]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#111827]',
     },
     dark: {
-      card: 'border-[#6FCF97]/40 bg-gradient-to-br from-[#1F6F5F]/5 to-white',
-      icon: 'bg-[#1F6F5F] text-white',
-      label: 'text-[#1F6F5F]/70',
-      value: 'text-[#1F6F5F]',
+      card: 'border-[#E5E7EB] bg-white',
+      iconWrap: 'border border-[#E5E7EB] bg-[#1E3A5F] text-white',
+      label: 'text-[#6B7280]',
+      value: 'text-[#1E3A5F]',
     },
     gold: {
-      card: 'border-amber-200/60 bg-gradient-to-br from-amber-50/80 to-white',
-      icon: 'bg-amber-500 text-white',
-      label: 'text-amber-800/70',
-      value: 'text-amber-900',
+      card: 'border-[#FED7AA] bg-white',
+      iconWrap: 'border border-[#FED7AA] bg-[#FEF3C7] text-[#D97706]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#9A3412]',
     },
   }[accent];
 
   return (
     <div
-      className={`rounded-2xl border p-4 shadow-[0_8px_24px_-16px_rgba(31,111,95,0.45)] sm:p-5 ${styles.card}`}
+      className={`rounded-2xl border p-4 shadow-[0_2px_12px_rgba(17,24,39,0.05)] transition-all duration-200 hover:shadow-[0_8px_24px_rgba(16,185,129,0.08)] sm:p-5 ${styles.card}`}
     >
       <div className="mb-3 flex items-center gap-2.5">
         <div
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-sm sm:h-10 sm:w-10 ${styles.icon}`}
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-10 sm:w-10 ${styles.iconWrap}`}
         >
           <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
@@ -163,7 +164,7 @@ export const AnalyticsPanel: React.FC = () => {
     return Object.entries(statusCounts).map(([name, value]) => ({
       name: name.replace(/_/g, ' '),
       value,
-      color: STATUS_COLORS[name] || '#94a3b8',
+      color: STATUS_COLORS[name] || '#9CA3AF',
     }));
   };
 
@@ -190,35 +191,40 @@ export const AnalyticsPanel: React.FC = () => {
   return (
     <section className="space-y-5 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h2 className="text-xl font-bold text-[#1F6F5F] sm:text-2xl">Analytics</h2>
-          <p className="mt-1 text-sm text-[#1F6F5F]/65">
-            Track bookings, completion rate, and revenue over time
-          </p>
+      <div className="flex flex-col gap-4 rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#D1FAE5] bg-[#D1FAE5]/50 text-[#059669]">
+            <BarChart3 className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-xl font-bold text-[#1E3A5F] sm:text-2xl">Analytics</h2>
+            <p className="mt-1 text-sm text-[#6B7280]">
+              Track bookings, completion rate, and revenue over time
+            </p>
+          </div>
         </div>
         <button
           type="button"
           onClick={fetchAnalytics}
           disabled={loading}
-          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-[#6FCF97]/50 bg-white px-3.5 py-2 text-sm font-semibold text-[#1F6F5F] shadow-sm transition hover:border-[#2FA084] hover:bg-[#EEEEEE] disabled:opacity-50"
+          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm font-semibold text-[#111827] shadow-sm transition-all hover:border-[#10B981]/30 hover:bg-[#F5F7F8] disabled:opacity-50"
         >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 text-[#10B981] ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </button>
       </div>
 
       {error && (
-        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
-          <AlertCircle className="h-5 w-5 shrink-0 text-red-600" />
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="flex items-start gap-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-4">
+          <AlertCircle className="h-5 w-5 shrink-0 text-[#EF4444]" />
+          <p className="text-sm text-[#EF4444]">{error}</p>
         </div>
       )}
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#6FCF97]/35 bg-white py-16">
-          <Loader2 className="h-9 w-9 animate-spin text-[#2FA084]" />
-          <p className="text-sm text-[#1F6F5F]/65">Loading analytics…</p>
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white py-16 shadow-sm">
+          <Loader2 className="h-9 w-9 animate-spin text-[#10B981]" />
+          <p className="text-sm text-[#6B7280]">Loading analytics…</p>
         </div>
       ) : (
         <>
@@ -234,12 +240,12 @@ export const AnalyticsPanel: React.FC = () => {
             />
           </div>
 
-          {/* Secondary stats row — mobile friendly pills */}
+          {/* Secondary stats row */}
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-full border border-[#6FCF97]/40 bg-[#EEEEEE] px-3 py-1.5 text-xs font-semibold text-[#1F6F5F]">
+            <span className="rounded-full border border-[#D1FAE5] bg-[#D1FAE5]/40 px-3 py-1.5 text-xs font-semibold text-[#059669]">
               In progress: {stats.inProgressBookings}
             </span>
-            <span className="rounded-full border border-red-200/80 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700">
+            <span className="rounded-full border border-[#FECACA] bg-[#FEF2F2] px-3 py-1.5 text-xs font-semibold text-[#EF4444]">
               Cancelled: {stats.cancelledBookings}
             </span>
           </div>
@@ -247,27 +253,27 @@ export const AnalyticsPanel: React.FC = () => {
           {/* Charts */}
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5">
             {/* Bookings trend */}
-            <div className="overflow-hidden rounded-2xl border border-[#6FCF97]/35 bg-white p-4 shadow-sm sm:p-5">
-              <div className="mb-3 flex items-center gap-2 sm:mb-4">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2FA084]/15">
-                  <BarChart3 className="h-4 w-4 text-[#2FA084]" />
+            <div className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-[0_2px_12px_rgba(17,24,39,0.05)] sm:p-5">
+              <div className="mb-3 flex items-center gap-3 sm:mb-4">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#D1FAE5] bg-[#D1FAE5]/40">
+                  <BarChart3 className="h-4 w-4 text-[#059669]" />
                 </div>
-                <h3 className="text-base font-bold text-[#1F6F5F] sm:text-lg">Bookings trend</h3>
+                <h3 className="text-base font-bold text-[#1E3A5F] sm:text-lg">Bookings trend</h3>
               </div>
               {monthlyBookings.length > 0 ? (
                 <div className={chartHeight}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={monthlyBookings} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#EEEEEE" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                       <XAxis
                         dataKey="month"
-                        stroke="#1F6F5F"
-                        tick={{ fontSize: 11, fill: '#1F6F5F' }}
+                        stroke="#E5E7EB"
+                        tick={{ fontSize: 11, fill: '#6B7280' }}
                         tickMargin={8}
                       />
                       <YAxis
-                        stroke="#1F6F5F"
-                        tick={{ fontSize: 11, fill: '#1F6F5F' }}
+                        stroke="#E5E7EB"
+                        tick={{ fontSize: 11, fill: '#6B7280' }}
                         allowDecimals={false}
                         width={32}
                       />
@@ -276,10 +282,10 @@ export const AnalyticsPanel: React.FC = () => {
                         type="monotone"
                         dataKey="bookings"
                         name="Bookings"
-                        stroke="#2FA084"
+                        stroke="#10B981"
                         strokeWidth={2.5}
-                        dot={{ fill: '#2FA084', r: 4 }}
-                        activeDot={{ r: 6, fill: '#1F6F5F' }}
+                        dot={{ fill: '#10B981', r: 4 }}
+                        activeDot={{ r: 6, fill: '#1E3A5F' }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -290,12 +296,12 @@ export const AnalyticsPanel: React.FC = () => {
             </div>
 
             {/* Status pie */}
-            <div className="overflow-hidden rounded-2xl border border-[#6FCF97]/35 bg-white p-4 shadow-sm sm:p-5">
-              <div className="mb-3 flex items-center gap-2 sm:mb-4">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#6FCF97]/25">
-                  <PieChartIcon className="h-4 w-4 text-[#1F6F5F]" />
+            <div className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-[0_2px_12px_rgba(17,24,39,0.05)] sm:p-5">
+              <div className="mb-3 flex items-center gap-3 sm:mb-4">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E5E7EB] bg-[#F9FAFB]">
+                  <PieChartIcon className="h-4 w-4 text-[#1E3A5F]" />
                 </div>
-                <h3 className="text-base font-bold text-[#1F6F5F] sm:text-lg">Status breakdown</h3>
+                <h3 className="text-base font-bold text-[#1E3A5F] sm:text-lg">Status breakdown</h3>
               </div>
               {statusDistribution.length > 0 ? (
                 <div className={chartHeight}>
@@ -320,7 +326,7 @@ export const AnalyticsPanel: React.FC = () => {
                         verticalAlign="bottom"
                         wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }}
                         formatter={(value) => (
-                          <span className="text-[#1F6F5F]">{value}</span>
+                          <span className="text-[#6B7280]">{value}</span>
                         )}
                       />
                     </PieChart>
@@ -339,9 +345,9 @@ export const AnalyticsPanel: React.FC = () => {
 
 function EmptyChart({ message }: { message: string }) {
   return (
-    <div className="flex h-[200px] flex-col items-center justify-center rounded-xl border border-dashed border-[#6FCF97]/40 bg-[#EEEEEE]/50 px-4 text-center sm:h-[240px]">
-      <BarChart3 className="mb-2 h-8 w-8 text-[#6FCF97]" />
-      <p className="text-sm text-[#1F6F5F]/60">{message}</p>
+    <div className="flex h-[200px] flex-col items-center justify-center rounded-xl border border-dashed border-[#E5E7EB] bg-[#F9FAFB] px-4 text-center sm:h-[240px]">
+      <BarChart3 className="mb-2 h-8 w-8 text-[#D1FAE5]" />
+      <p className="text-sm text-[#6B7280]">{message}</p>
     </div>
   );
 }

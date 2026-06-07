@@ -112,7 +112,7 @@ function ProviderDashboardContent() {
 
         <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#F5F7F8] p-4 sm:p-6 lg:p-8">
           <div className="mb-4 lg:hidden">
-            <span className="inline-flex rounded-lg bg-white px-3 py-1 text-xs font-medium text-[#4B5563] shadow-sm">
+            <span className="inline-flex rounded-lg border border-[#E5E7EB] bg-white px-3 py-1 text-xs font-semibold text-[#6B7280] shadow-sm">
               {getProviderTabLabel(activeTab)}
             </span>
           </div>

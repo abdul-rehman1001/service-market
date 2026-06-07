@@ -33,34 +33,34 @@ export default function VerificationRequiredModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#1F6F5F]/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#1E3A5F]/40 p-4 backdrop-blur-sm">
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-[#6FCF97]/40 bg-white shadow-[0_24px_60px_-28px_rgba(31,111,95,0.75)]"
+        className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-[0_24px_60px_rgba(17,24,39,0.15)]"
       >
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-lg p-2 text-[#1F6F5F]/60 transition hover:bg-[#EEEEEE] hover:text-[#1F6F5F]"
+          className="absolute right-4 top-4 rounded-lg p-2 text-[#6B7280] transition hover:bg-[#F9FAFB] hover:text-[#111827]"
           aria-label="Close"
         >
           <X className="h-5 w-5" />
         </button>
 
-        <div className="border-b border-amber-200/80 bg-gradient-to-r from-amber-50 via-white to-[#EFFAF6] px-6 py-5">
+        <div className="border-b border-[#FED7AA] bg-[#FFFBEB] px-6 py-5">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#FED7AA] bg-[#FEF3C7] text-[#D97706]">
               <ShieldAlert className="h-6 w-6" />
             </div>
             <div className="min-w-0 pr-8">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-700">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#B45309]">
                 {statusLabel}
               </p>
-              <h3 className="mt-1 text-xl font-bold text-[#1F6F5F]">
+              <h3 className="mt-1 text-xl font-bold text-[#1E3A5F]">
                 Verify first to add services
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-[#4A7268]">
+              <p className="mt-2 text-sm leading-relaxed text-[#6B7280]">
                 You need an approved provider verification before creating or publishing services on
                 Servizo.
               </p>
@@ -69,14 +69,14 @@ export default function VerificationRequiredModal({
         </div>
 
         <div className="space-y-4 px-6 py-5">
-          <p className="text-sm leading-relaxed text-[#1F6F5F]/75">{statusMessage}</p>
+          <p className="text-sm leading-relaxed text-[#6B7280]">{statusMessage}</p>
 
-          <div className="rounded-xl border border-[#6FCF97]/35 bg-[#EEEEEE]/70 px-4 py-3.5">
+          <div className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-4 py-3.5">
             <div className="flex items-start gap-3">
-              <FileText className="mt-0.5 h-5 w-5 shrink-0 text-[#2FA084]" />
+              <FileText className="mt-0.5 h-5 w-5 shrink-0 text-[#10B981]" />
               <div>
-                <p className="text-sm font-semibold text-[#1F6F5F]">Go to Documents</p>
-                <p className="mt-1 text-xs leading-relaxed text-[#4A7268]">
+                <p className="text-sm font-semibold text-[#111827]">Go to Documents</p>
+                <p className="mt-1 text-xs leading-relaxed text-[#6B7280]">
                   Upload your CNIC front and back, then wait for admin approval. This is the same
                   Documents section shown in your provider dashboard sidebar.
                 </p>
@@ -88,7 +88,7 @@ export default function VerificationRequiredModal({
             <button
               type="button"
               onClick={handleGoToDocuments}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#2FA084] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#1F6F5F]"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#10B981] px-4 py-3 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(16,185,129,0.3)] transition hover:bg-[#059669]"
             >
               <FileText className="h-4 w-4" />
               Go to Documents
@@ -96,7 +96,7 @@ export default function VerificationRequiredModal({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex flex-1 items-center justify-center rounded-xl border border-[#6FCF97]/45 bg-white px-4 py-3 text-sm font-semibold text-[#1F6F5F] transition hover:bg-[#EEEEEE]"
+              className="inline-flex flex-1 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white px-4 py-3 text-sm font-semibold text-[#111827] transition hover:bg-[#F9FAFB]"
             >
               Not now
             </button>

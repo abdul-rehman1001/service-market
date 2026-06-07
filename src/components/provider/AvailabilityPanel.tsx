@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { format } from 'date-fns';
 import {
@@ -12,6 +13,9 @@ import {
   Plus,
   RefreshCw,
   CalendarDays,
+  CalendarCheck,
+  Ban,
+  Info,
 } from 'lucide-react';
 
 const DAYS_OF_WEEK = [
@@ -40,12 +44,85 @@ interface UnavailableDate {
 type AlertType = 'success' | 'error' | 'info';
 
 const inputClass =
-  'w-full rounded-xl border border-[#6FCF97]/45 bg-white px-3 py-2.5 text-sm text-[#1F6F5F] shadow-sm transition focus:border-[#2FA084] focus:outline-none focus:ring-2 focus:ring-[#2FA084]/25';
+  'w-full rounded-xl border border-[#E5E7EB] bg-white px-3 py-2.5 text-sm text-[#111827] shadow-sm transition focus:border-[#10B981] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20';
 
-const labelClass = 'mb-1.5 block text-xs font-semibold text-[#1F6F5F]';
+const labelClass = 'mb-1.5 block text-xs font-semibold text-[#374151]';
 
 const primaryBtnClass =
-  'inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#2FA084] px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#1F6F5F] disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#10B981] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition hover:bg-[#059669] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] disabled:cursor-not-allowed disabled:opacity-50';
+
+function StatPill({
+  label,
+  value,
+  icon: Icon,
+  variant,
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ComponentType<{ className?: string }>;
+  variant: 'green' | 'navy' | 'red';
+}) {
+  const styles = {
+    green: {
+      card: 'border-[#E5E7EB] bg-white',
+      iconWrap: 'border border-[#D1FAE5] bg-[#D1FAE5]/50 text-[#059669]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#111827]',
+    },
+    navy: {
+      card: 'border-[#E5E7EB] bg-white',
+      iconWrap: 'border border-[#DBEAFE] bg-[#EFF6FF] text-[#1E3A5F]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#1E3A5F]',
+    },
+    red: {
+      card: 'border-[#E5E7EB] bg-white',
+      iconWrap: 'border border-[#FECACA] bg-[#FEF2F2] text-[#EF4444]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#111827]',
+    },
+  }[variant];
+
+  return (
+    <div
+      className={`rounded-2xl border p-4 shadow-[0_2px_12px_rgba(17,24,39,0.05)] transition-all duration-200 hover:shadow-[0_8px_24px_rgba(16,185,129,0.08)] sm:p-5 ${styles.card}`}
+    >
+      <div className="mb-2.5 flex items-center gap-2.5">
+        <div
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${styles.iconWrap}`}
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+        <p className={`text-xs font-semibold sm:text-sm ${styles.label}`}>{label}</p>
+      </div>
+      <p className={`text-2xl font-bold sm:text-3xl ${styles.value}`}>{value}</p>
+    </div>
+  );
+}
+
+function SectionCard({
+  title,
+  icon: Icon,
+  children,
+}: {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-[0_2px_12px_rgba(17,24,39,0.05)]">
+      <div className="border-b border-[#E5E7EB] bg-[#F9FAFB] px-4 py-3.5 sm:px-5">
+        <h3 className="flex items-center gap-2.5 text-base font-bold text-[#1E3A5F] sm:text-lg">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D1FAE5] bg-[#D1FAE5]/50 text-[#059669]">
+            <Icon className="h-4 w-4" />
+          </div>
+          {title}
+        </h3>
+      </div>
+      <div className="space-y-4 p-4 sm:p-5">{children}</div>
+    </div>
+  );
+}
 
 export const AvailabilityPanel: React.FC = () => {
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
@@ -257,9 +334,9 @@ export const AvailabilityPanel: React.FC = () => {
 
   if (loading) {
     return (
-      <section className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#6FCF97]/35 bg-white py-16">
-        <Loader2 className="h-9 w-9 animate-spin text-[#2FA084]" />
-        <p className="text-sm text-[#1F6F5F]/65">Loading availability…</p>
+      <section className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white py-16 shadow-sm">
+        <Loader2 className="h-9 w-9 animate-spin text-[#10B981]" />
+        <p className="text-sm text-[#6B7280]">Loading availability…</p>
       </section>
     );
   }
@@ -267,38 +344,34 @@ export const AvailabilityPanel: React.FC = () => {
   return (
     <section className="w-full space-y-5 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h2 className="text-xl font-bold text-[#1F6F5F] sm:text-2xl">Availability</h2>
-          <p className="mt-1 text-sm text-[#1F6F5F]/65">
-            Set weekly working hours and mark days you are off
-          </p>
+      <div className="flex flex-col gap-4 rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#D1FAE5] bg-[#D1FAE5]/60 text-[#059669]">
+            <CalendarCheck className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-xl font-bold text-[#1E3A5F] sm:text-2xl">Availability</h2>
+            <p className="mt-1 text-sm text-[#6B7280]">
+              Set weekly working hours and mark days you are off
+            </p>
+          </div>
         </div>
         <button
           type="button"
           onClick={fetchData}
           disabled={saving}
-          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-[#6FCF97]/50 bg-white px-3.5 py-2 text-sm font-semibold text-[#1F6F5F] shadow-sm transition hover:border-[#2FA084] hover:bg-[#EEEEEE] disabled:opacity-50"
+          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm font-semibold text-[#111827] shadow-sm transition-all hover:border-[#10B981]/30 hover:bg-[#F5F7F8] disabled:opacity-50"
         >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 text-[#10B981] ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </button>
       </div>
 
       {/* Quick stats */}
       <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-3 sm:gap-4">
-        <div className="rounded-2xl border border-[#6FCF97]/35 bg-gradient-to-br from-white to-[#6FCF97]/10 p-4">
-          <p className="text-xs font-semibold text-[#1F6F5F]/65">Active days</p>
-          <p className="mt-1 text-2xl font-bold text-[#1F6F5F]">{summary.daysWithHours}/7</p>
-        </div>
-        <div className="rounded-2xl border border-[#6FCF97]/35 bg-gradient-to-br from-white to-[#6FCF97]/10 p-4">
-          <p className="text-xs font-semibold text-[#1F6F5F]/65">Time slots</p>
-          <p className="mt-1 text-2xl font-bold text-[#1F6F5F]">{summary.totalSlots}</p>
-        </div>
-        <div className="rounded-2xl border border-[#6FCF97]/35 bg-gradient-to-br from-white to-[#EEEEEE]/80 p-4">
-          <p className="text-xs font-semibold text-[#1F6F5F]/65">Blocked dates</p>
-          <p className="mt-1 text-2xl font-bold text-[#1F6F5F]">{summary.blockedDates}</p>
-        </div>
+        <StatPill label="Active days" value={`${summary.daysWithHours}/7`} icon={Calendar} variant="green" />
+        <StatPill label="Time slots" value={summary.totalSlots} icon={Clock} variant="navy" />
+        <StatPill label="Blocked dates" value={summary.blockedDates} icon={Ban} variant="red" />
       </div>
 
       {/* Alert */}
@@ -306,287 +379,281 @@ export const AvailabilityPanel: React.FC = () => {
         <div
           className={`flex items-start gap-3 rounded-xl border p-4 ${
             alert.type === 'success'
-              ? 'border-[#6FCF97]/50 bg-[#6FCF97]/15 text-[#1F6F5F]'
+              ? 'border-[#BBF7D0] bg-[#F0FDF4] text-[#166534]'
               : alert.type === 'error'
-                ? 'border-red-200 bg-red-50 text-red-800'
-                : 'border-[#6FCF97]/40 bg-[#EEEEEE] text-[#1F6F5F]'
+                ? 'border-[#FECACA] bg-[#FEF2F2] text-[#EF4444]'
+                : 'border-[#E5E7EB] bg-[#F9FAFB] text-[#374151]'
           }`}
         >
           {alert.type === 'success' ? (
-            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#22C55E]" />
+          ) : alert.type === 'error' ? (
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#EF4444]" />
           ) : (
-            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+            <Info className="mt-0.5 h-5 w-5 shrink-0 text-[#1E3A5F]" />
           )}
           <p className="text-sm font-medium">{alert.message}</p>
         </div>
       )}
 
       {/* Weekly schedule */}
-      <div className="overflow-hidden rounded-2xl border border-[#6FCF97]/35 bg-white shadow-sm">
-        <div className="border-b border-[#6FCF97]/25 bg-gradient-to-r from-[#EEEEEE]/80 to-white px-4 py-3.5 sm:px-5">
-          <h3 className="flex items-center gap-2 text-base font-bold text-[#1F6F5F] sm:text-lg">
-            <Calendar className="h-5 w-5 text-[#2FA084]" />
-            Weekly schedule
-          </h3>
-        </div>
+      <SectionCard title="Weekly schedule" icon={Calendar}>
+        {/* Add form */}
+        <div className="rounded-2xl border border-dashed border-[#D1FAE5] bg-[#F9FAFB] p-4 sm:p-5">
+          <h4 className="mb-3 text-sm font-bold text-[#1E3A5F]">Add working hours</h4>
 
-        <div className="space-y-4 p-4 sm:p-5">
-          {/* Add form */}
-          <div className="rounded-2xl border border-dashed border-[#6FCF97]/50 bg-[#EEEEEE]/50 p-4 sm:p-5">
-            <h4 className="mb-3 text-sm font-bold text-[#1F6F5F]">Add working hours</h4>
-
-            {/* Day pills — quick select on mobile */}
-            <div className="mb-4 flex gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {DAYS_OF_WEEK.map((d) => (
-                <button
-                  key={d.index}
-                  type="button"
-                  onClick={() => setSelectedDay(d.index)}
-                  className={`shrink-0 rounded-lg px-3 py-2 text-xs font-semibold transition ${
-                    selectedDay === d.index
-                      ? 'bg-[#2FA084] text-white shadow-sm'
-                      : 'bg-white text-[#1F6F5F] ring-1 ring-[#6FCF97]/40 hover:bg-[#6FCF97]/15'
-                  }`}
-                >
-                  {d.abbr}
-                </button>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="sm:col-span-2 lg:col-span-1">
-                <label htmlFor="avail-day" className={labelClass}>
-                  Day
-                </label>
-                <select
-                  id="avail-day"
-                  value={selectedDay}
-                  onChange={(e) => setSelectedDay(Number(e.target.value))}
-                  className={inputClass}
-                >
-                  {DAYS_OF_WEEK.map((d) => (
-                    <option key={d.index} value={d.index}>
-                      {d.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="avail-start" className={labelClass}>
-                  Start
-                </label>
-                <input
-                  id="avail-start"
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label htmlFor="avail-end" className={labelClass}>
-                  End
-                </label>
-                <input
-                  id="avail-end"
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div className="flex items-end sm:col-span-2 lg:col-span-1">
-                <button
-                  type="button"
-                  onClick={handleAddAvailability}
-                  disabled={saving}
-                  className={primaryBtnClass}
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Saving…
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4" />
-                      Add hours
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Days list */}
-          <div className="space-y-3">
-            {groupedAvailability.map((day) => (
-              <div
-                key={day.index}
-                className={`rounded-xl border p-3.5 transition sm:p-4 ${
-                  day.slots.length > 0
-                    ? 'border-[#6FCF97]/40 bg-gradient-to-r from-[#6FCF97]/8 to-white'
-                    : 'border-[#EEEEEE] bg-[#EEEEEE]/40'
+          {/* Day pills — quick select on mobile */}
+          <div className="mb-4 flex gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {DAYS_OF_WEEK.map((d) => (
+              <button
+                key={d.index}
+                type="button"
+                onClick={() => setSelectedDay(d.index)}
+                className={`shrink-0 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                  selectedDay === d.index
+                    ? 'bg-[#10B981] text-white shadow-[0_2px_8px_rgba(16,185,129,0.35)]'
+                    : 'border border-[#E5E7EB] bg-white text-[#374151] hover:border-[#10B981]/40 hover:bg-[#F5F7F8]'
                 }`}
               >
-                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <h4 className="font-semibold text-[#1F6F5F]">{day.name}</h4>
-                    <p className="text-xs text-[#1F6F5F]/55">
-                      {day.slots.length === 0
-                        ? 'No hours set'
-                        : `${day.slots.length} slot${day.slots.length !== 1 ? 's' : ''}`}
-                    </p>
-                  </div>
-                  {day.slots.length > 0 && (
-                    <span className="rounded-full bg-[#2FA084] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-                      Open
-                    </span>
-                  )}
-                </div>
-
-                {day.slots.length > 0 ? (
-                  <div className="space-y-2">
-                    {day.slots.map((slot) => (
-                      <div
-                        key={slot.id}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-[#6FCF97]/25 bg-white px-3 py-2.5"
-                      >
-                        <div className="flex min-w-0 items-center gap-2.5">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#2FA084]/15">
-                            <Clock className="h-4 w-4 text-[#2FA084]" />
-                          </div>
-                          <p className="truncate text-sm font-semibold text-[#1F6F5F]">
-                            {formatSlotRange(slot)}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteAvailability(slot.id)}
-                          disabled={saving}
-                          className="shrink-0 rounded-lg p-2 text-red-600 transition hover:bg-red-50 disabled:opacity-50"
-                          aria-label="Remove slot"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-[#1F6F5F]/50">Not available this day</p>
-                )}
-              </div>
+                {d.abbr}
+              </button>
             ))}
           </div>
-        </div>
-      </div>
 
-      {/* Unavailable dates */}
-      <div className="overflow-hidden rounded-2xl border border-[#6FCF97]/35 bg-white shadow-sm">
-        <div className="border-b border-[#6FCF97]/25 bg-gradient-to-r from-[#EEEEEE]/80 to-white px-4 py-3.5 sm:px-5">
-          <h3 className="flex items-center gap-2 text-base font-bold text-[#1F6F5F] sm:text-lg">
-            <CalendarDays className="h-5 w-5 text-[#2FA084]" />
-            Unavailable dates
-          </h3>
-        </div>
-
-        <div className="space-y-4 p-4 sm:p-5">
-          <div className="rounded-2xl border border-dashed border-[#6FCF97]/50 bg-[#EEEEEE]/50 p-4 sm:p-5">
-            <h4 className="mb-3 text-sm font-bold text-[#1F6F5F]">Mark a day off</h4>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="sm:col-span-2">
-                <label htmlFor="unavail-date" className={labelClass}>
-                  Date
-                </label>
-                <input
-                  id="unavail-date"
-                  type="date"
-                  value={unavailableDate}
-                  min={minUnavailableDate}
-                  onChange={(e) => setUnavailableDate(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label htmlFor="unavail-reason" className={labelClass}>
-                  Reason <span className="font-normal text-[#1F6F5F]/50">(optional)</span>
-                </label>
-                <input
-                  id="unavail-reason"
-                  type="text"
-                  value={unavailableReason}
-                  onChange={(e) => setUnavailableReason(e.target.value)}
-                  placeholder="e.g. Holiday"
-                  className={inputClass}
-                />
-              </div>
-              <div className="flex items-end sm:col-span-2 lg:col-span-1">
-                <button
-                  type="button"
-                  onClick={handleAddUnavailableDate}
-                  disabled={saving}
-                  className={primaryBtnClass}
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Adding…
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4" />
-                      Add date
-                    </>
-                  )}
-                </button>
-              </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="sm:col-span-2 lg:col-span-1">
+              <label htmlFor="avail-day" className={labelClass}>
+                Day
+              </label>
+              <select
+                id="avail-day"
+                value={selectedDay}
+                onChange={(e) => setSelectedDay(Number(e.target.value))}
+                className={inputClass}
+              >
+                {DAYS_OF_WEEK.map((d) => (
+                  <option key={d.index} value={d.index}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="avail-start" className={labelClass}>
+                Start
+              </label>
+              <input
+                id="avail-start"
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="avail-end" className={labelClass}>
+                End
+              </label>
+              <input
+                id="avail-end"
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div className="flex items-end sm:col-span-2 lg:col-span-1">
+              <button
+                type="button"
+                onClick={handleAddAvailability}
+                disabled={saving}
+                className={primaryBtnClass}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Saving…
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Add hours
+                  </>
+                )}
+              </button>
             </div>
           </div>
+        </div>
 
-          {unavailableDates.length > 0 ? (
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              {unavailableDates.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between gap-2 rounded-xl border border-[#6FCF97]/30 bg-[#EEEEEE]/60 px-3 py-3"
-                >
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-100">
-                      <Calendar className="h-4 w-4 text-red-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-[#1F6F5F]">
-                        {format(new Date(item.date), 'EEE, MMM d, yyyy')}
-                      </p>
-                      {item.reason && (
-                        <p className="truncate text-xs text-[#1F6F5F]/60">{item.reason}</p>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteUnavailableDate(item.id)}
-                    disabled={saving}
-                    className="shrink-0 rounded-lg p-2 text-red-600 transition hover:bg-red-50 disabled:opacity-50"
-                    aria-label="Remove date"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+        {/* Days list */}
+        <div className="space-y-3">
+          {groupedAvailability.map((day, dayIndex) => (
+            <motion.div
+              key={day.index}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: dayIndex * 0.03 }}
+              className={`rounded-xl border p-3.5 transition-all duration-200 sm:p-4 ${
+                day.slots.length > 0
+                  ? 'border-[#D1FAE5] bg-white shadow-[0_2px_8px_rgba(16,185,129,0.06)] hover:border-[#10B981]/30'
+                  : 'border-[#E5E7EB] bg-[#F9FAFB]'
+              }`}
+            >
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h4 className="font-semibold text-[#111827]">{day.name}</h4>
+                  <p className="text-xs text-[#6B7280]">
+                    {day.slots.length === 0
+                      ? 'No hours set'
+                      : `${day.slots.length} slot${day.slots.length !== 1 ? 's' : ''}`}
+                  </p>
                 </div>
-              ))}
+                {day.slots.length > 0 && (
+                  <span className="rounded-full border border-[#BBF7D0] bg-[#D1FAE5] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#059669]">
+                    Open
+                  </span>
+                )}
+              </div>
+
+              {day.slots.length > 0 ? (
+                <div className="space-y-2">
+                  {day.slots.map((slot) => (
+                    <div
+                      key={slot.id}
+                      className="flex items-center justify-between gap-2 rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2.5 transition-colors hover:border-[#10B981]/25 hover:bg-white"
+                    >
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#D1FAE5] bg-[#D1FAE5]/50">
+                          <Clock className="h-4 w-4 text-[#059669]" />
+                        </div>
+                        <p className="truncate text-sm font-semibold text-[#111827]">
+                          {formatSlotRange(slot)}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteAvailability(slot.id)}
+                        disabled={saving}
+                        className="shrink-0 rounded-lg p-2 text-[#EF4444] transition hover:bg-[#FEF2F2] disabled:opacity-50"
+                        aria-label="Remove slot"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-[#9CA3AF]">Not available this day</p>
+              )}
+            </motion.div>
+          ))}
+        </div>
+      </SectionCard>
+
+      {/* Unavailable dates */}
+      <SectionCard title="Unavailable dates" icon={CalendarDays}>
+        <div className="rounded-2xl border border-dashed border-[#FECACA] bg-[#FEF2F2]/40 p-4 sm:p-5">
+          <h4 className="mb-3 text-sm font-bold text-[#1E3A5F]">Mark a day off</h4>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="sm:col-span-2">
+              <label htmlFor="unavail-date" className={labelClass}>
+                Date
+              </label>
+              <input
+                id="unavail-date"
+                type="date"
+                value={unavailableDate}
+                min={minUnavailableDate}
+                onChange={(e) => setUnavailableDate(e.target.value)}
+                className={inputClass}
+              />
             </div>
-          ) : (
-            <p className="rounded-xl border border-dashed border-[#6FCF97]/35 bg-[#EEEEEE]/40 py-8 text-center text-sm text-[#1F6F5F]/60">
+            <div>
+              <label htmlFor="unavail-reason" className={labelClass}>
+                Reason <span className="font-normal text-[#9CA3AF]">(optional)</span>
+              </label>
+              <input
+                id="unavail-reason"
+                type="text"
+                value={unavailableReason}
+                onChange={(e) => setUnavailableReason(e.target.value)}
+                placeholder="e.g. Holiday"
+                className={inputClass}
+              />
+            </div>
+            <div className="flex items-end sm:col-span-2 lg:col-span-1">
+              <button
+                type="button"
+                onClick={handleAddUnavailableDate}
+                disabled={saving}
+                className={primaryBtnClass}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Adding…
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Add date
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {unavailableDates.length > 0 ? (
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            {unavailableDates.map((item, index) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.03 }}
+                whileHover={{ y: -1 }}
+                className="flex items-center justify-between gap-2 rounded-xl border border-[#FECACA] bg-white px-3 py-3 shadow-sm transition-all hover:shadow-[0_4px_16px_rgba(239,68,68,0.08)]"
+              >
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#FECACA] bg-[#FEF2F2]">
+                    <Calendar className="h-4 w-4 text-[#EF4444]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[#111827]">
+                      {format(new Date(item.date), 'EEE, MMM d, yyyy')}
+                    </p>
+                    {item.reason && (
+                      <p className="truncate text-xs text-[#6B7280]">{item.reason}</p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteUnavailableDate(item.id)}
+                  disabled={saving}
+                  className="shrink-0 rounded-lg p-2 text-[#EF4444] transition hover:bg-[#FEF2F2] disabled:opacity-50"
+                  aria-label="Remove date"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-[#E5E7EB] bg-[#F9FAFB] py-8 text-center">
+            <p className="text-sm text-[#6B7280]">
               No blocked dates. Customers can book based on your weekly schedule.
             </p>
-          )}
-        </div>
-      </div>
+          </div>
+        )}
+      </SectionCard>
 
       {/* Tip */}
-      <div className="rounded-xl border border-[#6FCF97]/35 bg-[#6FCF97]/12 px-4 py-3.5">
-        <p className="text-sm leading-relaxed text-[#1F6F5F]/85">
-          <span className="font-semibold text-[#1F6F5F]">Tip:</span> Add your weekly hours first,
+      <div className="flex gap-3 rounded-xl border border-[#D1FAE5] bg-[#D1FAE5]/30 px-4 py-3.5">
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#059669]" />
+        <p className="text-sm leading-relaxed text-[#374151]">
+          <span className="font-semibold text-[#1E3A5F]">Tip:</span> Add your weekly hours first,
           then block specific dates for holidays or time off. Customers see this when booking.
         </p>
       </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { CountdownTimer } from '@/components/bookings/CountdownTimer';
@@ -16,6 +17,9 @@ import {
   ChevronDown,
   ChevronUp,
   ClipboardList,
+  Inbox,
+  Activity,
+  CircleCheck,
 } from 'lucide-react';
 
 interface BookingItem {
@@ -48,29 +52,82 @@ const TABS = [
 function statusStyles(status: string) {
   switch (status) {
     case 'PENDING':
-      return 'bg-amber-100 text-amber-800 border-amber-200';
+      return 'border-[#FED7AA] bg-[#FEF3C7] text-[#B45309]';
     case 'CONFIRMED':
-      return 'bg-[#6FCF97]/25 text-[#1F6F5F] border-[#6FCF97]/40';
+      return 'border-[#BBF7D0] bg-[#D1FAE5] text-[#059669]';
     case 'EN_ROUTE':
-      return 'bg-blue-100 text-blue-800 border-blue-200';
+      return 'border-[#BFDBFE] bg-[#EFF6FF] text-[#1E3A5F]';
     case 'IN_PROGRESS':
-      return 'bg-sky-100 text-sky-800 border-sky-200';
+      return 'border-[#A7F3D0] bg-[#ECFDF5] text-[#047857]';
     case 'COMPLETED':
-      return 'bg-[#2FA084]/15 text-[#1F6F5F] border-[#2FA084]/30';
+      return 'border-[#BBF7D0] bg-[#F0FDF4] text-[#166534]';
     case 'CANCELLED':
     case 'AUTO_CANCELLED':
-      return 'bg-red-100 text-red-800 border-red-200';
+      return 'border-[#FECACA] bg-[#FEF2F2] text-[#DC2626]';
     default:
-      return 'bg-[#EEEEEE] text-[#1F6F5F]/70 border-[#6FCF97]/30';
+      return 'border-[#E5E7EB] bg-[#F9FAFB] text-[#6B7280]';
   }
 }
 
 const transitionStyles: Record<string, string> = {
-  EN_ROUTE: 'bg-blue-600 hover:bg-blue-700',
-  IN_PROGRESS: 'bg-[#2FA084] hover:bg-[#1F6F5F]',
-  COMPLETED: 'bg-[#1F6F5F] hover:bg-[#1a5c52]',
-  CANCELLED: 'bg-red-600 hover:bg-red-700',
+  EN_ROUTE:
+    'bg-[#1E3A5F] shadow-[0_4px_14px_rgba(30,58,95,0.3)] hover:bg-[#16304f] hover:shadow-[0_6px_20px_rgba(30,58,95,0.35)]',
+  IN_PROGRESS:
+    'bg-[#10B981] shadow-[0_4px_14px_rgba(16,185,129,0.35)] hover:bg-[#059669] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)]',
+  COMPLETED:
+    'bg-[#059669] shadow-[0_4px_14px_rgba(5,150,105,0.35)] hover:bg-[#047857] hover:shadow-[0_6px_20px_rgba(5,150,105,0.4)]',
+  CANCELLED:
+    'bg-[#EF4444] shadow-[0_4px_14px_rgba(239,68,68,0.3)] hover:bg-[#DC2626] hover:shadow-[0_6px_20px_rgba(239,68,68,0.35)]',
 };
+
+function StatPill({
+  label,
+  value,
+  icon: Icon,
+  variant,
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ComponentType<{ className?: string }>;
+  variant: 'green' | 'navy' | 'amber';
+}) {
+  const styles = {
+    green: {
+      card: 'border-[#E5E7EB] bg-white',
+      iconWrap: 'border border-[#D1FAE5] bg-[#D1FAE5]/50 text-[#059669]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#111827]',
+    },
+    navy: {
+      card: 'border-[#E5E7EB] bg-white',
+      iconWrap: 'border border-[#DBEAFE] bg-[#EFF6FF] text-[#1E3A5F]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#1E3A5F]',
+    },
+    amber: {
+      card: 'border-[#E5E7EB] bg-white',
+      iconWrap: 'border border-[#FED7AA] bg-[#FEF3C7] text-[#D97706]',
+      label: 'text-[#6B7280]',
+      value: 'text-[#9A3412]',
+    },
+  }[variant];
+
+  return (
+    <div
+      className={`rounded-2xl border p-4 shadow-[0_2px_12px_rgba(17,24,39,0.05)] transition-all duration-200 hover:shadow-[0_8px_24px_rgba(16,185,129,0.08)] sm:p-5 ${styles.card}`}
+    >
+      <div className="mb-2.5 flex items-center gap-2.5">
+        <div
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${styles.iconWrap}`}
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+        <p className={`text-xs font-semibold sm:text-sm ${styles.label}`}>{label}</p>
+      </div>
+      <p className={`text-2xl font-bold sm:text-3xl ${styles.value}`}>{value}</p>
+    </div>
+  );
+}
 
 export const BookingRequestsPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState('PENDING');
@@ -122,6 +179,15 @@ export const BookingRequestsPanel: React.FC = () => {
     if (!tab) return [];
     return bookings.filter((booking) => tab.statuses.includes(booking.status));
   }, [activeTab, bookings]);
+
+  const summary = useMemo(
+    () => ({
+      new: tabCounts.PENDING ?? 0,
+      active: (tabCounts.CONFIRMED ?? 0) + (tabCounts.IN_PROGRESS ?? 0),
+      completed: tabCounts.COMPLETED ?? 0,
+    }),
+    [tabCounts]
+  );
 
   const respond = async (bookingId: string, type: 'ACCEPT' | 'REJECT') => {
     try {
@@ -201,23 +267,37 @@ export const BookingRequestsPanel: React.FC = () => {
   return (
     <section className="space-y-5 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h2 className="text-xl font-bold text-[#1F6F5F] sm:text-2xl">Booking Requests</h2>
-          <p className="mt-1 text-sm text-[#1F6F5F]/65">
-            Accept new jobs and track progress through completion
-          </p>
+      <div className="flex flex-col gap-4 rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#D1FAE5] bg-[#D1FAE5]/60 text-[#059669]">
+            <ClipboardList className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-xl font-bold text-[#1E3A5F] sm:text-2xl">Booking Requests</h2>
+            <p className="mt-1 text-sm text-[#6B7280]">
+              Accept new jobs and track progress through completion
+            </p>
+          </div>
         </div>
         <button
           type="button"
           onClick={fetchBookings}
           disabled={loading}
-          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-[#6FCF97]/50 bg-white px-3.5 py-2 text-sm font-semibold text-[#1F6F5F] shadow-sm transition hover:border-[#2FA084] hover:bg-[#EEEEEE] disabled:opacity-50"
+          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm font-semibold text-[#111827] shadow-sm transition-all hover:border-[#10B981]/30 hover:bg-[#F5F7F8] disabled:opacity-50"
         >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 text-[#10B981] ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </button>
       </div>
+
+      {/* Summary stats */}
+      {!loading && (
+        <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-3 sm:gap-4">
+          <StatPill label="New requests" value={summary.new} icon={Inbox} variant="amber" />
+          <StatPill label="Active jobs" value={summary.active} icon={Activity} variant="navy" />
+          <StatPill label="Completed" value={summary.completed} icon={CircleCheck} variant="green" />
+        </div>
+      )}
 
       {/* Tabs — horizontal scroll on mobile */}
       <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -229,16 +309,16 @@ export const BookingRequestsPanel: React.FC = () => {
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={`flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition ${
+              className={`flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all ${
                 isActive
-                  ? 'bg-[#2FA084] text-white shadow-md'
-                  : 'border border-[#6FCF97]/40 bg-white text-[#1F6F5F] hover:bg-[#6FCF97]/10'
+                  ? 'bg-[#10B981] text-white shadow-[0_4px_14px_rgba(16,185,129,0.35)]'
+                  : 'border border-[#E5E7EB] bg-white text-[#374151] hover:border-[#10B981]/40 hover:bg-[#F5F7F8]'
               }`}
             >
               {tab.label}
               <span
                 className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                  isActive ? 'bg-white/25 text-white' : 'bg-[#EEEEEE] text-[#1F6F5F]'
+                  isActive ? 'bg-white/25 text-white' : 'bg-[#F3F4F6] text-[#6B7280]'
                 }`}
               >
                 {count}
@@ -249,51 +329,59 @@ export const BookingRequestsPanel: React.FC = () => {
       </div>
 
       {error && (
-        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
-          <AlertCircle className="h-5 w-5 shrink-0 text-red-600" />
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="flex items-start gap-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-4">
+          <AlertCircle className="h-5 w-5 shrink-0 text-[#EF4444]" />
+          <p className="text-sm text-[#EF4444]">{error}</p>
         </div>
       )}
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#6FCF97]/35 bg-white py-16">
-          <Loader2 className="h-9 w-9 animate-spin text-[#2FA084]" />
-          <p className="text-sm text-[#1F6F5F]/65">Loading bookings…</p>
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white py-16 shadow-sm">
+          <Loader2 className="h-9 w-9 animate-spin text-[#10B981]" />
+          <p className="text-sm text-[#6B7280]">Loading bookings…</p>
         </div>
       ) : filteredBookings.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[#6FCF97]/50 bg-[#EEEEEE]/60 px-6 py-14 text-center">
-          <ClipboardList className="mx-auto mb-3 h-10 w-10 text-[#6FCF97]" />
-          <h3 className="font-semibold text-[#1F6F5F]">No bookings in this tab</h3>
-          <p className="mt-1 text-sm text-[#1F6F5F]/60">
+        <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-white px-6 py-14 text-center shadow-sm">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D1FAE5] bg-[#D1FAE5]/50 text-[#059669]">
+            <ClipboardList className="h-7 w-7" />
+          </div>
+          <h3 className="font-semibold text-[#1E3A5F]">No bookings in this tab</h3>
+          <p className="mt-1 text-sm text-[#6B7280]">
             New requests will appear here when customers book your services.
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredBookings.map((booking) => {
+          {filteredBookings.map((booking, index) => {
             const isPending = booking.status === 'PENDING';
             const isExpanded = expandedId === booking.id;
             const customerName = `${booking.seeker?.firstName || 'Unknown'} ${booking.seeker?.lastName || ''}`.trim();
 
             return (
-              <article
+              <motion.article
                 key={booking.id}
-                className={`flex flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_6px_24px_-16px_rgba(31,111,95,0.5)] transition hover:shadow-[0_10px_28px_-14px_rgba(31,111,95,0.55)] ${
-                  isPending ? 'border-amber-300/80 ring-1 ring-amber-200/50' : 'border-[#6FCF97]/35'
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.03 }}
+                whileHover={{ y: -2 }}
+                className={`flex flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_2px_12px_rgba(17,24,39,0.05)] transition-all duration-200 hover:shadow-[0_8px_24px_rgba(16,185,129,0.08)] ${
+                  isPending
+                    ? 'border-[#FED7AA] ring-1 ring-[#FEF3C7]'
+                    : 'border-[#E5E7EB] hover:border-[#10B981]/25'
                 }`}
               >
                 <div className="p-4 sm:p-5">
                   {/* Card header */}
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EEEEEE]">
-                          <User className="h-4 w-4 text-[#2FA084]" />
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-[#F9FAFB]">
+                          <User className="h-4 w-4 text-[#1E3A5F]" />
                         </div>
-                        <p className="truncate font-semibold text-[#1F6F5F]">{customerName}</p>
+                        <p className="truncate font-semibold text-[#111827]">{customerName}</p>
                       </div>
-                      <p className="mt-1 flex items-center gap-1 truncate pl-10 text-xs text-[#1F6F5F]/60">
-                        <Wrench className="h-3 w-3 shrink-0" />
+                      <p className="mt-1.5 flex items-center gap-1.5 truncate pl-[2.875rem] text-xs text-[#6B7280]">
+                        <Wrench className="h-3 w-3 shrink-0 text-[#10B981]" />
                         {booking.service?.name || 'Service'}
                       </p>
                     </div>
@@ -305,20 +393,20 @@ export const BookingRequestsPanel: React.FC = () => {
                   </div>
 
                   {/* Schedule & location */}
-                  <div className="mt-4 space-y-2 rounded-xl border border-[#6FCF97]/25 bg-[#EEEEEE]/50 px-3 py-2.5 text-sm">
-                    <p className="flex items-start gap-2 text-[#1F6F5F]">
-                      <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-[#2FA084]" />
+                  <div className="mt-4 space-y-2 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2.5 text-sm">
+                    <p className="flex items-start gap-2 text-[#111827]">
+                      <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-[#10B981]" />
                       <span className="min-w-0 leading-snug">
                         {format(new Date(booking.scheduledStart), 'MMM d, yyyy')}
                         <br />
-                        <span className="text-xs text-[#1F6F5F]/65">
+                        <span className="text-xs text-[#6B7280]">
                           {format(new Date(booking.scheduledStart), 'h:mm a')} –{' '}
                           {format(new Date(booking.scheduledEnd), 'h:mm a')}
                         </span>
                       </span>
                     </p>
-                    <p className="flex items-start gap-2 text-xs text-[#1F6F5F]/70">
-                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#2FA084]" />
+                    <p className="flex items-start gap-2 text-xs text-[#6B7280]">
+                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#10B981]" />
                       <span className="min-w-0 break-words">{booking.location}</span>
                     </p>
                   </div>
@@ -327,7 +415,7 @@ export const BookingRequestsPanel: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setExpandedId(isExpanded ? null : booking.id)}
-                    className="mt-3 flex w-full items-center justify-center gap-1 text-xs font-semibold text-[#2FA084]"
+                    className="mt-3 flex w-full items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold text-[#059669] transition-colors hover:bg-[#D1FAE5]/40"
                   >
                     {isExpanded ? (
                       <>
@@ -340,14 +428,14 @@ export const BookingRequestsPanel: React.FC = () => {
                     )}
                   </button>
                   {isExpanded && (
-                    <p className="mt-2 rounded-lg border border-[#6FCF97]/25 bg-white px-3 py-2.5 text-sm leading-relaxed text-[#1F6F5F]/80">
+                    <p className="mt-2 rounded-xl border border-l-4 border-[#E5E7EB] border-l-[#10B981] bg-white px-3 py-2.5 text-sm leading-relaxed text-[#374151]">
                       {booking.problemDescription}
                     </p>
                   )}
 
                   {/* Countdown */}
                   {isPending && booking.providerResponseDeadline && (
-                    <div className="mt-3 flex flex-col gap-1 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-semibold text-amber-800 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="mt-3 flex flex-col gap-1 rounded-xl border border-[#FED7AA] bg-[#FEF3C7] px-3 py-2.5 text-xs font-semibold text-[#B45309] sm:flex-row sm:items-center sm:justify-between">
                       <span>Respond within</span>
                       <CountdownTimer target={booking.providerResponseDeadline} />
                     </div>
@@ -355,21 +443,21 @@ export const BookingRequestsPanel: React.FC = () => {
 
                   {(booking.status === 'AUTO_CANCELLED' || booking.status === 'CANCELLED') &&
                     booking.cancellationReason && (
-                      <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                      <p className="mt-3 rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-xs text-[#DC2626]">
                         {booking.cancellationReason}
                       </p>
                     )}
                   {booking.status === 'AUTO_CANCELLED' && !booking.cancellationReason && (
-                    <p className="mt-3 text-xs text-red-600">Auto cancelled (no response)</p>
+                    <p className="mt-3 text-xs text-[#EF4444]">Auto cancelled (no response)</p>
                   )}
                 </div>
 
                 {/* Actions footer */}
                 {isPending && (
-                  <div className="flex flex-col gap-2 border-t border-[#EEEEEE] bg-[#EEEEEE]/40 p-3 sm:flex-row">
+                  <div className="flex flex-col gap-2 border-t border-[#E5E7EB] bg-[#F9FAFB] p-3 sm:flex-row">
                     <button
                       type="button"
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#2FA084] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1F6F5F] disabled:opacity-50"
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#10B981] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition hover:bg-[#059669] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] disabled:opacity-50"
                       onClick={() => respond(booking.id, 'ACCEPT')}
                       disabled={actionLoading === booking.id}
                     >
@@ -382,7 +470,7 @@ export const BookingRequestsPanel: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-2.5 text-sm font-semibold text-[#EF4444] transition hover:bg-[#FEE2E2] disabled:opacity-50"
                       onClick={() => respond(booking.id, 'REJECT')}
                       disabled={actionLoading === booking.id}
                     >
@@ -398,7 +486,7 @@ export const BookingRequestsPanel: React.FC = () => {
 
                 {!isPending &&
                   !['COMPLETED', 'CANCELLED', 'AUTO_CANCELLED'].includes(booking.status) && (
-                    <div className="flex flex-col gap-2 border-t border-[#EEEEEE] bg-[#EEEEEE]/40 p-3 sm:flex-row sm:flex-wrap">
+                    <div className="flex flex-col gap-2 border-t border-[#E5E7EB] bg-[#F9FAFB] p-3 sm:flex-row sm:flex-wrap">
                       {getNextStatusTransitions(booking.status).map((transition) => {
                         const isCancel = transition.value === 'CANCELLED';
                         return (
@@ -407,8 +495,9 @@ export const BookingRequestsPanel: React.FC = () => {
                             type="button"
                             className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-semibold text-white transition disabled:opacity-50 sm:min-w-[120px] ${
                               isCancel
-                                ? 'bg-red-600 hover:bg-red-700'
-                                : transitionStyles[transition.value] || 'bg-[#2FA084] hover:bg-[#1F6F5F]'
+                                ? transitionStyles.CANCELLED
+                                : transitionStyles[transition.value] ||
+                                  'bg-[#10B981] shadow-[0_4px_14px_rgba(16,185,129,0.35)] hover:bg-[#059669]'
                             }`}
                             onClick={() => {
                               if (isCancel) {
@@ -432,7 +521,7 @@ export const BookingRequestsPanel: React.FC = () => {
                       })}
                     </div>
                   )}
-              </article>
+              </motion.article>
             );
           })}
         </div>
@@ -441,7 +530,7 @@ export const BookingRequestsPanel: React.FC = () => {
       {/* Cancel modal */}
       {cancelModal.isOpen && (
         <div
-          className="fixed inset-0 z-[60] flex items-end justify-center bg-[#1F6F5F]/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          className="fixed inset-0 z-[60] flex items-end justify-center bg-[#111827]/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
           role="dialog"
           aria-modal="true"
           onClick={() => {
@@ -452,18 +541,20 @@ export const BookingRequestsPanel: React.FC = () => {
             }
           }}
         >
-          <div
-            className="w-full max-w-md rounded-t-2xl border border-[#6FCF97]/40 bg-white p-5 shadow-2xl sm:rounded-2xl sm:p-6"
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-md rounded-t-2xl border border-[#E5E7EB] bg-white p-5 shadow-2xl sm:rounded-2xl sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100">
-                <AlertCircle className="h-5 w-5 text-red-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#FECACA] bg-[#FEF2F2]">
+                <AlertCircle className="h-5 w-5 text-[#EF4444]" />
               </div>
-              <h3 className="text-lg font-bold text-[#1F6F5F]">Cancel booking</h3>
+              <h3 className="text-lg font-bold text-[#1E3A5F]">Cancel booking</h3>
             </div>
 
-            <p className="mb-4 text-sm text-[#1F6F5F]/70">
+            <p className="mb-4 text-sm text-[#6B7280]">
               Please provide a reason. The customer will be notified.
             </p>
 
@@ -471,12 +562,14 @@ export const BookingRequestsPanel: React.FC = () => {
               value={cancelReason}
               onChange={(e) => setCancelReason(e.target.value)}
               placeholder="Enter cancellation reason…"
-              className="w-full resize-none rounded-xl border border-[#6FCF97]/45 bg-white px-4 py-3 text-sm text-[#1F6F5F] focus:border-[#2FA084] focus:outline-none focus:ring-2 focus:ring-[#2FA084]/25"
+              className="w-full resize-none rounded-xl border border-[#E5E7EB] bg-white px-4 py-3 text-sm text-[#111827] shadow-sm transition focus:border-[#10B981] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20"
               rows={3}
             />
 
             {statusUpdateError && (
-              <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{statusUpdateError}</p>
+              <p className="mt-2 rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-xs text-[#EF4444]">
+                {statusUpdateError}
+              </p>
             )}
 
             <div className="mt-5 flex flex-col-reverse gap-2.5 sm:flex-row">
@@ -487,7 +580,7 @@ export const BookingRequestsPanel: React.FC = () => {
                   setCancelReason('');
                   setStatusUpdateError(null);
                 }}
-                className="flex-1 rounded-xl border border-[#6FCF97]/50 bg-[#EEEEEE] px-4 py-2.5 text-sm font-semibold text-[#1F6F5F] transition hover:bg-[#EEEEEE]/80 disabled:opacity-50"
+                className="flex-1 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-4 py-2.5 text-sm font-semibold text-[#374151] transition hover:bg-[#F3F4F6] disabled:opacity-50"
                 disabled={actionLoading === cancelModal.bookingId}
               >
                 Keep booking
@@ -495,7 +588,7 @@ export const BookingRequestsPanel: React.FC = () => {
               <button
                 type="button"
                 onClick={() => updateStatus(cancelModal.bookingId, 'CANCELLED', cancelReason)}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#EF4444] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(239,68,68,0.3)] transition hover:bg-[#DC2626] disabled:opacity-50"
                 disabled={!cancelReason.trim() || actionLoading === cancelModal.bookingId}
               >
                 {actionLoading === cancelModal.bookingId ? (
@@ -506,7 +599,7 @@ export const BookingRequestsPanel: React.FC = () => {
                 Cancel booking
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </section>

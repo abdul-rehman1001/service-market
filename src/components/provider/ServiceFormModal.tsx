@@ -40,9 +40,9 @@ interface ServiceFormModalProps {
 }
 
 const inputClass =
-  'w-full rounded-xl border border-[#6FCF97]/45 bg-white px-4 py-3 text-sm text-[#1F6F5F] shadow-sm transition placeholder:text-[#1F6F5F]/40 focus:border-[#2FA084] focus:outline-none focus:ring-2 focus:ring-[#2FA084]/25';
+  'w-full rounded-xl border border-[#E5E7EB] bg-white px-4 py-3 text-sm text-[#111827] shadow-sm transition placeholder:text-[#9CA3AF] hover:border-[#10B981]/30 focus:border-[#10B981] focus:outline-none focus:ring-4 focus:ring-[#D1FAE5]';
 
-const labelClass = 'mb-1.5 block text-sm font-semibold text-[#1F6F5F]';
+const labelClass = 'mb-1.5 block text-sm font-semibold text-[#111827]';
 
 export default function ServiceFormModal({ service, onClose }: ServiceFormModalProps) {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -242,7 +242,7 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-[#1F6F5F]/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-[#1E3A5F]/40 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="service-form-title"
@@ -253,21 +253,21 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 24 }}
         transition={{ duration: 0.22, ease: 'easeOut' }}
-        className="flex max-h-[96dvh] w-full flex-col overflow-hidden rounded-t-2xl border border-[#6FCF97]/40 bg-white shadow-2xl sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl"
+        className="flex max-h-[96dvh] w-full flex-col overflow-hidden rounded-t-2xl border border-[#E5E7EB] bg-white shadow-[0_24px_60px_rgba(17,24,39,0.15)] sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="shrink-0 border-b border-[#E5E7EB] bg-[#F5F7F8] px-4 py-4 sm:px-6">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#2FA084] text-white shadow-md">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#10B981] text-white shadow-[0_2px_8px_rgba(16,185,129,0.3)]">
                 <Wrench className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <h2 id="service-form-title" className="text-lg font-bold text-[#1F6F5F] sm:text-xl">
+                <h2 id="service-form-title" className="text-lg font-bold text-[#1E3A5F] sm:text-xl">
                   {isEdit ? 'Edit Service' : 'Add New Service'}
                 </h2>
-                <p className="mt-0.5 text-xs text-[#1F6F5F]/65 sm:text-sm">
+                <p className="mt-0.5 text-xs text-[#6B7280] sm:text-sm">
                   {isEdit
                     ? 'Update your service details below'
                     : 'Fill in the details to list a new service'}
@@ -278,7 +278,7 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
               type="button"
               onClick={() => onClose()}
               disabled={submitting}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#6FCF97]/40 bg-white text-[#1F6F5F] transition hover:bg-[#EEEEEE] disabled:opacity-50"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-[#6B7280] transition hover:bg-[#F9FAFB] hover:text-[#111827] disabled:opacity-50"
               aria-label="Close"
             >
               <X className="h-5 w-5" />
@@ -290,8 +290,8 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
             {/* Basic info */}
-            <section className="rounded-2xl border border-[#6FCF97]/30 bg-[#EEEEEE]/50 p-4 sm:p-5">
-              <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[#1F6F5F]">
+            <section className="rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-4 sm:p-5">
+              <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[#1E3A5F]">
                 Basic information
               </h3>
               <div className="space-y-4">
@@ -346,7 +346,7 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
                     ))}
                   </select>
                   {loadingCategories && (
-                    <p className="mt-1.5 flex items-center gap-1.5 text-xs text-[#1F6F5F]/60">
+                    <p className="mt-1.5 flex items-center gap-1.5 text-xs text-[#6B7280]">
                       <Loader2 className="h-3 w-3 animate-spin" />
                       Loading categories…
                     </p>
@@ -356,9 +356,9 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
             </section>
 
             {/* Pricing */}
-            <section className="rounded-2xl border border-[#6FCF97]/30 bg-[#EEEEEE]/50 p-4 sm:p-5">
-              <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-[#1F6F5F]">
-                <Tag className="h-4 w-4 text-[#2FA084]" />
+            <section className="rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-4 sm:p-5">
+              <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-[#1E3A5F]">
+                <Tag className="h-4 w-4 text-[#10B981]" />
                 Pricing & duration
               </h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -397,7 +397,7 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
                 <div className="sm:col-span-2">
                   <label htmlFor="duration" className={labelClass}>
                     <span className="inline-flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5 text-[#2FA084]" />
+                      <Clock className="h-3.5 w-3.5 text-[#10B981]" />
                       Duration (minutes) <span className="text-red-500">*</span>
                     </span>
                   </label>
@@ -411,7 +411,7 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
                     className={inputClass}
                     required
                   />
-                  <p className="mt-1.5 text-xs text-[#1F6F5F]/60">
+                  <p className="mt-1.5 text-xs text-[#6B7280]">
                     Typical time needed to complete this service
                   </p>
                 </div>
@@ -419,13 +419,13 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
             </section>
 
             {/* Images */}
-            <section className="rounded-2xl border border-[#6FCF97]/30 bg-[#EEEEEE]/50 p-4 sm:p-5">
-              <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-[#1F6F5F]">
-                <ImageIcon className="h-4 w-4 text-[#2FA084]" />
+            <section className="rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-4 sm:p-5">
+              <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-[#1E3A5F]">
+                <ImageIcon className="h-4 w-4 text-[#10B981]" />
                 Photos
               </h3>
               <div className="space-y-3">
-                <div className="rounded-xl border-2 border-dashed border-[#6FCF97]/55 bg-white p-5 text-center transition hover:border-[#2FA084] hover:bg-[#6FCF97]/10 sm:p-6">
+                <div className="rounded-xl border-2 border-dashed border-[#D1FAE5] bg-white p-5 text-center transition hover:border-[#10B981] hover:bg-[#D1FAE5]/20 sm:p-6">
                   <input
                     type="file"
                     multiple
@@ -441,18 +441,18 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
                   >
                     {uploadingImages ? (
                       <>
-                        <Loader2 className="h-7 w-7 animate-spin text-[#2FA084]" />
-                        <span className="text-sm font-medium text-[#1F6F5F]">Uploading…</span>
+                        <Loader2 className="h-7 w-7 animate-spin text-[#10B981]" />
+                        <span className="text-sm font-medium text-[#111827]">Uploading…</span>
                       </>
                     ) : (
                       <>
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#6FCF97]/25">
-                          <Upload className="h-6 w-6 text-[#2FA084]" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#D1FAE5]">
+                          <Upload className="h-6 w-6 text-[#059669]" />
                         </div>
-                        <span className="text-sm font-semibold text-[#1F6F5F]">
+                        <span className="text-sm font-semibold text-[#111827]">
                           Tap to upload photos
                         </span>
-                        <span className="text-xs text-[#1F6F5F]/60">
+                        <span className="text-xs text-[#6B7280]">
                           JPEG, PNG, WebP · max 5MB each
                         </span>
                       </>
@@ -465,7 +465,7 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
                     {formData.images.map((image, index) => (
                       <div
                         key={image}
-                        className="group relative aspect-square overflow-hidden rounded-xl border border-[#6FCF97]/35 bg-[#EEEEEE]"
+                        className="group relative aspect-square overflow-hidden rounded-xl border border-[#E5E7EB] bg-[#F9FAFB]"
                       >
                         <img
                           src={image}
@@ -475,7 +475,7 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
                         <button
                           type="button"
                           onClick={() => removeImage(index)}
-                          className="absolute inset-0 flex items-center justify-center bg-[#1F6F5F]/55 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100"
+                          className="absolute inset-0 flex items-center justify-center bg-[#1E3A5F]/50 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100"
                           aria-label={`Remove image ${index + 1}`}
                         >
                           <span className="flex items-center gap-1.5 rounded-lg bg-red-500 px-2.5 py-1.5 text-xs font-semibold text-white">
@@ -487,7 +487,7 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
                     ))}
                   </div>
                 )}
-                <p className="text-xs text-[#1F6F5F]/60">
+                <p className="text-xs text-[#6B7280]">
                   {formData.images.length} photo{formData.images.length !== 1 ? 's' : ''} added
                 </p>
               </div>
@@ -497,39 +497,39 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
             <button
               type="button"
               onClick={() => handleChange('isActive', !formData.isActive)}
-              className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[#6FCF97]/35 bg-white px-4 py-3.5 text-left transition hover:border-[#2FA084]/50 sm:px-5"
+              className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[#E5E7EB] bg-white px-4 py-3.5 text-left transition hover:border-[#10B981]/30 sm:px-5"
             >
               <div>
-                <p className="text-sm font-semibold text-[#1F6F5F]">Service visible to customers</p>
-                <p className="mt-0.5 text-xs text-[#1F6F5F]/60">
+                <p className="text-sm font-semibold text-[#111827]">Service visible to customers</p>
+                <p className="mt-0.5 text-xs text-[#6B7280]">
                   {formData.isActive
                     ? 'Active, shown in search & bookings'
                     : 'Inactive, hidden from customers'}
                 </p>
               </div>
               {formData.isActive ? (
-                <ToggleRight className="h-8 w-8 shrink-0 text-[#2FA084]" />
+                <ToggleRight className="h-8 w-8 shrink-0 text-[#10B981]" />
               ) : (
-                <ToggleLeft className="h-8 w-8 shrink-0 text-[#1F6F5F]/40" />
+                <ToggleLeft className="h-8 w-8 shrink-0 text-[#9CA3AF]" />
               )}
             </button>
           </div>
 
           {/* Footer actions */}
-          <div className="shrink-0 border-t border-[#6FCF97]/30 bg-white px-4 py-4 sm:px-6">
+          <div className="shrink-0 border-t border-[#E5E7EB] bg-white px-4 py-4 sm:px-6">
             <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end sm:gap-3">
               <button
                 type="button"
                 onClick={() => onClose()}
                 disabled={submitting}
-                className="w-full rounded-xl border border-[#6FCF97]/50 bg-[#EEEEEE] px-4 py-3 text-sm font-semibold text-[#1F6F5F] transition hover:bg-[#EEEEEE]/80 disabled:opacity-50 sm:w-auto sm:min-w-[120px]"
+                className="w-full rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-4 py-3 text-sm font-semibold text-[#111827] transition hover:bg-[#F5F7F8] disabled:opacity-50 sm:w-auto sm:min-w-[120px]"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submitting || uploadingImages}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#2FA084] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#1F6F5F] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-w-[160px]"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#10B981] px-4 py-3 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(16,185,129,0.3)] transition hover:bg-[#059669] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-w-[160px]"
               >
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 {submitting
