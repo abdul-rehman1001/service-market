@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Briefcase, Loader2, MapPin } from 'lucide-react';
-import Footer from '@/components/layout/Footer';
 import AddressAutofill from '@/components/auth/AddressAutofill';
 import { notifyAuthUpdated } from '@/lib/authEvents';
 
@@ -142,7 +141,6 @@ export default function BecomeProviderPage() {
           </form>
         </div>
       </div>
-      <Footer />
     </>
   );
 }

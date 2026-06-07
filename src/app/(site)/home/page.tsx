@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import SearchSection from "@/components/home/SearchSection";
 import Categories from "@/components/home/Categories";
 import FeaturedProviders from "@/components/home/providers/FeaturedProviders";
-import Footer from "@/components/layout/Footer";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUserLocation } from "@/hooks/useUserLocation";
 
@@ -142,7 +141,6 @@ export default function HomePage() {
           <FeaturedProviders userLocation={location ? { lat: location.lat, lng: location.lng } : null} />
         </div>
 
-        <Footer flush />
       </div>
     </div>
   );

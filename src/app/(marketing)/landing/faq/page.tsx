@@ -1,5 +1,5 @@
-import FaqContentPage from "@/components/landing-page/FaqContentPage";
+import CmsFaqPage from "@/components/cms/CmsFaqPage";
 
 export default function LandingFaqPage() {
-  return <FaqContentPage />;
+  return <CmsFaqPage />;
 }

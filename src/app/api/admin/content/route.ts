@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { CMS_STATIC_PAGE_KEYS } from "@/lib/cms-pages";
 import { verifyToken } from "@/lib/jwt";
 import prisma from "@/lib/prisma";
 
@@ -53,10 +54,9 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const validPages = ["about-us", "terms", "privacy"];
-    if (!validPages.includes(page)) {
+    if (!CMS_STATIC_PAGE_KEYS.includes(page)) {
       return NextResponse.json(
-        { error: `Invalid page. Must be one of: ${validPages.join(", ")}` },
+        { error: `Invalid page. Must be one of: ${CMS_STATIC_PAGE_KEYS.join(", ")}` },
         { status: 400 }
       );
     }

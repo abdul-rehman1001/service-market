@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidCmsStaticSlug } from "@/lib/cms-pages";
 import prisma from "@/lib/prisma";
 
 // Public endpoint — fetch content page by slug
@@ -9,8 +10,7 @@ export async function GET(
   try {
     const { slug } = await context.params;
 
-    const validSlugs = ["about-us", "terms", "privacy"];
-    if (!validSlugs.includes(slug)) {
+    if (!isValidCmsStaticSlug(slug)) {
       return NextResponse.json({ error: "Page not found" }, { status: 404 });
     }
 
