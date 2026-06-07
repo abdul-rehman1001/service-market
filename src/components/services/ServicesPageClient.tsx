@@ -45,12 +45,36 @@ interface FiltersState {
   sortBy: string;
 }
 
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia(query).matches;
+  });
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const onChange = () => setMatches(media.matches);
+
+    onChange();
+    // Safari fallback
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', onChange);
+      return () => media.removeEventListener('change', onChange);
+    }
+    media.addListener(onChange);
+    return () => media.removeListener(onChange);
+  }, [query]);
+
+  return matches;
+}
+
 export default function ServicesPageClient() {
   const [searchQuery, setSearchQuery] = useState('');
   const [allProviders, setAllProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const availability = useAvailabilityFilter();
   const [showMap, setShowMap] = useState(false);
+  const isLgUp = useMediaQuery('(min-width: 1024px)');
   const [selectedProvider, setSelectedProvider] = useState<any>(null);
   const [filters, setFilters] = useState<FiltersState>({
     rating: null,
@@ -250,6 +274,21 @@ export default function ServicesPageClient() {
     setShowMap(filters.radius > 0 && Boolean(userLocation));
   }, [filters.radius, userLocation]);
 
+  const mapProviders = useMemo(
+    () =>
+      visibleProviders.map((p) => ({
+        id: p.id,
+        userId: p.userId,
+        name: p.name,
+        latitude: p.latitude,
+        longitude: p.longitude,
+        baseAddress: p.baseAddress,
+        rating: p.rating,
+        distance: p.distance,
+      })),
+    [visibleProviders]
+  );
+
   const runAvailabilityCheck = useCallback(() => {
     if (!availability.applied || !filteredProviders.length) {
       return;
@@ -345,6 +384,24 @@ export default function ServicesPageClient() {
             totalCount={filteredProviders.length}
             disabled={loading || filteredProviders.length === 0}
           />
+
+          {/* Mobile-only map placement: directly under availability filter */}
+          {showMap && !isLgUp && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 12 }}
+              className="h-[380px] w-full sm:h-[420px]"
+            >
+              <SearchMap
+                location="Current Location"
+                providers={mapProviders as any}
+                userLocation={userLocation || undefined}
+                radius={filters.radius}
+                onProviderSelect={handleProviderSelect}
+              />
+            </motion.div>
+          )}
 
           {/* Results Summary */}
           <motion.div
@@ -447,7 +504,7 @@ export default function ServicesPageClient() {
         </main>
 
         {/* Right Column / Map */}
-        {showMap && (
+        {showMap && isLgUp && (
           <motion.aside
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -456,16 +513,7 @@ export default function ServicesPageClient() {
           >
             <SearchMap
               location="Current Location"
-              providers={visibleProviders.map((p) => ({
-                id: p.id,
-                userId: p.userId,
-                name: p.name,
-                latitude: p.latitude,
-                longitude: p.longitude,
-                baseAddress: p.baseAddress,
-                rating: p.rating,
-                distance: p.distance,
-              })) as any}
+              providers={mapProviders as any}
               userLocation={userLocation || undefined}
               radius={filters.radius}
               onProviderSelect={handleProviderSelect}
