@@ -1,30 +1,28 @@
+import AuthCard from '@/components/auth/AuthCard';
+import AuthPageShell from '@/components/auth/AuthPageShell';
+
 export default function LoginLoading() {
   return (
-    <div className="min-h-screen flex justify-center items-center bg-[#f5f7f8]">
-      <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-lg">
+    <AuthPageShell>
+      <AuthCard>
         <div className="animate-pulse space-y-6">
-          {/* Header skeleton */}
-          <div className="space-y-3">
-            <div className="h-8 bg-gray-200 rounded w-2/3 mx-auto"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+          <div className="space-y-3 text-center">
+            <div className="mx-auto h-6 w-24 rounded-full bg-[#E5E7EB]" />
+            <div className="mx-auto h-8 w-48 rounded-lg bg-[#E5E7EB]" />
+            <div className="mx-auto h-4 w-64 rounded-lg bg-[#F3F4F6]" />
           </div>
-
-          {/* Form fields skeleton */}
           <div className="space-y-4">
-            <div className="h-12 bg-gray-200 rounded-lg"></div>
-            <div className="h-12 bg-gray-200 rounded-lg"></div>
+            <div className="h-12 rounded-xl bg-[#F3F4F6]" />
+            <div className="h-12 rounded-xl bg-[#F3F4F6]" />
+            <div className="h-16 rounded-xl bg-[#F3F4F6]" />
           </div>
-
-          {/* Button skeleton */}
-          <div className="h-12 bg-gray-300 rounded-lg"></div>
-
-          {/* Links skeleton */}
-          <div className="space-y-2">
-            <div className="h-4 bg-gray-200 rounded w-1/3 mx-auto"></div>
-            <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+          <div className="h-12 rounded-xl bg-[#D1FAE5]/60" />
+          <div className="space-y-2 pt-2">
+            <div className="mx-auto h-4 w-40 rounded bg-[#F3F4F6]" />
+            <div className="mx-auto h-4 w-32 rounded bg-[#F3F4F6]" />
           </div>
         </div>
-      </div>
-    </div>
+      </AuthCard>
+    </AuthPageShell>
   );
 }

@@ -3,15 +3,19 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Loader2, UserPlus } from 'lucide-react';
 import AuthCard from '@/components/auth/AuthCard';
+import AuthHeader from '@/components/auth/AuthHeader';
+import AuthPageShell from '@/components/auth/AuthPageShell';
+import ImageUploader from '@/components/auth/ImageUploader';
 import Input from '@/components/auth/Input';
 import PasswordInput from '@/components/auth/PasswordInput';
-import ImageUploader from '@/components/auth/ImageUploader';
+import PasswordRequirements from '@/components/auth/PasswordRequirements';
 import {
-  getPasswordRuleStatus,
   validateEmail,
   validatePassword,
 } from '@/lib/validation/authValidation';
+import { cn } from '@/lib/utils';
 
 type AuthField = 'email' | 'password';
 type FieldErrors = Partial<Record<AuthField, string>>;
@@ -121,7 +125,7 @@ export default function RegisterSeeker() {
           phone: form.phone,
           profileImage: form.profileImage,
           address: form.address,
-          role: 'SEEKER', // fixed role for seekers
+          role: 'SEEKER',
         }),
       });
 
@@ -131,15 +135,13 @@ export default function RegisterSeeker() {
         return;
       }
 
-      // Ensure we have userId before redirecting
       if (!data.user?.id) {
         setError('Registration failed: User ID not received');
         return;
       }
 
       console.log('Registration successful, redirecting with userId:', data.user.id);
-      
-      // Redirect to email verification page with userId only
+
       router.push(`/verify-email-registration?userId=${data.user.id}`);
     } catch {
       setError('An error occurred. Please try again.');
@@ -149,25 +151,35 @@ export default function RegisterSeeker() {
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-[#f5f7f8] px-4 py-10 md:py-16 lg:py-20">
+    <AuthPageShell maxWidth="lg">
       <AuthCard>
-        <h2 className="text-3xl font-bold text-center">Service Seeker</h2>
-        <p className="text-center mt-1 text-gray-500">Join to find experts</p>
+        <AuthHeader
+          badge="Customer account"
+          title="Join as a service seeker"
+          subtitle="Create your account to find trusted local professionals"
+        />
 
-        {error && <p className="text-red-500 text-center mt-2">{error}</p>}
+        {error ? (
+          <div
+            className="mt-5 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-center text-sm text-[#EF4444]"
+            role="alert"
+          >
+            {error}
+          </div>
+        ) : null}
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <ImageUploader onImageUpload={handleImageUpload} imageUrl={form.profileImage} />
-          
+
           <Input
-            placeholder="Full Name"
+            placeholder="Full name"
             name="name"
             value={form.name}
             onChange={handleChange}
             required
           />
           <Input
-            placeholder="Email Address"
+            placeholder="Email address"
             name="email"
             type="email"
             value={form.email}
@@ -177,11 +189,11 @@ export default function RegisterSeeker() {
             aria-invalid={Boolean(fieldErrors.email)}
             required
           />
-          {fieldErrors.email && (
-            <p className="-mt-2 text-sm text-red-600">{fieldErrors.email}</p>
-          )}
+          {fieldErrors.email ? (
+            <p className="-mt-2 text-sm text-[#EF4444]">{fieldErrors.email}</p>
+          ) : null}
           <Input
-            placeholder="Phone Number (e.g., +92300123456)"
+            placeholder="Phone number (e.g., +923001234567)"
             name="phone"
             type="tel"
             value={form.phone}
@@ -205,52 +217,54 @@ export default function RegisterSeeker() {
             aria-invalid={Boolean(fieldErrors.password)}
             required
           />
-          {fieldErrors.password && (
-            <p className="-mt-2 text-sm text-red-600">{fieldErrors.password}</p>
-          )}
+          {fieldErrors.password ? (
+            <p className="-mt-2 text-sm text-[#EF4444]">{fieldErrors.password}</p>
+          ) : null}
 
-          <div className="rounded-xl border border-gray-200 bg-white p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">
-              Password requirements
-            </p>
-            <ul className="mt-2 space-y-1 text-xs">
-              {getPasswordRuleStatus(form.password).map((rule) => (
-                <li
-                  key={rule.key}
-                  className={rule.passed ? 'text-emerald-600' : 'text-gray-500'}
-                >
-                  <span
-                    className={`mr-2 inline-block h-1.5 w-1.5 rounded-full ${
-                      rule.passed ? 'bg-emerald-600' : 'bg-gray-400'
-                    }`}
-                  />
-                  {rule.label}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <PasswordRequirements password={form.password} />
 
           <button
             type="submit"
             disabled={isLoading}
-            className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className={cn(
+              'mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#10B981] py-3.5 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition-all duration-200',
+              'hover:bg-[#059669] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60'
+            )}
           >
-            {isLoading ? 'Creating Account...' : 'Create Account'}
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Creating account...
+              </>
+            ) : (
+              <>
+                <UserPlus className="h-4 w-4" />
+                Create account
+              </>
+            )}
           </button>
 
-          <div className="mt-5 border-t border-gray-200 pt-4 text-center">
-            <p className="text-sm text-gray-600">
+          <div className="border-t border-[#E5E7EB] pt-5 text-center">
+            <p className="text-sm text-[#6B7280]">
               Already have an account?{' '}
               <Link
                 href="/login"
-                className="font-semibold text-emerald-600 hover:text-emerald-700 hover:underline"
+                className="font-semibold text-[#10B981] transition hover:text-[#059669] hover:underline"
               >
-                Login here
+                Sign in
+              </Link>
+            </p>
+            <p className="mt-2 text-sm">
+              <Link
+                href="/register"
+                className="font-medium text-[#1E3A5F] transition hover:text-[#10B981] hover:underline"
+              >
+                ← Choose a different account type
               </Link>
             </p>
           </div>
         </form>
       </AuthCard>
-    </div>
+    </AuthPageShell>
   );
 }
