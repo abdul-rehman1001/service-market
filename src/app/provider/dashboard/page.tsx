@@ -96,7 +96,7 @@ function ProviderDashboardContent() {
         setOpen={setSidebarOpen}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col bg-[#F5F7F8]">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#F5F7F8]">
         <ProviderDashboardHeader
           onOpenMessages={() => {
             setActiveTab('messages');
@@ -110,18 +110,32 @@ function ProviderDashboardContent() {
           activeTabLabel={getProviderTabLabel(activeTab)}
         />
 
-        <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#F5F7F8] p-4 sm:p-6 lg:p-8">
-          <div className="mb-4 lg:hidden">
-            <span className="inline-flex rounded-lg border border-[#E5E7EB] bg-white px-3 py-1 text-xs font-semibold text-[#6B7280] shadow-sm">
-              {getProviderTabLabel(activeTab)}
-            </span>
-          </div>
+        <main
+          className={`min-w-0 flex-1 overflow-x-hidden bg-[#F5F7F8] ${
+            activeTab === 'messages'
+              ? 'flex min-h-0 flex-col overflow-hidden p-0 md:p-6 lg:p-8'
+              : 'overflow-y-auto p-4 sm:p-6 lg:p-8'
+          }`}
+        >
+          {activeTab !== 'messages' && (
+            <div className="mb-4 lg:hidden">
+              <span className="inline-flex rounded-lg border border-[#E5E7EB] bg-white px-3 py-1 text-xs font-semibold text-[#6B7280] shadow-sm">
+                {getProviderTabLabel(activeTab)}
+              </span>
+            </div>
+          )}
           {activeTab === 'services' ? (
             <div className="mx-auto max-w-7xl">
               <ServicesPanel />
             </div>
           ) : (
-            <div className="mx-auto max-w-7xl rounded-2xl bg-white p-4 shadow-sm sm:p-5 md:p-6">
+            <div
+              className={
+                activeTab === 'messages'
+                  ? 'flex min-h-0 w-full flex-1 flex-col'
+                  : 'mx-auto max-w-7xl rounded-2xl bg-white p-4 shadow-sm sm:p-5 md:p-6'
+              }
+            >
               {activeTab === 'analytics' && <AnalyticsPanel />}
               {activeTab === 'work-history' && <WorkHistoryPanel />}
               {activeTab === 'reviews' && <ReviewsPanel />}

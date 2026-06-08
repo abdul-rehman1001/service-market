@@ -1,12 +1,17 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { AlertCircle, MessageSquare, MessageSquareText } from 'lucide-react';
 import { useChatClient } from '@/hooks/useChatClient';
 import ChatSidebar from '@/components/chat/ChatSidebar';
 import ChatHeader from '@/components/chat/ChatHeader';
 import ChatMessages from '@/components/chat/ChatMessages';
 import ChatInput from '@/components/chat/ChatInput';
 import BookingFilterBar from '@/components/chat/BookingFilterBar';
+import { isMobileViewport } from '@/components/chat/chatUtils';
+
+const shellMd =
+  'md:w-full md:rounded-2xl md:border md:border-[#E5E7EB] md:shadow-[0_2px_12px_rgba(17,24,39,0.05)] md:h-[600px] md:min-h-[24rem] md:flex-none';
 
 export const ChatPanel: React.FC = () => {
   const {
@@ -21,12 +26,19 @@ export const ChatPanel: React.FC = () => {
     sendMessage,
   } = useChatClient();
 
+  const [bookingFilter, setBookingFilter] = useState<string>('');
+  const [mobileListOpen, setMobileListOpen] = useState(true);
+
   const activeConversation = conversations.find((c) => c.id === activeConversationId);
   const hasConversations = conversations.length > 0;
   const showLoader = loading && !hasConversations;
-  const [bookingFilter, setBookingFilter] = useState<string>('');
 
   const bookingIdsKey = activeConversation?.bookings?.map((booking) => booking.id).join('|') ?? '';
+
+  useEffect(() => {
+    if (!isMobileViewport()) return;
+    setMobileListOpen(!activeConversationId);
+  }, [activeConversationId]);
 
   useEffect(() => {
     if (!activeConversation) {
@@ -41,9 +53,7 @@ export const ChatPanel: React.FC = () => {
     }
 
     setBookingFilter((prev) => {
-      if (prev && currentBookings.some((booking) => booking.id === prev)) {
-        return prev;
-      }
+      if (prev && currentBookings.some((booking) => booking.id === prev)) return prev;
       return currentBookings[0].id;
     });
   }, [activeConversationId, bookingIdsKey]);
@@ -51,9 +61,7 @@ export const ChatPanel: React.FC = () => {
   const availableBookings = activeConversation?.bookings ?? [];
   const effectiveFilter = bookingFilter || (availableBookings[0]?.id ?? '');
   const filteredMessages = useMemo(() => {
-    if (!effectiveFilter) {
-      return messages;
-    }
+    if (!effectiveFilter) return messages;
     return messages.filter((message) => message.bookingId === effectiveFilter);
   }, [messages, effectiveFilter]);
 
@@ -72,23 +80,19 @@ export const ChatPanel: React.FC = () => {
 
   if (showLoader) {
     return (
-      <div className="w-full h-96 flex items-center justify-center bg-white rounded-lg">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-500 text-sm">Loading conversations...</p>
-        </div>
+      <div className={`flex min-h-[14rem] flex-1 items-center justify-center bg-white ${shellMd}`}>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E5E7EB] border-t-[#10B981]" />
       </div>
     );
   }
 
   if (error && !hasConversations) {
     return (
-      <div className="w-full h-96 flex items-center justify-center bg-white rounded-lg">
+      <div className={`flex min-h-[14rem] flex-1 items-center justify-center bg-white ${shellMd}`}>
         <div className="text-center">
-          <p className="text-gray-500 text-lg mb-2">{error}</p>
-          <a href="/login" className="text-emerald-600 hover:underline text-sm">
-            Go to Login
-          </a>
+          <AlertCircle className="mx-auto mb-2 h-8 w-8 text-[#EF4444]" />
+          <p className="mb-2 text-sm text-[#6B7280]">{error}</p>
+          <a href="/login" className="text-sm font-semibold text-[#059669]">Go to Login</a>
         </div>
       </div>
     );
@@ -96,15 +100,11 @@ export const ChatPanel: React.FC = () => {
 
   if (!hasConversations) {
     return (
-      <div className="w-full h-96 flex items-center justify-center bg-white rounded-lg">
-        <div className="text-center px-6">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-1">No conversations yet</h3>
-          <p className="text-gray-500 text-sm">
+      <div className={`flex min-h-[14rem] flex-1 items-center justify-center bg-white ${shellMd}`}>
+        <div className="px-6 text-center">
+          <MessageSquare className="mx-auto mb-3 h-10 w-10 text-[#10B981]" />
+          <h3 className="text-lg font-bold text-[#1E3A5F]">No conversations yet</h3>
+          <p className="mt-1 text-sm text-[#6B7280]">
             Chat becomes available once a booking is confirmed with a customer.
           </p>
         </div>
@@ -112,25 +112,38 @@ export const ChatPanel: React.FC = () => {
     );
   }
 
+  const showListOnMobile = mobileListOpen;
+  const showThreadOnMobile = !mobileListOpen;
+
   return (
-    <div className="w-full h-[600px] flex flex-col md:flex-row rounded-lg overflow-hidden bg-white shadow-sm">
-      {/* Sidebar */}
-      <aside className="w-full md:w-80 flex-shrink-0 border-r border-gray-200">
+    <div className={`flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-white md:flex-row ${shellMd}`}>
+      <aside
+        className={`flex min-h-0 flex-col md:w-80 md:shrink-0 md:border-r md:border-[#E5E7EB] ${
+          showListOnMobile ? 'flex flex-1 md:flex' : 'hidden md:flex md:flex-col'
+        }`}
+      >
         <ChatSidebar
           conversations={conversations}
           activeId={activeConversationId || ''}
-          onSelect={selectConversation}
+          onSelect={(id) => {
+            selectConversation(id);
+            if (isMobileViewport()) setMobileListOpen(false);
+          }}
         />
       </aside>
 
-      {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div
+        className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden ${
+          showThreadOnMobile ? 'flex' : 'hidden md:flex'
+        }`}
+      >
         {activeConversation ? (
           <>
             <ChatHeader
               user={activeConversation.otherUser}
               serviceName={selectedBooking?.serviceName || activeConversation.serviceName}
               bookingStatus={selectedBooking?.status || activeConversation.bookingStatus}
+              onBack={() => setMobileListOpen(true)}
             />
             <BookingFilterBar
               bookings={availableBookings}
@@ -143,9 +156,11 @@ export const ChatPanel: React.FC = () => {
               currentUserId={currentUserId}
               bookings={availableBookings}
               bookingFilter={effectiveFilter}
+              threadKey={`${activeConversationId}-${effectiveFilter}`}
+              isActive={showThreadOnMobile || !isMobileViewport()}
             />
             {!bookingIdForSend && (
-              <div className="px-4 py-2 text-xs text-amber-700 bg-amber-50 border-t border-amber-100">
+              <div className="shrink-0 border-t border-[#FED7AA] bg-[#FEF3C7] px-3 py-1.5 text-[11px] font-medium text-[#B45309]">
                 {availableBookings.length === 0
                   ? 'No eligible bookings available for chat.'
                   : 'Select a booking to send a message.'}
@@ -154,8 +169,16 @@ export const ChatPanel: React.FC = () => {
             <ChatInput onSend={handleSend} disabled={sending || !bookingIdForSend} />
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-400">
-            Select a conversation to start chatting
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-[#F5F7F8] text-[#6B7280]">
+            <MessageSquareText className="h-10 w-10 text-[#10B981]" />
+            <p className="text-sm font-semibold text-[#1E3A5F]">Select a conversation</p>
+            <button
+              type="button"
+              onClick={() => setMobileListOpen(true)}
+              className="rounded-full bg-[#10B981] px-4 py-2 text-sm font-semibold text-white md:hidden"
+            >
+              View conversations
+            </button>
           </div>
         )}
       </div>

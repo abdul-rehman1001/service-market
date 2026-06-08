@@ -2,13 +2,26 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { AlertCircle, MessageSquare, MessageSquareText } from 'lucide-react';
 import ChatSidebar from './ChatSidebar';
 import ChatHeader from './ChatHeader';
 import ChatMessages from './ChatMessages';
 import ChatInput from './ChatInput';
 import BookingFilterBar from './BookingFilterBar';
 import { useChatClient } from '@/hooks/useChatClient';
-import { MessageSquareText, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { isMobileViewport } from './chatUtils';
+
+const shellMobile = 'h-[100dvh] max-h-[100dvh]';
+const shellMd =
+  'md:h-[76dvh] md:max-h-none md:w-full md:rounded-2xl md:border md:border-[#E5E7EB] md:shadow-[0_2px_12px_rgba(17,24,39,0.05)] md:min-h-[28rem] md:flex-none';
+
+function CenteredShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className={`flex min-h-[14rem] flex-1 items-center justify-center bg-white ${shellMd}`}>
+      {children}
+    </div>
+  );
+}
 
 export default function ChatLayout() {
   const searchParams = useSearchParams();
@@ -28,14 +41,25 @@ export default function ChatLayout() {
 
   const [hydrated, setHydrated] = useState(false);
   const [bookingFilter, setBookingFilter] = useState<string>('');
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(true);
+  const [mobileListOpen, setMobileListOpen] = useState(true);
 
   useEffect(() => {
     setHydrated(true);
   }, []);
 
   useEffect(() => {
-    setMobileSidebarOpen(true);
+    if (!isMobileViewport()) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  // Mobile: show list OR thread — never both. Open list when no chat selected.
+  useEffect(() => {
+    if (!isMobileViewport()) return;
+    setMobileListOpen(!activeConversationId);
   }, [activeConversationId]);
 
   const activeConversation = conversations.find((c) => c.id === activeConversationId);
@@ -67,9 +91,7 @@ export default function ChatLayout() {
   const availableBookings = activeConversation?.bookings ?? [];
   const effectiveFilter = bookingFilter || (availableBookings[0]?.id ?? '');
   const filteredMessages = useMemo(() => {
-    if (!effectiveFilter) {
-      return messages;
-    }
+    if (!effectiveFilter) return messages;
     return messages.filter((message) => message.bookingId === effectiveFilter);
   }, [messages, effectiveFilter]);
 
@@ -88,63 +110,63 @@ export default function ChatLayout() {
 
   if (!hydrated) {
     return (
-      <div className="mx-auto flex h-[76vh] items-center justify-center rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] shadow-[0_20px_45px_-30px_rgba(31,41,55,0.55)]">
+      <CenteredShell>
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E5E7EB] border-t-[#009966]" />
-          <p className="text-sm text-[#6B7280]">Preparing chat...</p>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E5E7EB] border-t-[#10B981]" />
+          <p className="text-sm text-[#6B7280]">Preparing chat…</p>
         </div>
-      </div>
+      </CenteredShell>
     );
   }
 
   if (showLoader) {
     return (
-      <div className="mx-auto flex h-[76vh] items-center justify-center rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] shadow-[0_20px_45px_-30px_rgba(31,41,55,0.55)]">
+      <CenteredShell>
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E5E7EB] border-t-[#009966]" />
-          <p className="text-sm text-[#6B7280]">Loading conversations...</p>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E5E7EB] border-t-[#10B981]" />
+          <p className="text-sm text-[#6B7280]">Loading conversations…</p>
         </div>
-      </div>
+      </CenteredShell>
     );
   }
 
   if (error && !hasConversations) {
     return (
-      <div className="mx-auto flex h-[76vh] items-center justify-center rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] shadow-[0_20px_45px_-30px_rgba(31,41,55,0.55)]">
+      <CenteredShell>
         <div className="text-center">
-          <p className="mb-2 text-lg text-[#6B7280]">{error}</p>
-          <a href="/login" className="text-sm text-[#009966] hover:underline">
-            Go to Login
-          </a>
+          <AlertCircle className="mx-auto mb-2 h-8 w-8 text-[#EF4444]" />
+          <p className="mb-2 text-sm text-[#6B7280]">{error}</p>
+          <a href="/login" className="text-sm font-semibold text-[#059669]">Go to Login</a>
         </div>
-      </div>
+      </CenteredShell>
     );
   }
 
   if (!hasConversations) {
     return (
-      <div className="mx-auto flex h-[76vh] items-center justify-center rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] shadow-[0_20px_45px_-30px_rgba(31,41,55,0.55)]">
+      <CenteredShell>
         <div className="px-6 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F5F7F9]">
-            <svg className="h-8 w-8 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-          </div>
-          <h3 className="mb-1 text-lg font-semibold text-[#1F2937]">No conversations yet</h3>
-          <p className="text-sm text-[#6B7280]">
-            Chat becomes available once a booking is confirmed between you and a service provider.
+          <MessageSquare className="mx-auto mb-3 h-10 w-10 text-[#10B981]" />
+          <h3 className="text-lg font-bold text-[#1E3A5F]">No conversations yet</h3>
+          <p className="mt-1 text-sm text-[#6B7280]">
+            Chat becomes available once a booking is confirmed.
           </p>
         </div>
-      </div>
+      </CenteredShell>
     );
   }
 
+  const showListOnMobile = mobileListOpen;
+  const showThreadOnMobile = !mobileListOpen;
+
   return (
-    <div className="mx-auto flex h-[76vh] min-h-0 flex-col overflow-hidden rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] shadow-[0_24px_50px_-30px_rgba(31,41,55,0.6)] md:flex-row">
-      {/* Sidebar */}
+    <div
+      className={`flex min-h-0 w-full flex-col overflow-hidden bg-white max-md:fixed max-md:inset-0 max-md:z-30 md:relative md:flex-1 md:flex-row ${shellMobile} ${shellMd}`}
+    >
+      {/* Conversation list — full screen on mobile when open */}
       <aside
-        className={`w-full min-h-0 flex-shrink-0 border-b border-[#E5E7EB] md:w-80 md:border-b-0 md:border-r ${
-          mobileSidebarOpen ? 'block' : 'hidden md:block'
+        className={`flex min-h-0 flex-col md:w-80 md:shrink-0 md:border-r md:border-[#E5E7EB] ${
+          showListOnMobile ? 'flex flex-1 md:flex' : 'hidden md:flex md:flex-col'
         }`}
       >
         <ChatSidebar
@@ -152,38 +174,24 @@ export default function ChatLayout() {
           activeId={activeConversationId || ''}
           onSelect={(id) => {
             selectConversation(id);
-            if (window.innerWidth < 768) {
-              setMobileSidebarOpen(false);
-            }
+            if (isMobileViewport()) setMobileListOpen(false);
           }}
         />
       </aside>
 
-      {/* Chat Area */}
-      <div className={`min-h-0 flex-1 flex-col ${mobileSidebarOpen ? 'hidden md:flex' : 'flex'}`}>
+      {/* Chat thread — full screen on mobile when open */}
+      <div
+        className={`flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden ${
+          showThreadOnMobile ? 'flex' : 'hidden md:flex'
+        }`}
+      >
         {activeConversation ? (
           <>
-            <div className="flex items-center justify-between border-b border-[#E5E7EB] bg-[#FFFFFF] px-3 py-2 md:hidden">
-              <button
-                type="button"
-                onClick={() => setMobileSidebarOpen((prev) => !prev)}
-                className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-xs font-semibold text-[#1F2937]"
-              >
-                {mobileSidebarOpen ? (
-                  <PanelLeftClose className="h-4 w-4" />
-                ) : (
-                  <PanelLeftOpen className="h-4 w-4" />
-                )}
-                Conversations
-              </button>
-              <span className="truncate text-xs font-medium text-[#6B7280]">
-                {selectedBooking?.serviceName || activeConversation.serviceName}
-              </span>
-            </div>
             <ChatHeader
               user={activeConversation.otherUser}
               serviceName={selectedBooking?.serviceName || activeConversation.serviceName}
               bookingStatus={selectedBooking?.status || activeConversation.bookingStatus}
+              onBack={() => setMobileListOpen(true)}
             />
             <BookingFilterBar
               bookings={availableBookings}
@@ -196,9 +204,11 @@ export default function ChatLayout() {
               currentUserId={currentUserId}
               bookings={availableBookings}
               bookingFilter={effectiveFilter}
+              threadKey={`${activeConversationId}-${effectiveFilter}`}
+              isActive={showThreadOnMobile || !isMobileViewport()}
             />
             {!bookingIdForSend && (
-              <div className="border-t border-[#E5E7EB] bg-[#FFF4D6] px-4 py-2 text-xs text-[#8A5A00]">
+              <div className="shrink-0 border-t border-[#FED7AA] bg-[#FEF3C7] px-3 py-1.5 text-[11px] font-medium text-[#B45309]">
                 {availableBookings.length === 0
                   ? 'No eligible bookings available for chat.'
                   : 'Select a booking to send a message.'}
@@ -207,15 +217,15 @@ export default function ChatLayout() {
             <ChatInput onSend={handleSend} disabled={sending || !bookingIdForSend} />
           </>
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-[#FFFFFF] text-[#6B7280]">
-            <MessageSquareText className="h-10 w-10 text-[#009966]" />
-            <p className="text-sm font-medium">Select a conversation to start chatting</p>
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-[#F5F7F8] text-[#6B7280]">
+            <MessageSquareText className="h-10 w-10 text-[#10B981]" />
+            <p className="text-sm font-semibold text-[#1E3A5F]">Select a conversation</p>
             <button
               type="button"
-              onClick={() => setMobileSidebarOpen(true)}
-              className="md:hidden rounded-xl border border-[#E5E7EB] bg-[#FFFFFF] px-4 py-2 text-sm font-semibold text-[#009966]"
+              onClick={() => setMobileListOpen(true)}
+              className="rounded-full bg-[#10B981] px-4 py-2 text-sm font-semibold text-white md:hidden"
             >
-              Open conversations
+              View conversations
             </button>
           </div>
         )}

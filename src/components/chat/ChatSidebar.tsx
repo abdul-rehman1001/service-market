@@ -8,19 +8,19 @@ interface Props {
 
 export default function ChatSidebar({ conversations, activeId, onSelect }: Props) {
   return (
-    <div className="flex h-full flex-col overflow-y-auto bg-[#FFFFFF]">
-      <h2 className="border-b border-[#E5E7EB] px-4 py-3 text-base font-bold text-[#1F2937] sm:text-lg">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white">
+      <h2 className="shrink-0 border-b border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2.5 text-base font-bold text-[#1E3A5F] md:px-4 md:py-3 md:text-lg">
         Messages
       </h2>
-      <div className="flex-1 space-y-1 p-2">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
         {conversations.map((conv) => (
           <button
             key={conv.id}
             onClick={() => onSelect(conv.id)}
-            className={`flex w-full items-center rounded-xl border px-3 py-3 text-left transition ${
+            className={`flex w-full items-center border-b border-[#E5E7EB]/70 px-3 py-3 text-left transition active:bg-[#F3F4F6] md:mx-1 md:mb-1 md:rounded-xl md:border md:px-4 ${
               activeId === conv.id
-                ? 'border-[#009966]/30 bg-[#D1FAE5]'
-                : 'border-transparent hover:border-[#E5E7EB] hover:bg-[#F5F7F9]'
+                ? 'bg-[#D1FAE5]/50 md:border-[#10B981]/30 md:bg-[#D1FAE5]'
+                : 'bg-white md:border-transparent md:hover:border-[#E5E7EB] md:hover:bg-[#F9FAFB]'
             }`}
           >
             <div className="flex-shrink-0">
