@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useNotifications } from '@/hooks/useNotifications';
+import DefaultLocationMapModal from './DefaultLocationMapModal';
 
 interface ProviderData {
   id: string;
@@ -54,6 +55,12 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
   const [locationMode, setLocationMode] = useState<LocationMode>('current');
   const [locationModeHydrated, setLocationModeHydrated] = useState(false);
   const [hasDefaultLocation, setHasDefaultLocation] = useState(false);
+  const [defaultLocation, setDefaultLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [locationModalCoords, setLocationModalCoords] = useState<{ lat: number; lng: number } | null>(
+    null
+  );
+  const [locationModalMode, setLocationModalMode] = useState<'set' | 'update'>('set');
   const [lastKnownLocation, setLastKnownLocation] = useState<LocationState | null>(null);
   const [locationMessage, setLocationMessage] = useState('Location sync idle');
   const [locationSyncing, setLocationSyncing] = useState(false);
@@ -157,6 +164,15 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
 
       const data = await response.json();
       setHasDefaultLocation(Boolean(data.hasDefaultLocation));
+
+      if (data.defaultLocation) {
+        setDefaultLocation({
+          lat: Number(data.defaultLocation.lat),
+          lng: Number(data.defaultLocation.lng),
+        });
+      } else {
+        setDefaultLocation(null);
+      }
 
       if (data.lastKnownLocation) {
         setLastKnownLocation({
@@ -286,47 +302,34 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
     }
   };
 
-  const handleSetDefaultLocation = () => {
+  const openDefaultLocationModal = (mode: 'set' | 'update') => {
+    const openWithCoords = (lat: number, lng: number) => {
+      setLocationModalCoords({ lat, lng });
+      setLocationModalMode(mode);
+      setShowLocationModal(true);
+    };
+
+    if (mode === 'update' && defaultLocation) {
+      openWithCoords(defaultLocation.lat, defaultLocation.lng);
+      return;
+    }
+
     if (!navigator.geolocation) {
-      setLocationMessage('Geolocation is not supported by your browser.');
+      const fallback = lastKnownLocation ?? { lat: 24.8607, lng: 67.0011 };
+      openWithCoords(fallback.lat, fallback.lng);
       return;
     }
 
     setLocationSyncing(true);
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-
-          const response = await fetch('/api/provider/location', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'set-default', lat, lng }),
-          });
-
-          const data = await response.json();
-          if (!response.ok) {
-            throw new Error(data.error || 'Failed to save default location');
-          }
-
-          setHasDefaultLocation(true);
-          setLocationMessage('Default location saved. Switched to default mode.');
-          setLocationMode('default');
-          persistMode('default');
-        } catch (error: any) {
-          setLocationMessage(error.message || 'Failed to save default location.');
-        } finally {
-          setLocationSyncing(false);
-        }
-      },
-      (error) => {
-        if (error.code === error.PERMISSION_DENIED) {
-          setLocationMessage('Permission denied. Cannot set default location.');
-        } else {
-          setLocationMessage('Unable to get location for default setup.');
-        }
+      (position) => {
         setLocationSyncing(false);
+        openWithCoords(position.coords.latitude, position.coords.longitude);
+      },
+      () => {
+        setLocationSyncing(false);
+        const fallback = lastKnownLocation ?? { lat: 24.8607, lng: 67.0011 };
+        openWithCoords(fallback.lat, fallback.lng);
       },
       {
         enableHighAccuracy: true,
@@ -336,6 +339,44 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
     );
   };
 
+  const handleConfirmDefaultLocation = async (lat: number, lng: number) => {
+    try {
+      setLocationSyncing(true);
+
+      const response = await fetch('/api/provider/location', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'set-default', lat, lng }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save default location');
+      }
+
+      setHasDefaultLocation(true);
+      setDefaultLocation({ lat, lng });
+      setShowLocationModal(false);
+      setLocationModalCoords(null);
+
+      if (locationModalMode === 'set') {
+        setLocationMessage('Default location saved. Switched to default mode.');
+        setLocationMode('default');
+        persistMode('default');
+        await applyDefaultLocation();
+      } else {
+        setLocationMessage('Default location updated.');
+        if (locationMode === 'default') {
+          await applyDefaultLocation();
+        }
+      }
+    } catch (error: any) {
+      setLocationMessage(error.message || 'Failed to save default location.');
+    } finally {
+      setLocationSyncing(false);
+    }
+  };
+
   const handleCurrentMode = () => {
     setLocationMode('current');
     persistMode('current');
@@ -343,7 +384,7 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
 
   const handleDefaultMode = () => {
     if (!hasDefaultLocation) {
-      handleSetDefaultLocation();
+      openDefaultLocationModal('set');
       return;
     }
 
@@ -447,12 +488,22 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
           title={
             hasDefaultLocation
               ? 'Use saved default location'
-              : 'Set your current position as default location'
+              : 'Set your default location on the map'
           }
         >
           <Navigation className="h-3.5 w-3.5 shrink-0" />
           {hasDefaultLocation ? 'Default' : 'Set default'}
         </button>
+        {hasDefaultLocation && (
+          <button
+            type="button"
+            onClick={() => openDefaultLocationModal('update')}
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-[10px] font-semibold text-[#1F6F5F] transition hover:bg-white sm:text-[11px]"
+            title="Update your saved default location"
+          >
+            Update
+          </button>
+        )}
       </div>
 
       <div className="hidden h-8 w-px shrink-0 bg-[#6FCF97]/35 sm:block" aria-hidden />
@@ -625,6 +676,28 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
         {/* Location controls + status */}
         <div className="mt-3 flex justify-start">{locationBar}</div>
       </div>
+
+      {showLocationModal && locationModalCoords && (
+        <DefaultLocationMapModal
+          open={showLocationModal}
+          initialLat={locationModalCoords.lat}
+          initialLng={locationModalCoords.lng}
+          saving={locationSyncing}
+          title={locationModalMode === 'set' ? 'Set Default Location' : 'Update Default Location'}
+          description={
+            locationModalMode === 'set'
+              ? 'Confirm your position on the map. Drag the pin if needed, then save.'
+              : 'Adjust your saved default location. It stays the same until you confirm an update.'
+          }
+          confirmLabel={locationModalMode === 'set' ? 'Save default location' : 'Update location'}
+          onClose={() => {
+            if (locationSyncing) return;
+            setShowLocationModal(false);
+            setLocationModalCoords(null);
+          }}
+          onConfirm={handleConfirmDefaultLocation}
+        />
+      )}
     </header>
   );
 };
