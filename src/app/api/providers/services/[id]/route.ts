@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
+import {
+  ActiveBookingsError,
+  deleteOrDeactivateService,
+  ServiceNotFoundError,
+} from '@/lib/serviceDeletion';
 
 /**
  * PATCH  /api/providers/services/:id → Update service (Owner only)
@@ -225,27 +230,15 @@ export async function DELETE(
       );
     }
 
-    // 3. Find the service with booking count
     const service = await prisma.service.findUnique({
       where: { id },
-      include: {
-        _count: {
-          select: {
-            bookings: {
-              where: {
-                status: { in: ['PENDING', 'CONFIRMED', 'EN_ROUTE', 'IN_PROGRESS'] },
-              },
-            },
-          },
-        },
-      },
+      select: { id: true, providerId: true },
     });
 
     if (!service) {
       return NextResponse.json({ error: 'Service not found' }, { status: 404 });
     }
 
-    // 4. Check ownership
     if (service.providerId !== provider.id) {
       return NextResponse.json(
         { error: 'You can only delete your own services' },
@@ -253,30 +246,42 @@ export async function DELETE(
       );
     }
 
-    // 5. Prevent deletion if active bookings exist
-    if (service._count.bookings > 0) {
+    const result = await deleteOrDeactivateService(id);
+
+    if (result.action === 'deactivated') {
+      return NextResponse.json(
+        {
+          action: 'deactivated',
+          message: 'Service deactivated (booking history preserved)',
+          details: `This service has ${result.bookingCount} past booking(s) and cannot be permanently removed.`,
+          bookingCount: result.bookingCount,
+        },
+        { status: 200 }
+      );
+    }
+
+    return NextResponse.json(
+      { action: 'deleted', message: 'Service deleted successfully' },
+      { status: 200 }
+    );
+  } catch (error: unknown) {
+    if (error instanceof ServiceNotFoundError) {
+      return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+
+    if (error instanceof ActiveBookingsError) {
       return NextResponse.json(
         {
           error: 'Cannot delete service with active bookings',
-          details: `This service has ${service._count.bookings} active booking(s). Please complete or cancel them first.`,
+          details: error.message,
         },
         { status: 400 }
       );
     }
 
-    // 6. Delete service (cascades availability)
-    await prisma.service.delete({
-      where: { id },
-    });
-
-    return NextResponse.json(
-      { message: 'Service deleted successfully' },
-      { status: 200 }
-    );
-  } catch (error: any) {
     console.error('Error deleting service:', error);
     return NextResponse.json(
-      { error: 'Failed to delete service', details: error.message },
+      { error: 'Failed to delete service' },
       { status: 500 }
     );
   }

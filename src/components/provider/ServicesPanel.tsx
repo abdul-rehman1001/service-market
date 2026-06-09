@@ -127,7 +127,11 @@ export const ServicesPanel: React.FC = () => {
         return;
       }
 
-      alert('Service deleted successfully');
+      alert(
+        data.action === 'deactivated'
+          ? `${data.message}${data.details ? `\n${data.details}` : ''}`
+          : data.message || 'Service deleted successfully'
+      );
       fetchServices();
     } catch (err: any) {
       alert('Failed to delete service: ' + err.message);

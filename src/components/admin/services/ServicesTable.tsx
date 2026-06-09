@@ -166,7 +166,11 @@ export default function ServicesTable() {
         return;
       }
 
-      alert("Service deleted successfully");
+      alert(
+        data.action === "deactivated"
+          ? data.message + (data.details ? `\n${data.details}` : "")
+          : data.message || "Service deleted successfully"
+      );
       fetchServices();
     } catch (err: unknown) {
       const e = err as Error;
