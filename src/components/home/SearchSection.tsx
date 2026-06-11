@@ -28,9 +28,10 @@ const EXAMPLE_TAGS: { text: string; icon: LucideIcon }[] = [
 interface ClassificationResult {
   success: boolean;
   query: string;
-  category: string;
+  matched?: boolean;
+  category: string | null;
   categoryId: string | null;
-  categoryName: string;
+  categoryName: string | null;
   confidence: number;
   allMatches: Array<{
     category: string;
@@ -189,6 +190,29 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
     );
   };
 
+  const classifyRequest = async (searchQuery: string): Promise<ClassificationResult> => {
+    const response = await fetch("/api/classify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: searchQuery }),
+    });
+
+    if (!response.ok) {
+      let message = "Search failed. Please try again.";
+      try {
+        const body = await response.json();
+        if (body?.error) message = body.error;
+      } catch {
+        // Non-JSON error response; keep the default message.
+      }
+      const error = new Error(message) as Error & { retryable?: boolean };
+      error.retryable = response.status >= 500;
+      throw error;
+    }
+
+    return response.json();
+  };
+
   const handleSearch = async (searchQuery?: string | React.MouseEvent) => {
     // If searchQuery is an event object (from onClick), use the current query state
     const queryToSearch = (typeof searchQuery === 'string' ? searchQuery : query) || query;
@@ -201,14 +225,17 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
     setShowHistory(false);
 
     try {
-      const response = await fetch("/api/classify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: queryToSearch }),
-      });
+      let data: ClassificationResult;
+      try {
+        data = await classifyRequest(queryToSearch);
+      } catch (firstErr: any) {
+        // Server errors are often transient cold starts — retry once before
+        // surfacing an error to the user.
+        if (firstErr?.retryable === false) throw firstErr;
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+        data = await classifyRequest(queryToSearch);
+      }
 
-      if (!response.ok) throw new Error("Classification failed");
-      const data = await response.json();
       setResult(data);
 
       // Save to history after successful search
@@ -216,7 +243,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
 
       // Don't trigger search yet - wait for user to click button
     } catch (err: any) {
-      setError(err.message || "Something went wrong");
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -479,9 +506,48 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
             )}
           </AnimatePresence>
 
+          {/* No Match Found */}
+          <AnimatePresence>
+            {result && (result.matched === false || !result.category) && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="mt-6 rounded-2xl border-2 border-amber-200 bg-amber-50 p-5 text-left sm:p-6"
+                role="status"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+                      <Search className="h-5 w-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 sm:text-lg">
+                        No results found
+                      </h3>
+                      <p className="mt-1 text-sm leading-relaxed text-amber-900">
+                        We couldn&apos;t match &ldquo;{result.query}&rdquo; to any of our
+                        services. Try describing the problem differently, e.g.
+                        &ldquo;fix leaking tap&rdquo; or &ldquo;ac not cooling&rdquo;.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleClear}
+                    className="rounded-lg p-2 transition hover:bg-white/60"
+                    aria-label="Clear results"
+                  >
+                    <X className="h-5 w-5 text-amber-700" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* AI Results */}
           <AnimatePresence>
-            {result && (
+            {result && result.matched !== false && result.category && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -536,7 +602,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                       >
                         <span className="text-xs text-gray-600 font-medium">Category</span>
                         <span className="px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-bold rounded-lg shadow-md">
-                          {result.categoryName || formatCategoryName(result.category)}
+                          {result.categoryName || formatCategoryName(result.category!)}
                         </span>
                       </motion.div>
 
@@ -568,20 +634,26 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                       </motion.div>
                     </div>
 
-                    <motion.button
-                      onClick={() => handleFindProviders(result.category, result.categoryId, result.categoryName)}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg sm:gap-3 sm:py-4 sm:text-base"
-                    >
-                      Find providers
-                      <ArrowRight className="w-5 h-5" />
-                    </motion.button>
+                    {result.categoryId ? (
+                      <motion.button
+                        onClick={() => handleFindProviders(result.category!, result.categoryId, result.categoryName ?? formatCategoryName(result.category!))}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg sm:gap-3 sm:py-4 sm:text-base"
+                      >
+                        Find providers
+                        <ArrowRight className="w-5 h-5" />
+                      </motion.button>
+                    ) : (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-center text-sm font-semibold text-amber-900">
+                        No providers offer this service yet. Please check back soon.
+                      </div>
+                    )}
                   </div>
                 </motion.div>
 
-                {/* Alternative Matches */}
-                {result.allMatches && result.allMatches.length > 1 && (
+                {/* Alternative Matches (only ones that map to a real category) */}
+                {result.allMatches && result.allMatches.slice(1).filter((m) => m.categoryId).length > 0 && (
                   <motion.div
                     layout
                     initial={{ opacity: 0, y: 10 }}
@@ -594,7 +666,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                       Other Possible Matches
                     </h4>
                     <div className="space-y-2">
-                      {result.allMatches.slice(1, 4).map((match, idx) => (
+                      {result.allMatches.slice(1).filter((m) => m.categoryId).slice(0, 3).map((match, idx) => (
                         <motion.div
                           key={idx}
                           initial={{ opacity: 0, x: -20 }}
@@ -630,8 +702,8 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
             )}
           </AnimatePresence>
 
-          {/* Example Tags */}
-          {!result && !loading && (
+          {/* Example Tags (also shown after a no-match search to suggest retries) */}
+          {(!result || result.matched === false || !result.category) && !loading && (
             <motion.div
               initial={reduceMotion ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}

@@ -1,17 +1,35 @@
 
-import { getEmbedding } from './embeddings';
+import { getEmbedding, warmUpEmbedder } from './embeddings';
 import { trainingData, categoryKeywords, aiCategories } from './training-data';
 import { cosineSimilarity } from './utils';
 import prisma from './prisma';
 import { classifyWithStoredEmbeddings } from './ai/stored-embedding-classifier';
 
 // ---------------------------------------------------------------------------
+// Tuning
+// ---------------------------------------------------------------------------
+/**
+ * Minimum embedding similarity for a result to count as a real match.
+ * Below this we report "no match" so the UI can show "no results found"
+ * instead of a confidently-wrong category.
+ */
+const MIN_MATCH_CONFIDENCE = 0.45;
+
+/**
+ * Max time the embedding pipeline may take before we fall back to keyword
+ * matching. Keeps the API responsive even while a cold serverless instance
+ * is still downloading the model.
+ */
+const EMBEDDING_TIME_BUDGET_MS = 20_000;
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 export interface ClassificationResult {
-  category: string;          // AI-detected category key (e.g. "plumber")
+  matched: boolean;          // false => nothing relevant found ("no results")
+  category: string | null;   // AI-detected category key (e.g. "plumber")
   categoryId: string | null; // Matching DB category ID
-  categoryName: string;      // DB category name or formatted key
+  categoryName: string | null; // DB category name or formatted key
   confidence: number;
   allMatches: Array<{
     category: string;
@@ -75,10 +93,20 @@ async function getDbCategoryMap(): Promise<Record<string, DbCategoryMapping[]>> 
   const now = Date.now();
   if (dbCategoryMap && now < dbMapExpiry) return dbCategoryMap;
 
-  const categories = await prisma.serviceCategory.findMany({
-    where: { isActive: true },
-    select: { id: true, name: true, parentId: true },
-  });
+  let categories: Array<{ id: string; name: string; parentId: string | null }>;
+  try {
+    categories = await prisma.serviceCategory.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, parentId: true },
+    });
+  } catch (err) {
+    // DB hiccup: serve the stale map instead of failing the whole request.
+    if (dbCategoryMap) {
+      console.error('Category map refresh failed; serving stale map:', err);
+      return dbCategoryMap;
+    }
+    throw err;
+  }
 
   const map: Record<string, DbCategoryMapping[]> = {};
 
@@ -124,6 +152,10 @@ function keywordMatch(query: string): { key: string; score: number } | null {
 // Main classification function
 // ---------------------------------------------------------------------------
 export async function classifyQuery(query: string): Promise<ClassificationResult> {
+  // Start loading the embedding model immediately so a cold instance is warm
+  // by the time (this or a later) request needs embeddings.
+  warmUpEmbedder();
+
   const dbMap = await getDbCategoryMap();
 
   // 1. Try fast keyword match first
@@ -132,6 +164,7 @@ export async function classifyQuery(query: string): Promise<ClassificationResult
     const dbEntry = dbMap[kwMatch.key]?.[0];
     const allMatches = buildAllMatchesFromKeywords(query, dbMap);
     return {
+      matched: true,
       category: kwMatch.key,
       categoryId: dbEntry?.id ?? null,
       categoryName: dbEntry?.name ?? formatKey(kwMatch.key),
@@ -140,7 +173,62 @@ export async function classifyQuery(query: string): Promise<ClassificationResult
     };
   }
 
-  // 2. Fall back to embedding similarity
+  // 2. Embedding similarity (DB-backed store first, in-memory fallback).
+  // Never let an embedding failure bubble up as a 500: degrade to keyword
+  // matching / "no match" instead.
+  try {
+    const embeddingResult = await withTimeout(
+      classifyWithEmbeddings(query, dbMap),
+      EMBEDDING_TIME_BUDGET_MS,
+      'Embedding classification timed out'
+    );
+
+    if (embeddingResult) {
+      if (embeddingResult.confidence >= MIN_MATCH_CONFIDENCE) {
+        return embeddingResult;
+      }
+      // Embeddings worked but nothing was similar enough → genuine no-match.
+      return {
+        ...embeddingResult,
+        matched: false,
+        allMatches: embeddingResult.allMatches.filter(
+          (m) => m.similarity >= MIN_MATCH_CONFIDENCE
+        ),
+      };
+    }
+  } catch (err) {
+    console.error('Embedding classification failed, using keyword fallback:', err);
+  }
+
+  // 3. Degraded fallback: accept any keyword hit, even a weak one.
+  if (kwMatch) {
+    const dbEntry = dbMap[kwMatch.key]?.[0];
+    return {
+      matched: true,
+      category: kwMatch.key,
+      categoryId: dbEntry?.id ?? null,
+      categoryName: dbEntry?.name ?? formatKey(kwMatch.key),
+      confidence: kwMatch.score,
+      allMatches: buildAllMatchesFromKeywords(query, dbMap),
+    };
+  }
+
+  // 4. Nothing usable found.
+  return {
+    matched: false,
+    category: null,
+    categoryId: null,
+    categoryName: null,
+    confidence: 0,
+    allMatches: [],
+  };
+}
+
+async function classifyWithEmbeddings(
+  query: string,
+  dbMap: Record<string, DbCategoryMapping[]>
+): Promise<ClassificationResult | null> {
+  // Preferred: pre-computed embeddings stored in the database.
   const dbBackedResult = await classifyWithStoredEmbeddings(query);
   if (dbBackedResult) {
     const allMatches = dbBackedResult.allMatches.map((match) => {
@@ -156,6 +244,7 @@ export async function classifyQuery(query: string): Promise<ClassificationResult
     const best = allMatches[0];
 
     return {
+      matched: true,
       category: best.category,
       categoryId: best.categoryId,
       categoryName: best.categoryName,
@@ -164,7 +253,8 @@ export async function classifyQuery(query: string): Promise<ClassificationResult
     };
   }
 
-  // 3. Fall back to in-memory training data similarity if DB embeddings are missing
+  // Fallback: compute embeddings for the bundled training data (only used
+  // when the DB embedding store is empty).
   const [queryEmbedding, cache] = await Promise.all([
     getEmbedding(query),
     getEmbeddingCache(),
@@ -180,7 +270,6 @@ export async function classifyQuery(query: string): Promise<ClassificationResult
     }
   }
 
-  // Sort categories by score descending
   const sorted = Object.entries(categoryScores)
     .map(([key, similarity]) => {
       const dbEntry = dbMap[key]?.[0];
@@ -193,15 +282,34 @@ export async function classifyQuery(query: string): Promise<ClassificationResult
     })
     .sort((a, b) => b.similarity - a.similarity);
 
+  if (sorted.length === 0) return null;
+
   const best = sorted[0];
 
   return {
+    matched: true,
     category: best.category,
     categoryId: best.categoryId,
     categoryName: best.categoryName,
     confidence: best.similarity,
     allMatches: sorted.slice(0, 5),
   };
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
 }
 
 // ---------------------------------------------------------------------------

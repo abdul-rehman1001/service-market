@@ -17,18 +17,40 @@ backends.onnx.wasm.numThreads = 1;
 backends.onnx.wasm.wasmPaths =
   process.env.ONNX_WASM_PATH || 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.1/dist/';
 
-let embedder: FeatureExtractionPipeline | null = null;
+let embedderPromise: Promise<FeatureExtractionPipeline> | null = null;
 
 async function getEmbedder(): Promise<FeatureExtractionPipeline> {
-  if (!embedder) {
+  // Share one in-flight load across concurrent requests. Without this, several
+  // simultaneous cold-start requests each download the model, exhausting
+  // memory/time in serverless environments.
+  if (!embedderPromise) {
     console.log('Loading embedding model...');
-    embedder = await pipeline(
+    embedderPromise = pipeline(
       'feature-extraction',
       'Xenova/paraphrase-multilingual-MiniLM-L12-v2'
-    );
-    console.log('Model loaded successfully!');
+    ).then((model) => {
+      console.log('Embedding model loaded successfully!');
+      return model;
+    });
+
+    // If the load fails (network hiccup, etc.) allow the next request to retry
+    // instead of caching the rejected promise forever.
+    embedderPromise.catch((err) => {
+      console.error('Embedding model failed to load:', err);
+      embedderPromise = null;
+    });
   }
-  return embedder;
+  return embedderPromise;
+}
+
+/**
+ * Begins loading the model in the background without blocking the caller.
+ * Useful to warm up a fresh serverless instance.
+ */
+export function warmUpEmbedder(): void {
+  getEmbedder().catch(() => {
+    // Errors are already logged in getEmbedder; warm-up is best-effort.
+  });
 }
 
 export async function getEmbedding(text: string): Promise<number[]> {

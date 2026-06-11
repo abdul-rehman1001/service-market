@@ -339,7 +339,10 @@ export default function FeaturedProviders({ userLocation }: FeaturedProvidersPro
             </p>
           </div>
         ) : (
-          <ProvidersEmptyState />
+          <ProvidersEmptyState
+            categoryName={active.categoryName || active.category}
+            onClear={clear}
+          />
         )}
       </div>
     </section>
