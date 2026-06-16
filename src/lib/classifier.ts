@@ -4,6 +4,7 @@ import { trainingData, categoryKeywords, aiCategories } from './training-data';
 import { cosineSimilarity } from './utils';
 import prisma from './prisma';
 import { classifyWithStoredEmbeddings } from './ai/stored-embedding-classifier';
+import { getOutOfScopeScore } from './ai/out-of-scope';
 
 // ---------------------------------------------------------------------------
 // Tuning
@@ -127,6 +128,22 @@ async function getDbCategoryMap(): Promise<Record<string, DbCategoryMapping[]>> 
 // ---------------------------------------------------------------------------
 // Fast keyword matching – avoids embedding computation for obvious queries
 // ---------------------------------------------------------------------------
+const keywordRegexCache = new Map<string, RegExp>();
+
+/**
+ * Whole-word keyword test. Plain `includes` causes false positives with
+ * short keywords, e.g. "ac" matching inside "facing" or "package".
+ */
+function containsKeyword(lowerQuery: string, keyword: string): boolean {
+  let regex = keywordRegexCache.get(keyword);
+  if (!regex) {
+    const escaped = keyword.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    regex = new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`);
+    keywordRegexCache.set(keyword, regex);
+  }
+  return regex.test(lowerQuery);
+}
+
 function keywordMatch(query: string): { key: string; score: number } | null {
   const lower = query.toLowerCase();
 
@@ -134,7 +151,7 @@ function keywordMatch(query: string): { key: string; score: number } | null {
 
   for (const [key, keywords] of Object.entries(categoryKeywords)) {
     for (const kw of keywords) {
-      if (lower.includes(kw.toLowerCase())) {
+      if (containsKeyword(lower, kw)) {
         // Longer keyword match = higher confidence
         const score = kw.length / lower.length;
         const adjusted = Math.min(0.95, 0.7 + score * 0.3);
@@ -177,21 +194,51 @@ export async function classifyQuery(query: string): Promise<ClassificationResult
   // Never let an embedding failure bubble up as a 500: degrade to keyword
   // matching / "no match" instead.
   try {
-    const embeddingResult = await withTimeout(
+    const embeddingOutcome = await withTimeout(
       classifyWithEmbeddings(query, dbMap),
       EMBEDDING_TIME_BUDGET_MS,
       'Embedding classification timed out'
     );
 
-    if (embeddingResult) {
-      if (embeddingResult.confidence >= MIN_MATCH_CONFIDENCE) {
-        return embeddingResult;
+    if (embeddingOutcome) {
+      const { result, outOfScopeScore } = embeddingOutcome;
+
+      // The query resembles a service we explicitly do NOT offer (e.g. sofa
+      // cleaning) more than any real category → genuine no-match.
+      if (outOfScopeScore >= result.confidence) {
+        return {
+          matched: false,
+          category: null,
+          categoryId: null,
+          categoryName: null,
+          confidence: result.confidence,
+          allMatches: [],
+        };
       }
+
+      if (result.confidence >= MIN_MATCH_CONFIDENCE) {
+        return result;
+      }
+
+      // Embeddings are unsure (common for Roman Urdu / slang); a keyword hit,
+      // even a weak one, is a stronger signal than a low-similarity embedding.
+      if (kwMatch) {
+        const dbEntry = dbMap[kwMatch.key]?.[0];
+        return {
+          matched: true,
+          category: kwMatch.key,
+          categoryId: dbEntry?.id ?? null,
+          categoryName: dbEntry?.name ?? formatKey(kwMatch.key),
+          confidence: kwMatch.score,
+          allMatches: buildAllMatchesFromKeywords(query, dbMap),
+        };
+      }
+
       // Embeddings worked but nothing was similar enough → genuine no-match.
       return {
-        ...embeddingResult,
+        ...result,
         matched: false,
-        allMatches: embeddingResult.allMatches.filter(
+        allMatches: result.allMatches.filter(
           (m) => m.similarity >= MIN_MATCH_CONFIDENCE
         ),
       };
@@ -224,12 +271,26 @@ export async function classifyQuery(query: string): Promise<ClassificationResult
   };
 }
 
+interface EmbeddingOutcome {
+  result: ClassificationResult;
+  /** Best similarity against known out-of-scope service examples. */
+  outOfScopeScore: number;
+}
+
 async function classifyWithEmbeddings(
   query: string,
   dbMap: Record<string, DbCategoryMapping[]>
-): Promise<ClassificationResult | null> {
+): Promise<EmbeddingOutcome | null> {
+  // Compute the query embedding once and reuse it for category matching and
+  // the out-of-scope guard.
+  const queryEmbedding = await getEmbedding(query);
+
+  const [dbBackedResult, outOfScopeScore] = await Promise.all([
+    classifyWithStoredEmbeddings(query, queryEmbedding),
+    getOutOfScopeScore(queryEmbedding),
+  ]);
+
   // Preferred: pre-computed embeddings stored in the database.
-  const dbBackedResult = await classifyWithStoredEmbeddings(query);
   if (dbBackedResult) {
     const allMatches = dbBackedResult.allMatches.map((match) => {
       const dbEntry = dbMap[match.category]?.[0];
@@ -244,21 +305,21 @@ async function classifyWithEmbeddings(
     const best = allMatches[0];
 
     return {
-      matched: true,
-      category: best.category,
-      categoryId: best.categoryId,
-      categoryName: best.categoryName,
-      confidence: best.similarity,
-      allMatches,
+      outOfScopeScore,
+      result: {
+        matched: true,
+        category: best.category,
+        categoryId: best.categoryId,
+        categoryName: best.categoryName,
+        confidence: best.similarity,
+        allMatches,
+      },
     };
   }
 
   // Fallback: compute embeddings for the bundled training data (only used
   // when the DB embedding store is empty).
-  const [queryEmbedding, cache] = await Promise.all([
-    getEmbedding(query),
-    getEmbeddingCache(),
-  ]);
+  const cache = await getEmbeddingCache();
 
   // Aggregate best similarity per category (take max similarity per category)
   const categoryScores: Record<string, number> = {};
@@ -287,12 +348,15 @@ async function classifyWithEmbeddings(
   const best = sorted[0];
 
   return {
-    matched: true,
-    category: best.category,
-    categoryId: best.categoryId,
-    categoryName: best.categoryName,
-    confidence: best.similarity,
-    allMatches: sorted.slice(0, 5),
+    outOfScopeScore,
+    result: {
+      matched: true,
+      category: best.category,
+      categoryId: best.categoryId,
+      categoryName: best.categoryName,
+      confidence: best.similarity,
+      allMatches: sorted.slice(0, 5),
+    },
   };
 }
 
@@ -335,7 +399,7 @@ function buildAllMatchesFromKeywords(
   for (const [key, keywords] of Object.entries(categoryKeywords)) {
     let maxScore = 0;
     for (const kw of keywords) {
-      if (lower.includes(kw.toLowerCase())) {
+      if (containsKeyword(lower, kw)) {
         const score = kw.length / lower.length;
         const adjusted = Math.min(0.95, 0.7 + score * 0.3);
         maxScore = Math.max(maxScore, adjusted);

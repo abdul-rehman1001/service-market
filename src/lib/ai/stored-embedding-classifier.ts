@@ -61,7 +61,8 @@ export type StoredEmbeddingClassification = {
 };
 
 export async function classifyWithStoredEmbeddings(
-  query: string
+  query: string,
+  precomputedQueryEmbedding?: number[]
 ): Promise<StoredEmbeddingClassification | null> {
   const records = await getCachedRecords();
 
@@ -69,7 +70,7 @@ export async function classifyWithStoredEmbeddings(
     return null;
   }
 
-  const queryEmbedding = await getEmbedding(query);
+  const queryEmbedding = precomputedQueryEmbedding ?? (await getEmbedding(query));
   const categoryBestScore: Record<string, StoredCategoryMatch> = {};
 
   for (const record of records) {
