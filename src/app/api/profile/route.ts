@@ -206,6 +206,11 @@ export async function PUT(req: NextRequest) {
       return user;
     });
 
+    const providerProfile = await prisma.serviceProvider.findUnique({
+      where: { userId: auth.userId },
+      select: { verificationStatus: true },
+    });
+
     return NextResponse.json(
       {
         message: 'Profile updated successfully',
@@ -214,6 +219,7 @@ export async function PUT(req: NextRequest) {
           activeMode: auth.role,
           hasProviderProfile,
           canSwitchMode: updatedUser.role !== 'ADMIN' && hasProviderProfile,
+          providerVerificationStatus: providerProfile?.verificationStatus ?? null,
         },
       },
       { status: 200 }

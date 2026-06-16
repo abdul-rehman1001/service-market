@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { getModeDisplayLabel } from '@/lib/auth';
+import { getProfileStatusBadge } from '@/lib/profile-status';
 import ProfileModeSwitcher from '@/components/profile/ProfileModeSwitcher';
 
 interface UserProfile {
@@ -34,6 +35,7 @@ interface UserProfile {
   activeMode?: string;
   hasProviderProfile?: boolean;
   canSwitchMode?: boolean;
+  providerVerificationStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
   status: string;
   city?: string;
   address?: string;
@@ -203,6 +205,8 @@ export default function ProfilePage() {
     );
   }
 
+  const statusBadge = getProfileStatusBadge(user);
+
   return (
     <>
       <Header />
@@ -236,13 +240,9 @@ export default function ProfilePage() {
                     {getModeDisplayLabel(user.activeMode || user.role)}
                   </span>
                   <span
-                    className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold sm:text-sm ${
-                      user.status === 'ACTIVE'
-                        ? 'border border-[#A7F3D0] bg-[#D1FAE5] text-[#007A52]'
-                        : 'border border-[#FDE68A] bg-[#FFF4D6] text-[#8A5A00]'
-                    }`}
+                    className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold sm:text-sm ${statusBadge.className}`}
                   >
-                    {user.status}
+                    {statusBadge.label}
                   </span>
                 </div>
               </div>

@@ -17,6 +17,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { getModeDisplayLabel } from '@/lib/auth';
+import { getProfileStatusBadge } from '@/lib/profile-status';
 import ProfileModeSwitcher from '@/components/profile/ProfileModeSwitcher';
 
 interface UserProfile {
@@ -29,6 +30,7 @@ interface UserProfile {
   activeMode?: string;
   hasProviderProfile?: boolean;
   canSwitchMode?: boolean;
+  providerVerificationStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
   status: string;
   city?: string;
   address?: string;
@@ -176,6 +178,8 @@ export const ProviderProfilePanel: React.FC = () => {
     );
   }
 
+  const statusBadge = getProfileStatusBadge(user);
+
   return (
     <section className="mx-auto w-full max-w-4xl space-y-5 sm:space-y-6">
       <div>
@@ -212,13 +216,9 @@ export const ProviderProfilePanel: React.FC = () => {
                   {getModeDisplayLabel(user.activeMode || user.role)}
                 </span>
                 <span
-                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                    user.status === 'ACTIVE'
-                      ? 'border-[#6FCF97]/40 bg-[#6FCF97]/20 text-[#1F6F5F]'
-                      : 'border-amber-200 bg-amber-50 text-amber-800'
-                  }`}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusBadge.className}`}
                 >
-                  {user.status}
+                  {statusBadge.label}
                 </span>
               </div>
             </div>
