@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { parseJwtPayload } from '@/lib/auth';
+import { emailVerificationPath } from '@/lib/emailVerification';
 import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from '@/lib/cookies';
 
 function redirectForActiveMode(role: string) {
@@ -24,13 +25,16 @@ export default async function RootPage() {
   if (accessToken) {
     const auth = parseJwtPayload(accessToken);
     if (auth) {
+      if (auth.role !== 'ADMIN' && auth.emailVerified === false) {
+        redirect(emailVerificationPath(auth.userId));
+      }
       redirectForActiveMode(auth.role);
     }
   }
 
   const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)?.value;
   if (refreshToken) {
-    redirect('/home');
+    redirect('/login');
   }
 
   redirect('/landing');

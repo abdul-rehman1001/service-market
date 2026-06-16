@@ -1,13 +1,20 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import type { ActiveMode } from '@/lib/auth';
-import { getAccessTokenRole, getSessionModeFromCookie } from '@/lib/accessTokenRole';
+import {
+  getAccessTokenClaims,
+  getSessionModeFromCookie,
+} from '@/lib/accessTokenRole';
 import {
   ACCESS_TOKEN_COOKIE,
   PREFERRED_MODE_COOKIE,
-  REFRESH_TOKEN_COOKIE,
   SESSION_MODE_COOKIE,
 } from '@/lib/cookies';
+import {
+  emailVerificationPath,
+  isEmailVerificationRoute,
+  shouldBlockUnverifiedEmail,
+} from '@/lib/emailVerification';
 import {
   classifyRoute,
   normalizePath,
@@ -33,11 +40,21 @@ function redirectForActiveMode(role: ActiveMode, request: NextRequest): NextResp
   return NextResponse.redirect(new URL('/home', request.url));
 }
 
-function resolveActiveModeFromRequest(request: NextRequest): ActiveMode | null {
-  const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
-  const roleFromAccess = getAccessTokenRole(accessToken);
-  if (roleFromAccess) return roleFromAccess;
+function redirectToEmailVerification(userId: string, request: NextRequest): NextResponse {
+  return NextResponse.redirect(new URL(emailVerificationPath(userId), request.url));
+}
 
+function isAuthEntryRoute(pathname: string): boolean {
+  return (
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname.startsWith('/register/') ||
+    pathname === '/forgot-password' ||
+    pathname.startsWith('/reset-password/')
+  );
+}
+
+function resolveActiveModeFromCookies(request: NextRequest): ActiveMode | null {
   const preferredMode = getSessionModeFromCookie(
     request.cookies.get(PREFERRED_MODE_COOKIE)?.value
   );
@@ -58,9 +75,21 @@ export function evaluateRouteAccess(request: NextRequest): NextResponse | null {
   const pathname = normalizePath(request.nextUrl.pathname);
   const access = classifyRoute(pathname);
 
-  const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
-  const activeMode = resolveActiveModeFromRequest(request);
-  const hasSession = Boolean(activeMode) || Boolean(refreshToken);
+  const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+  const claims = getAccessTokenClaims(accessToken);
+  const activeMode = claims?.role ?? resolveActiveModeFromCookies(request);
+  const hasVerifiedSession = Boolean(claims) && !shouldBlockUnverifiedEmail(claims);
+
+  if (shouldBlockUnverifiedEmail(claims)) {
+    const mayStay =
+      isEmailVerificationRoute(pathname) ||
+      isAuthEntryRoute(pathname) ||
+      access === 'public';
+
+    if (!mayStay) {
+      return redirectToEmailVerification(claims!.userId, request);
+    }
+  }
 
   if (access === 'public') {
     return null;
@@ -68,14 +97,17 @@ export function evaluateRouteAccess(request: NextRequest): NextResponse | null {
 
   // Customer home — guests may browse; active provider/admin must use their own dashboard
   if (access === 'seeker') {
-    if (activeMode && activeMode !== 'SEEKER') {
+    if (hasVerifiedSession && activeMode && activeMode !== 'SEEKER') {
       return redirectForActiveMode(activeMode, request);
     }
     return null;
   }
 
   if (access === 'guest-only') {
-    if (activeMode) {
+    if (shouldBlockUnverifiedEmail(claims)) {
+      return null;
+    }
+    if (hasVerifiedSession && activeMode) {
       const next = request.nextUrl.searchParams.get('next');
       const safeNext = sanitizeNextPath(next);
       if (safeNext && classifyRoute(safeNext) !== 'guest-only' && canAccessWithAuth(safeNext, activeMode)) {
@@ -86,8 +118,12 @@ export function evaluateRouteAccess(request: NextRequest): NextResponse | null {
     return null;
   }
 
-  if (!hasSession) {
+  if (!claims) {
     return redirectToLogin(request, pathname);
+  }
+
+  if (shouldBlockUnverifiedEmail(claims)) {
+    return redirectToEmailVerification(claims.userId, request);
   }
 
   if (access === 'authenticated') {
@@ -98,9 +134,6 @@ export function evaluateRouteAccess(request: NextRequest): NextResponse | null {
     if (activeMode === 'PROVIDER') {
       return null;
     }
-    if (!hasSession) {
-      return redirectToLogin(request, pathname);
-    }
     if (activeMode) {
       return redirectForActiveMode(activeMode, request);
     }
@@ -110,9 +143,6 @@ export function evaluateRouteAccess(request: NextRequest): NextResponse | null {
   if (access === 'admin') {
     if (activeMode === 'ADMIN') {
       return null;
-    }
-    if (!hasSession) {
-      return redirectToLogin(request, pathname);
     }
     if (activeMode) {
       return redirectForActiveMode(activeMode, request);

@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import  prisma  from '@/lib/prisma';
 import bcrypt from 'bcrypt';
-import { setPreferredModeCookie } from '@/lib/cookies';
-import { resolveInitialActiveMode } from '@/lib/auth';
-import { establishAuthSession } from '@/lib/session';
 import { createServiceProviderProfile } from '@/lib/providerProfile';
 import { sendEmail } from '@/lib/email';
 import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
+import { resolveInitialActiveMode } from '@/lib/auth';
 import {
   normalizeAddress,
   normalizeEmail,
@@ -208,12 +206,6 @@ export async function POST(req: NextRequest) {
     message: 'Registration successful. Please verify your email.',
   });
 
-  await establishAuthSession(res, {
-    userId: user.id,
-    activeMode,
-    rememberMe: false,
-  });
-  setPreferredModeCookie(res, activeMode);
   return res;
   } catch (error: unknown) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {

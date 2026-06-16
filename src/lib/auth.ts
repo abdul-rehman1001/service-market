@@ -7,10 +7,15 @@ export type ActiveMode = 'SEEKER' | 'PROVIDER' | 'ADMIN';
 export interface JwtPayload {
   userId: string;
   role: ActiveMode;
+  emailVerified?: boolean;
 }
 
 export function parseJwtPayload(token: string): JwtPayload | null {
-  const decoded = verifyToken(token) as { userId?: string; role?: string } | null;
+  const decoded = verifyToken(token) as {
+    userId?: string;
+    role?: string;
+    emailVerified?: boolean;
+  } | null;
   if (!decoded?.userId || !decoded?.role) return null;
 
   const role = String(decoded.role).toUpperCase();
@@ -21,6 +26,7 @@ export function parseJwtPayload(token: string): JwtPayload | null {
   return {
     userId: decoded.userId,
     role: role as ActiveMode,
+    emailVerified: decoded.emailVerified,
   };
 }
 
@@ -31,7 +37,16 @@ export function getTokenFromRequest(req: NextRequest): string | undefined {
 export function getAuthFromRequest(req: NextRequest): JwtPayload | null {
   const token = getTokenFromRequest(req);
   if (!token) return null;
-  return parseJwtPayload(token);
+
+  const auth = parseJwtPayload(token);
+  if (!auth) return null;
+
+  // Unverified accounts must not call protected APIs (guest browsing stays cookie-free).
+  if (auth.role !== 'ADMIN' && auth.emailVerified === false) {
+    return null;
+  }
+
+  return auth;
 }
 
 export function resolveInitialActiveMode(params: {

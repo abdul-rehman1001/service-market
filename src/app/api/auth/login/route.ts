@@ -32,6 +32,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  if (user.role !== 'ADMIN' && !user.emailVerified) {
+    return NextResponse.json(
+      {
+        error: 'Please verify your email before signing in.',
+        code: 'EMAIL_NOT_VERIFIED',
+        userId: user.id,
+      },
+      { status: 403 }
+    );
+  }
+
   const hasProviderProfile = Boolean(user.providerProfile);
   const preferredMode = req.cookies.get('preferredMode')?.value ?? null;
   const activeMode = resolveInitialActiveMode({

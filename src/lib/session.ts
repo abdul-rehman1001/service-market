@@ -45,10 +45,25 @@ export async function createAuthSession(params: {
   activeMode: ActiveMode;
   rememberMe?: boolean;
 }): Promise<AuthSessionResult> {
+  const user = await prisma.user.findUnique({
+    where: { id: params.userId },
+    select: { emailVerified: true, role: true },
+  });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  const isAdmin = user.role === 'ADMIN';
+  if (!isAdmin && !user.emailVerified) {
+    throw new Error('EMAIL_NOT_VERIFIED');
+  }
+
   const rememberMe = Boolean(params.rememberMe);
   const accessToken = signAccessToken({
     userId: params.userId,
     role: params.activeMode,
+    emailVerified: isAdmin ? true : user.emailVerified,
   });
   const refreshToken = generateRefreshToken();
 
@@ -97,9 +112,24 @@ export async function issueAccessTokenForSession(params: {
   userId: string;
   activeMode: ActiveMode;
 }): Promise<string> {
+  const user = await prisma.user.findUnique({
+    where: { id: params.userId },
+    select: { emailVerified: true, role: true },
+  });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  const isAdmin = user.role === 'ADMIN';
+  if (!isAdmin && !user.emailVerified) {
+    throw new Error('EMAIL_NOT_VERIFIED');
+  }
+
   return signAccessToken({
     userId: params.userId,
     role: params.activeMode,
+    emailVerified: isAdmin ? true : user.emailVerified,
   });
 }
 
@@ -135,10 +165,28 @@ export async function rotateAuthSession(
     return null;
   }
 
+  const user = await prisma.user.findUnique({
+    where: { id: stored.userId },
+    select: { emailVerified: true, role: true },
+  });
+
+  if (!user) {
+    return null;
+  }
+
+  if (user.role !== 'ADMIN' && !user.emailVerified) {
+    await prisma.refreshToken.update({
+      where: { id: stored.id },
+      data: { revokedAt: new Date() },
+    });
+    return null;
+  }
+
   const activeMode = String(stored.activeMode).toUpperCase() as ActiveMode;
   const accessToken = signAccessToken({
     userId: stored.userId,
     role: activeMode,
+    emailVerified: user.role === 'ADMIN' ? true : user.emailVerified,
   });
   const newRefreshToken = generateRefreshToken();
 

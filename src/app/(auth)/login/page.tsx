@@ -50,6 +50,10 @@ function LoginPageContent() {
       const data = await res.json();
 
       if (!res.ok) {
+        if (data.code === 'EMAIL_NOT_VERIFIED' && data.userId) {
+          router.push(`/verify-email-registration?userId=${data.userId}`);
+          return;
+        }
         setError(data.error || 'Invalid credentials');
         setLoading(false);
         return;
