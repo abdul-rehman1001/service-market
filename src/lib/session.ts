@@ -10,6 +10,7 @@ import {
   setSessionModeCookie,
 } from '@/lib/cookies';
 import type { ActiveMode } from '@/lib/auth';
+import { isBlockedAccountStatus } from '@/lib/accountAccess';
 
 const REFRESH_TOKEN_BYTES = 48;
 
@@ -47,11 +48,15 @@ export async function createAuthSession(params: {
 }): Promise<AuthSessionResult> {
   const user = await prisma.user.findUnique({
     where: { id: params.userId },
-    select: { emailVerified: true, role: true },
+    select: { emailVerified: true, role: true, status: true },
   });
 
   if (!user) {
     throw new Error('User not found');
+  }
+
+  if (user.role !== 'ADMIN' && isBlockedAccountStatus(user.status)) {
+    throw new Error('ACCOUNT_SUSPENDED');
   }
 
   const isAdmin = user.role === 'ADMIN';
@@ -114,11 +119,15 @@ export async function issueAccessTokenForSession(params: {
 }): Promise<string> {
   const user = await prisma.user.findUnique({
     where: { id: params.userId },
-    select: { emailVerified: true, role: true },
+    select: { emailVerified: true, role: true, status: true },
   });
 
   if (!user) {
     throw new Error('User not found');
+  }
+
+  if (user.role !== 'ADMIN' && isBlockedAccountStatus(user.status)) {
+    throw new Error('ACCOUNT_SUSPENDED');
   }
 
   const isAdmin = user.role === 'ADMIN';
@@ -167,10 +176,18 @@ export async function rotateAuthSession(
 
   const user = await prisma.user.findUnique({
     where: { id: stored.userId },
-    select: { emailVerified: true, role: true },
+    select: { emailVerified: true, role: true, status: true },
   });
 
   if (!user) {
+    return null;
+  }
+
+  if (user.role !== 'ADMIN' && isBlockedAccountStatus(user.status)) {
+    await prisma.refreshToken.update({
+      where: { id: stored.id },
+      data: { revokedAt: new Date() },
+    });
     return null;
   }
 

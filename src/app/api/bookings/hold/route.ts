@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyToken } from '@/lib/jwt';
+import { getAuthFromRequest } from '@/lib/auth';
+import { assertAccountCanAct } from '@/lib/accountAccess';
 import {
   HOLD_DURATION_MINUTES,
   cancelExpiredHolds,
@@ -23,19 +24,22 @@ const toMinutes = (time: string) => {
 
 export async function POST(req: NextRequest) {
   try {
-    const token = req.cookies.get('token')?.value;
-    if (!token) {
+    const auth = getAuthFromRequest(req);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token) as { userId: string; role: string } | null;
-    if (!decoded || !decoded.userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
-    if (decoded.role !== 'SEEKER') {
+    if (auth.role !== 'SEEKER') {
       return NextResponse.json(
         { error: 'Only seekers can create bookings' },
+        { status: 403 }
+      );
+    }
+
+    const accountCheck = await assertAccountCanAct(auth.userId);
+    if (!accountCheck.ok) {
+      return NextResponse.json(
+        { error: accountCheck.message, code: 'ACCOUNT_SUSPENDED' },
         { status: 403 }
       );
     }
@@ -216,7 +220,7 @@ export async function POST(req: NextRequest) {
         data: {
           bookingNumber: generateBookingNumber(),
           serviceId: service.id,
-          seekerId: decoded.userId,
+          seekerId: auth.userId,
           providerId: service.providerId,
           status: 'HOLD',
           holdExpiresAt,

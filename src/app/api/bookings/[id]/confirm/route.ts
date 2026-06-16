@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyToken } from '@/lib/jwt';
+import { getAuthFromRequest } from '@/lib/auth';
+import { assertAccountCanAct } from '@/lib/accountAccess';
 import { PROVIDER_RESPONSE_MINUTES, cancelExpiredHolds } from '@/lib/bookings';
 import { sendNotification } from '@/lib/notifications';
 
@@ -19,19 +20,22 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const token = req.cookies.get('token')?.value;
-    if (!token) {
+    const auth = getAuthFromRequest(req);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token) as { userId: string; role: string } | null;
-    if (!decoded || !decoded.userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
-    if (decoded.role !== 'SEEKER') {
+    if (auth.role !== 'SEEKER') {
       return NextResponse.json(
         { error: 'Only seekers can confirm bookings' },
+        { status: 403 }
+      );
+    }
+
+    const accountCheck = await assertAccountCanAct(auth.userId);
+    if (!accountCheck.ok) {
+      return NextResponse.json(
+        { error: accountCheck.message, code: 'ACCOUNT_SUSPENDED' },
         { status: 403 }
       );
     }
@@ -46,7 +50,7 @@ export async function POST(
         throw new ApiError('Booking not found', 404);
       }
 
-      if (existing.seekerId !== decoded.userId) {
+      if (existing.seekerId !== auth.userId) {
         throw new ApiError('Unauthorized', 403);
       }
 

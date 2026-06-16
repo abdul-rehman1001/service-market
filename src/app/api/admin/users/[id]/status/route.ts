@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
+import { revokeAllUserRefreshTokens } from '@/lib/session';
 
 /**
  * PATCH /api/admin/users/:id/status
@@ -69,6 +70,10 @@ export async function PATCH(
         status: true,
       },
     });
+
+    if (status === 'SUSPENDED') {
+      await revokeAllUserRefreshTokens(id);
+    }
 
     return NextResponse.json({
       message: `User ${status === 'SUSPENDED' ? 'suspended' : 'activated'} successfully`,
