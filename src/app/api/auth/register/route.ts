@@ -8,11 +8,14 @@ import { createServiceProviderProfile } from '@/lib/providerProfile';
 import { sendEmail } from '@/lib/email';
 import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
-import { geocodeAddress } from '@/lib/geocoding';
 import {
+  normalizeAddress,
   normalizeEmail,
   normalizePakistanPhone,
+  validateAddress,
   validateEmail,
+  validateFirstName,
+  validateLastName,
   validatePakistanPhone,
   validatePassword,
 } from '@/lib/validation/authValidation';
@@ -26,16 +29,33 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-  const name = String(body.name ?? '').trim();
+  const firstName = String(body.firstName ?? '').trim();
+  const lastName = String(body.lastName ?? '').trim();
   const email = normalizeEmail(String(body.email ?? ''));
   const password = String(body.password ?? '');
   const role = String(body.role ?? '').trim();
   const profileImage = body.profileImage;
   const phone = String(body.phone ?? '').trim();
-  const address = String(body.address ?? '').trim();
+  const address = normalizeAddress(String(body.address ?? ''));
 
-  if (!name || !email || !password || !role || !phone || !address) {
+  if (!firstName || !email || !password || !role || !phone || !address) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  }
+
+  const firstNameValidation = validateFirstName(firstName);
+  if (!firstNameValidation.isValid) {
+    return NextResponse.json(
+      { error: firstNameValidation.error || 'Invalid first name' },
+      { status: 400 }
+    );
+  }
+
+  const lastNameValidation = validateLastName(lastName);
+  if (!lastNameValidation.isValid) {
+    return NextResponse.json(
+      { error: lastNameValidation.error || 'Invalid last name' },
+      { status: 400 }
+    );
   }
 
   const emailValidation = validateEmail(email);
@@ -63,9 +83,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const normalizedAddress = String(address).trim();
-  if (!normalizedAddress) {
-    return NextResponse.json({ error: 'Address is required' }, { status: 400 });
+  const normalizedAddress = normalizeAddress(address);
+  const addressValidation = validateAddress(normalizedAddress);
+  if (!addressValidation.isValid) {
+    return NextResponse.json(
+      { error: addressValidation.error || 'Address is required' },
+      { status: 400 }
+    );
   }
 
   const phoneValidation = validatePakistanPhone(phone);
@@ -92,35 +116,8 @@ export async function POST(req: NextRequest) {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Split name into firstName and lastName
-  const nameParts = name.trim().split(/\s+/);
-  const firstName = nameParts[0];
-  const lastName = nameParts.slice(1).join(' ') || '';
-
-  let resolvedAddress = normalizedAddress;
-  let resolvedLongitude = 0;
-  let resolvedLatitude = 0;
-
-  if (role === 'PROVIDER') {
-    try {
-      const geocodeData = await geocodeAddress(normalizedAddress);
-      resolvedAddress = geocodeData.formatted_address;
-      resolvedLongitude = geocodeData.longitude;
-      resolvedLatitude = geocodeData.latitude;
-    } catch (error: unknown) {
-      const geocodeErrorMessage =
-        error instanceof Error && error.message
-          ? error.message
-          : 'Unable to geocode provider address';
-
-      return NextResponse.json(
-        { error: geocodeErrorMessage },
-        { status: 400 }
-      );
-    }
-  }
-
-  // Create user with UNVERIFIED status (becomes ACTIVE after email verification)
+  // Store the address exactly as entered. Coordinates are set later (e.g.
+  // profile update) — not during registration.
   const user = await prisma.user.create({
     data: {
       firstName,
@@ -130,9 +127,9 @@ export async function POST(req: NextRequest) {
       role: role as 'SEEKER' | 'PROVIDER',
       profileImage: profileImage || null,
       phone: normalizedPhone,
-      address: resolvedAddress,
-      longitude: new Prisma.Decimal(resolvedLongitude),
-      latitude: new Prisma.Decimal(resolvedLatitude),
+      address: normalizedAddress,
+      longitude: new Prisma.Decimal(0),
+      latitude: new Prisma.Decimal(0),
       status: 'UNVERIFIED', // Will be set to ACTIVE after email verification
     },
   });
@@ -142,9 +139,8 @@ export async function POST(req: NextRequest) {
       await createServiceProviderProfile({
         userId: user.id,
         address: normalizedAddress,
-        formattedAddress: resolvedAddress,
-        longitude: resolvedLongitude,
-        latitude: resolvedLatitude,
+        longitude: 0,
+        latitude: 0,
       });
     } catch (providerError) {
       console.error('Error creating provider profile:', providerError);
@@ -201,7 +197,7 @@ export async function POST(req: NextRequest) {
     user: { 
       id: user.id, 
       email: user.email, 
-      name: `${user.firstName} ${user.lastName}`, 
+      name: [user.firstName, user.lastName].filter(Boolean).join(' '), 
       role: activeMode,
       accountRole: user.role,
       hasProviderProfile,

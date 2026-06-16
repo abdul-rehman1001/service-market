@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getAuthFromRequest } from '@/lib/auth';
 import { geocodeAddress } from '@/lib/geocoding';
+import { validateFirstName, validateLastName } from '@/lib/validation/authValidation';
 
 // GET - Fetch current user profile
 export async function GET(req: NextRequest) {
@@ -99,10 +100,28 @@ export async function PUT(req: NextRequest) {
 
     const { firstName, lastName, city, address, bio, profileImage } = await req.json();
 
-    // Validation
-    if (!firstName || !lastName) {
+    const normalizedFirstName = typeof firstName === 'string' ? firstName.trim() : '';
+    const normalizedLastName = typeof lastName === 'string' ? lastName.trim() : '';
+
+    if (!normalizedFirstName) {
       return NextResponse.json(
-        { error: 'First name and last name are required' },
+        { error: 'First name is required' },
+        { status: 400 }
+      );
+    }
+
+    const firstNameValidation = validateFirstName(normalizedFirstName);
+    if (!firstNameValidation.isValid) {
+      return NextResponse.json(
+        { error: firstNameValidation.error || 'Invalid first name' },
+        { status: 400 }
+      );
+    }
+
+    const lastNameValidation = validateLastName(normalizedLastName);
+    if (!lastNameValidation.isValid) {
+      return NextResponse.json(
+        { error: lastNameValidation.error || 'Invalid last name' },
         { status: 400 }
       );
     }
@@ -136,8 +155,8 @@ export async function PUT(req: NextRequest) {
 
     const updatedUser = await prisma.$transaction(async (tx) => {
       const userData: any = {
-        firstName,
-        lastName,
+        firstName: normalizedFirstName,
+        lastName: normalizedLastName,
         city: city || null,
         address: resolvedAddress || null,
         bio: bio || null,

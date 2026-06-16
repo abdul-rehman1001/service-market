@@ -12,14 +12,20 @@ import Input from '@/components/auth/Input';
 import PasswordInput from '@/components/auth/PasswordInput';
 import PasswordRequirements from '@/components/auth/PasswordRequirements';
 import {
+  formatPakistanPhoneInput,
+  normalizeAddress,
   normalizePakistanPhone,
+  validateAddress,
   validateEmail,
+  validateFirstName,
+  validateLastName,
   validatePakistanPhone,
   validatePassword,
+  PAKISTAN_PHONE_LOCAL_LENGTH,
 } from '@/lib/validation/authValidation';
 import { cn } from '@/lib/utils';
 
-type AuthField = 'email' | 'password' | 'phone';
+type AuthField = 'email' | 'password' | 'phone' | 'firstName' | 'lastName' | 'address';
 type FieldErrors = Partial<Record<AuthField, string>>;
 type TouchedFields = Record<AuthField, boolean>;
 
@@ -27,7 +33,8 @@ export default function RegisterProvider() {
   const router = useRouter();
   const [checkingSession, setCheckingSession] = useState(true);
   const [form, setForm] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     phone: '',
@@ -41,6 +48,9 @@ export default function RegisterProvider() {
     email: false,
     password: false,
     phone: false,
+    firstName: false,
+    lastName: false,
+    address: false,
   });
 
   useEffect(() => {
@@ -99,6 +109,33 @@ export default function RegisterProvider() {
       : validation.error || 'Enter a valid Pakistan mobile number';
   };
 
+  const validateFirstNameField = (value: string, showRequired: boolean): string => {
+    if (!value.trim() && !showRequired) {
+      return '';
+    }
+
+    const validation = validateFirstName(value);
+    return validation.isValid ? '' : validation.error || 'Enter your first name';
+  };
+
+  const validateLastNameField = (value: string, showRequired: boolean): string => {
+    if (!value.trim() && !showRequired) {
+      return '';
+    }
+
+    const validation = validateLastName(value);
+    return validation.isValid ? '' : validation.error || 'Enter your last name';
+  };
+
+  const validateAddressField = (addressValue: string, showRequired: boolean): string => {
+    if (!addressValue.trim() && !showRequired) {
+      return '';
+    }
+
+    const validation = validateAddress(addressValue);
+    return validation.isValid ? '' : validation.error || 'Address is required';
+  };
+
   const updateFieldValidation = (field: AuthField, value: string, showRequired: boolean) => {
     let nextError = '';
     if (field === 'email') {
@@ -107,6 +144,12 @@ export default function RegisterProvider() {
       nextError = validatePasswordField(value, showRequired);
     } else if (field === 'phone') {
       nextError = validatePhoneField(value, showRequired);
+    } else if (field === 'firstName') {
+      nextError = validateFirstNameField(value, showRequired);
+    } else if (field === 'lastName') {
+      nextError = validateLastNameField(value, showRequired);
+    } else if (field === 'address') {
+      nextError = validateAddressField(value, showRequired);
     }
 
     setFieldErrors((prev) => ({ ...prev, [field]: nextError }));
@@ -115,9 +158,22 @@ export default function RegisterProvider() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
+    if (name === 'phone') {
+      const formattedPhone = formatPakistanPhoneInput(value);
+      setForm({ ...form, phone: formattedPhone });
+      updateFieldValidation('phone', formattedPhone, touchedFields.phone);
+      return;
+    }
+
     setForm({ ...form, [name]: value });
 
-    if (name === 'email' || name === 'password' || name === 'phone') {
+    if (
+      name === 'email' ||
+      name === 'password' ||
+      name === 'firstName' ||
+      name === 'lastName' ||
+      name === 'address'
+    ) {
       updateFieldValidation(name, value, touchedFields[name]);
     }
   };
@@ -125,7 +181,14 @@ export default function RegisterProvider() {
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    if (name !== 'email' && name !== 'password' && name !== 'phone') {
+    if (
+      name !== 'email' &&
+      name !== 'password' &&
+      name !== 'phone' &&
+      name !== 'firstName' &&
+      name !== 'lastName' &&
+      name !== 'address'
+    ) {
       return;
     }
 
@@ -145,17 +208,35 @@ export default function RegisterProvider() {
       email: validateEmailField(form.email, true),
       password: validatePasswordField(form.password, true),
       phone: validatePhoneField(form.phone, true),
+      firstName: validateFirstNameField(form.firstName, true),
+      lastName: validateLastNameField(form.lastName, true),
+      address: validateAddressField(form.address, true),
     };
 
-    setTouchedFields({ email: true, password: true, phone: true });
+    setTouchedFields({
+      email: true,
+      password: true,
+      phone: true,
+      firstName: true,
+      lastName: true,
+      address: true,
+    });
     setFieldErrors(nextFieldErrors);
 
-    if (nextFieldErrors.email || nextFieldErrors.password || nextFieldErrors.phone) {
+    if (
+      nextFieldErrors.email ||
+      nextFieldErrors.password ||
+      nextFieldErrors.phone ||
+      nextFieldErrors.firstName ||
+      nextFieldErrors.lastName ||
+      nextFieldErrors.address
+    ) {
       setError('Please fix the highlighted fields before creating your account.');
       return;
     }
 
     const normalizedPhone = normalizePakistanPhone(form.phone);
+    const normalizedFormAddress = normalizeAddress(form.address);
 
     setIsLoading(true);
 
@@ -164,12 +245,13 @@ export default function RegisterProvider() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: form.name,
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
           email: form.email,
           password: form.password,
           phone: normalizedPhone,
           profileImage: form.profileImage,
-          address: form.address,
+          address: normalizedFormAddress,
           role: 'PROVIDER',
         }),
       });
@@ -229,13 +311,37 @@ export default function RegisterProvider() {
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <ImageUploader onImageUpload={handleImageUpload} imageUrl={form.profileImage} />
 
-          <Input
-            placeholder="Full name"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            required
-          />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <Input
+                placeholder="First name"
+                name="firstName"
+                value={form.firstName}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                autoComplete="given-name"
+                aria-invalid={Boolean(fieldErrors.firstName)}
+                required
+              />
+              {fieldErrors.firstName ? (
+                <p className="mt-1 text-sm text-[#EF4444]">{fieldErrors.firstName}</p>
+              ) : null}
+            </div>
+            <div>
+              <Input
+                placeholder="Last name (optional)"
+                name="lastName"
+                value={form.lastName}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                autoComplete="family-name"
+                aria-invalid={Boolean(fieldErrors.lastName)}
+              />
+              {fieldErrors.lastName ? (
+                <p className="mt-1 text-sm text-[#EF4444]">{fieldErrors.lastName}</p>
+              ) : null}
+            </div>
+          </div>
           <Input
             placeholder="Email address"
             name="email"
@@ -251,9 +357,12 @@ export default function RegisterProvider() {
             <p className="-mt-2 text-sm text-[#EF4444]">{fieldErrors.email}</p>
           ) : null}
           <Input
-            placeholder="Phone number (e.g. 03001234567)"
+            placeholder="03001234567"
             name="phone"
             type="tel"
+            inputMode="numeric"
+            maxLength={PAKISTAN_PHONE_LOCAL_LENGTH}
+            pattern="03[0-9]{9}"
             value={form.phone}
             onChange={handleChange}
             onBlur={handleBlur}
@@ -261,16 +370,25 @@ export default function RegisterProvider() {
             aria-invalid={Boolean(fieldErrors.phone)}
             required
           />
+          <p className="-mt-2 text-xs text-[#6B7280]">
+            Enter 11-digit Pakistan mobile number starting with 03
+          </p>
           {fieldErrors.phone ? (
             <p className="-mt-2 text-sm text-[#EF4444]">{fieldErrors.phone}</p>
           ) : null}
           <Input
-            placeholder="Address"
+            placeholder="Business or service address (e.g. Shop 5, DHA Phase 6, Karachi)"
             name="address"
             value={form.address}
             onChange={handleChange}
+            onBlur={handleBlur}
+            autoComplete="street-address"
+            aria-invalid={Boolean(fieldErrors.address)}
             required
           />
+          {fieldErrors.address ? (
+            <p className="-mt-2 text-sm text-[#EF4444]">{fieldErrors.address}</p>
+          ) : null}
           <PasswordInput
             placeholder="Password"
             name="password"

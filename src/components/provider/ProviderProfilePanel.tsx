@@ -195,12 +195,12 @@ export const ProviderProfilePanel: React.FC = () => {
             ) : (
               <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-[#6FCF97] bg-[#2FA084] text-2xl font-bold text-white sm:h-24 sm:w-24">
                 {user.firstName[0]}
-                {user.lastName[0]}
+                {user.lastName?.[0] ?? ''}
               </div>
             )}
             <div className="min-w-0 flex-1">
               <h3 className="text-xl font-bold text-[#1F6F5F] sm:text-2xl">
-                {user.firstName} {user.lastName}
+                {[user.firstName, user.lastName].filter(Boolean).join(' ')}
               </h3>
               <p className="mt-1 flex items-center justify-center gap-2 text-sm text-[#1F6F5F]/70 sm:justify-start">
                 <Mail className="h-4 w-4 shrink-0 text-[#2FA084]" />
@@ -290,7 +290,7 @@ export const ProviderProfilePanel: React.FC = () => {
             ) : (
               <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-[#6FCF97]/50 bg-[#2FA084] text-3xl font-bold text-white">
                 {profileForm.firstName[0]}
-                {profileForm.lastName[0]}
+                {profileForm.lastName?.[0] ?? ''}
               </div>
             )}
             <div className="flex flex-col gap-2">
@@ -329,13 +329,14 @@ export const ProviderProfilePanel: React.FC = () => {
               />
             </div>
             <div>
-              <label className={labelClass}>Last name *</label>
+              <label className={labelClass}>
+                Last name <span className="font-normal text-[#1F6F5F]/55">(optional)</span>
+              </label>
               <input
                 type="text"
                 value={profileForm.lastName}
                 onChange={(e) => setProfileForm((prev) => ({ ...prev, lastName: e.target.value }))}
                 className={inputClass}
-                required
               />
             </div>
             <div>

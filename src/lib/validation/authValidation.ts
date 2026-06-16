@@ -10,6 +10,7 @@ export interface PasswordRuleStatus {
 }
 
 export const PASSWORD_MIN_LENGTH = 8;
+export const ADDRESS_MIN_LENGTH = 10;
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -90,50 +91,193 @@ export function validatePassword(password: string): ValidationResult {
   return { isValid: true };
 }
 
-/** Pakistan mobile in E.164: +92 followed by 10 digits starting with 3 */
+/** Pakistan mobile local format: 03XX XXXXXXX (11 digits) */
+export const PAKISTAN_PHONE_LOCAL_LENGTH = 11;
+const PAKISTAN_PHONE_LOCAL_REGEX = /^03\d{9}$/;
+
+/** Stored in DB as E.164: +923XXXXXXXXX */
 const PAKISTAN_MOBILE_E164_REGEX = /^\+923\d{9}$/;
 
 /**
- * Normalizes common Pakistan mobile inputs to +923XXXXXXXXX.
- * Accepts: +923001234567, 923001234567, 03001234567, 3001234567
+ * Keeps only digits and caps length for the registration input field.
+ * Users must enter the local format: 03XXXXXXXXX
+ */
+export function formatPakistanPhoneInput(value: string): string {
+  return value.replace(/\D/g, '').slice(0, PAKISTAN_PHONE_LOCAL_LENGTH);
+}
+
+/**
+ * Converts local format (03001234567) to E.164 (+923001234567) for storage.
+ * Call only after validatePakistanPhone passes.
  */
 export function normalizePakistanPhone(phone: string): string {
-  const raw = phone.trim().replace(/[\s\-().]/g, '');
-  if (!raw) return '';
-
-  if (raw.startsWith('+92')) {
-    const national = raw.slice(3).replace(/\D/g, '');
-    return `+92${national}`;
-  }
-
-  const digits = raw.replace(/\D/g, '');
-
-  if (digits.startsWith('92') && digits.length >= 12) {
-    return `+92${digits.slice(2, 12)}`;
-  }
-  if (digits.startsWith('0') && digits.length >= 11) {
-    return `+92${digits.slice(1, 11)}`;
-  }
-  if (digits.startsWith('3') && digits.length >= 10) {
-    return `+92${digits.slice(0, 10)}`;
-  }
-
-  return raw.startsWith('+') ? raw : `+${digits}`;
+  const digits = formatPakistanPhoneInput(phone);
+  return `+92${digits.slice(1)}`;
 }
 
 export function validatePakistanPhone(phone: string): ValidationResult {
-  const trimmed = phone.trim();
+  const digits = formatPakistanPhoneInput(phone);
 
-  if (!trimmed) {
+  if (!digits) {
     return { isValid: false, error: 'Phone number is required' };
   }
 
-  const normalized = normalizePakistanPhone(trimmed);
-
-  if (!PAKISTAN_MOBILE_E164_REGEX.test(normalized)) {
+  if (digits.length < PAKISTAN_PHONE_LOCAL_LENGTH) {
     return {
       isValid: false,
-      error: 'Enter a valid Pakistan mobile number (e.g. 03001234567 or +923001234567)',
+      error: `Mobile number must be exactly ${PAKISTAN_PHONE_LOCAL_LENGTH} digits`,
+    };
+  }
+
+  if (digits.length > PAKISTAN_PHONE_LOCAL_LENGTH) {
+    return {
+      isValid: false,
+      error: `Mobile number cannot be more than ${PAKISTAN_PHONE_LOCAL_LENGTH} digits`,
+    };
+  }
+
+  if (!digits.startsWith('03')) {
+    return {
+      isValid: false,
+      error: 'Mobile number must start with 03 (e.g. 03001234567)',
+    };
+  }
+
+  if (!PAKISTAN_PHONE_LOCAL_REGEX.test(digits)) {
+    return {
+      isValid: false,
+      error: 'Enter a valid Pakistan mobile number (03001234567)',
+    };
+  }
+
+  const e164 = normalizePakistanPhone(digits);
+  if (!PAKISTAN_MOBILE_E164_REGEX.test(e164)) {
+    return {
+      isValid: false,
+      error: 'Enter a valid Pakistan mobile number (03001234567)',
+    };
+  }
+
+  return { isValid: true };
+}
+
+const FAKE_ADDRESS_PATTERNS = [
+  /^test$/i,
+  /^abc+$/i,
+  /^asdf+$/i,
+  /^n\/?a$/i,
+  /^none$/i,
+  /^fake$/i,
+  /^dummy$/i,
+  /^address$/i,
+  /^home$/i,
+  /^my\s+address$/i,
+  /^\d+$/,
+  /^\.+$/,
+  /^-+$/,
+];
+
+export function normalizeAddress(address: string): string {
+  return address.trim().replace(/\s+/g, ' ');
+}
+
+export function validateFullName(name: string): ValidationResult {
+  const trimmed = name.trim().replace(/\s+/g, ' ');
+
+  if (!trimmed) {
+    return { isValid: false, error: 'Full name is required' };
+  }
+
+  if (trimmed.length < 2) {
+    return { isValid: false, error: 'Enter your full name' };
+  }
+
+  if (!/[a-zA-Z]/.test(trimmed)) {
+    return { isValid: false, error: 'Enter a valid name' };
+  }
+
+  return { isValid: true };
+}
+
+function validateNamePart(
+  value: string,
+  fieldLabel: 'First name' | 'Last name'
+): ValidationResult {
+  const trimmed = value.trim().replace(/\s+/g, ' ');
+
+  if (!trimmed) {
+    return { isValid: false, error: `${fieldLabel} is required` };
+  }
+
+  if (trimmed.length < 2) {
+    return {
+      isValid: false,
+      error: `${fieldLabel} must be at least 2 characters`,
+    };
+  }
+
+  if (!/[a-zA-Z]/.test(trimmed)) {
+    return { isValid: false, error: `Enter a valid ${fieldLabel.toLowerCase()}` };
+  }
+
+  return { isValid: true };
+}
+
+export function validateFirstName(firstName: string): ValidationResult {
+  return validateNamePart(firstName, 'First name');
+}
+
+export function validateLastName(lastName: string): ValidationResult {
+  const trimmed = lastName.trim().replace(/\s+/g, ' ');
+
+  // Last name is optional — empty is stored as "" in the database.
+  if (!trimmed) {
+    return { isValid: true };
+  }
+
+  if (trimmed.length < 2) {
+    return {
+      isValid: false,
+      error: 'Last name must be at least 2 characters',
+    };
+  }
+
+  if (!/[a-zA-Z]/.test(trimmed)) {
+    return { isValid: false, error: 'Enter a valid last name' };
+  }
+
+  return { isValid: true };
+}
+
+export function validateAddress(address: string): ValidationResult {
+  const trimmed = normalizeAddress(address);
+
+  if (!trimmed) {
+    return { isValid: false, error: 'Address is required' };
+  }
+
+  if (trimmed.length < ADDRESS_MIN_LENGTH) {
+    return {
+      isValid: false,
+      error: `Address must be at least ${ADDRESS_MIN_LENGTH} characters`,
+    };
+  }
+
+  if (!/[a-zA-Z]/.test(trimmed)) {
+    return { isValid: false, error: 'Enter a valid street or area address' };
+  }
+
+  for (const pattern of FAKE_ADDRESS_PATTERNS) {
+    if (pattern.test(trimmed)) {
+      return { isValid: false, error: 'Please enter your real address' };
+    }
+  }
+
+  const words = trimmed.split(/\s+/).filter((word) => word.length >= 2);
+  if (words.length < 2) {
+    return {
+      isValid: false,
+      error: 'Please include area and city (e.g. House 12, Gulberg, Lahore)',
     };
   }
 

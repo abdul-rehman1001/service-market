@@ -221,14 +221,14 @@ export default function ProfilePage() {
                 ) : (
                   <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-[#D1FAE5] bg-[#009966] text-2xl font-bold text-white sm:h-24 sm:w-24 sm:text-3xl">
                     {user.firstName[0]}
-                    {user.lastName[0]}
+                    {user.lastName?.[0] ?? ''}
                   </div>
                 )}
               </div>
               <div className="flex-1">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#009966]">Profile</p>
                 <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#1F2937] sm:text-3xl">
-                  {user.firstName} {user.lastName}
+                  {[user.firstName, user.lastName].filter(Boolean).join(' ')}
                 </h1>
                 <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start sm:gap-3">
                   <span className="inline-flex items-center gap-1 rounded-full border border-[#A7F3D0] bg-[#D1FAE5] px-3 py-1 text-xs font-semibold text-[#007A52] sm:text-sm">
@@ -339,7 +339,7 @@ export default function ProfilePage() {
                       ) : (
                         <div className="flex h-28 w-28 items-center justify-center rounded-full border-4 border-[#E5E7EB] bg-[#009966] text-3xl font-bold text-white sm:h-32 sm:w-32 sm:text-4xl">
                           {profileForm.firstName[0]}
-                          {profileForm.lastName[0]}
+                          {profileForm.lastName?.[0] ?? ''}
                         </div>
                       )}
                     </div>
@@ -395,7 +395,7 @@ export default function ProfilePage() {
 
                   <div>
                     <label className="mb-2 block text-sm font-medium text-[#1F2937]">
-                      Last Name *
+                      Last Name <span className="text-[#6B7280]">(optional)</span>
                     </label>
                     <input
                       type="text"
@@ -404,7 +404,6 @@ export default function ProfilePage() {
                         setProfileForm({ ...profileForm, lastName: e.target.value })
                       }
                       className="w-full rounded-xl border border-[#E5E7EB] bg-[#FFFFFF] px-4 py-2.5 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#009966]"
-                      required
                     />
                   </div>
 
