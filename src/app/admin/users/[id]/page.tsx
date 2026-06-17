@@ -246,14 +246,6 @@ export default function UserDetailsPage() {
               <p className="text-2xl font-bold text-emerald-600">{user._count.reviewsGiven}</p>
               <p className="text-xs text-slate-500 mt-1">Reviews Given</p>
             </div>
-            <div className="bg-slate-50 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-emerald-600">{user._count.reviewsReceived}</p>
-              <p className="text-xs text-slate-500 mt-1">Reviews Received</p>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-emerald-600">{user._count.bookmarks}</p>
-              <p className="text-xs text-slate-500 mt-1">Bookmarks</p>
-            </div>
           </div>
         </div>
       </div>
