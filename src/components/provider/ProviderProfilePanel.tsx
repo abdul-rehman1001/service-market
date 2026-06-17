@@ -19,6 +19,7 @@ import {
 import { getModeDisplayLabel } from '@/lib/auth';
 import { getProfileStatusBadge } from '@/lib/profile-status';
 import ProfileModeSwitcher from '@/components/profile/ProfileModeSwitcher';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 interface UserProfile {
   id: string;
@@ -75,7 +76,7 @@ export const ProviderProfilePanel: React.FC = () => {
   const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/profile');
+      const res = await authenticatedFetch('/api/profile');
       if (!res.ok) {
         throw new Error('Failed to fetch profile');
       }
@@ -107,7 +108,7 @@ export const ProviderProfilePanel: React.FC = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      const res = await fetch('/api/profile', {
+      const res = await authenticatedFetch('/api/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(profileForm),
@@ -132,7 +133,7 @@ export const ProviderProfilePanel: React.FC = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      const res = await fetch('/api/profile/change-password', {
+      const res = await authenticatedFetch('/api/profile/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(passwordForm),

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader, AlertCircle, Trash2, Upload as UploadIcon } from 'lucide-react';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 interface PortfolioItem {
   id: string;
@@ -26,7 +27,7 @@ export const PortfolioPanel: React.FC = () => {
   useEffect(() => {
     const fetchProviderData = async () => {
       try {
-        const res = await fetch('/api/provider/dashboard');
+        const res = await authenticatedFetch('/api/provider/dashboard');
         const data = await res.json();
         if (data.provider?.id) {
           setProviderId(data.provider.id);
@@ -42,7 +43,7 @@ export const PortfolioPanel: React.FC = () => {
   const fetchPortfolio = async (id: string) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/providers/${id}/documents`);
+      const res = await authenticatedFetch(`/api/providers/${id}/documents`);
       const data = await res.json();
       if (res.ok) {
         // Filter to show portfolio images
@@ -110,7 +111,7 @@ export const PortfolioPanel: React.FC = () => {
         throw new Error(cloudinaryData.error?.message || 'Failed to upload image');
       }
 
-      const res = await fetch(`/api/providers/${providerId}/documents`, {
+      const res = await authenticatedFetch(`/api/providers/${providerId}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

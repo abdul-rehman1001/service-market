@@ -7,6 +7,7 @@ import {
   ArrowLeft, Loader2, Mail, Phone, MapPin, Calendar, Shield,
   ShieldCheck, ShieldAlert, Trash2, Star, Briefcase, CheckCircle, XCircle,
 } from "lucide-react";
+import { authenticatedFetch } from "@/lib/authenticatedFetch";
 
 interface UserDetail {
   id: string;
@@ -68,7 +69,7 @@ export default function UserDetailsPage() {
 
   const fetchUser = async () => {
     try {
-      const res = await fetch(`/api/admin/users/${params.id}`);
+      const res = await authenticatedFetch(`/api/admin/users/${params.id}`);
       if (!res.ok) throw new Error("Failed to fetch user");
       const data = await res.json();
       setUser(data.user);
@@ -84,7 +85,7 @@ export default function UserDetailsPage() {
     const newStatus = user.status === "SUSPENDED" ? "ACTIVE" : "SUSPENDED";
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/admin/users/${user.id}/status`, {
+      const res = await authenticatedFetch(`/api/admin/users/${user.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -102,7 +103,7 @@ export default function UserDetailsPage() {
     if (!user) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/admin/users/${user.id}`, { method: "DELETE" });
+      const res = await authenticatedFetch(`/api/admin/users/${user.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete user");
       router.push("/admin/users");
     } catch (err: any) {

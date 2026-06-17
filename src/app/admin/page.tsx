@@ -17,6 +17,7 @@ import AnalyticsCharts from "@/components/admin/analytics/AnalyticsCharts";
 import PopularCategories from "@/components/admin/analytics/PopularCategories";
 import ExportButtons from "@/components/admin/analytics/ExportButtons";
 import StatCard from "@/components/admin/StatCard";
+import { authenticatedFetch } from "@/lib/authenticatedFetch";
 
 export interface AnalyticsData {
   stats: {
@@ -42,7 +43,7 @@ export default function AnalyticsPage() {
   const fetchAnalytics = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(
+      const res = await authenticatedFetch(
         `/api/admin/analytics?trendPeriod=${trendPeriod}&growthMonths=12`
       );
       if (res.ok) {

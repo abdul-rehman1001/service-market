@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { Camera, CheckCircle, Loader2, Mail, Save, Shield } from "lucide-react";
+import { authenticatedFetch } from "@/lib/authenticatedFetch";
 
 interface UserProfile {
   firstName: string;
@@ -43,7 +44,7 @@ export default function AdminProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch("/api/profile");
+        const res = await authenticatedFetch("/api/profile");
         if (!res.ok) {
           throw new Error("Failed to load profile");
         }
@@ -88,7 +89,7 @@ export default function AdminProfilePage() {
     setMessage({ type: "", text: "" });
 
     try {
-      const res = await fetch("/api/profile", {
+      const res = await authenticatedFetch("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

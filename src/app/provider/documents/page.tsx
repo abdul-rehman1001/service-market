@@ -14,6 +14,7 @@ import {
   Loader2,
   Image as ImageIcon,
 } from 'lucide-react';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 interface Document {
   id: string;
@@ -53,7 +54,7 @@ export default function DocumentsPage() {
   const fetchProviderData = async () => {
     try {
       // First get current user to get provider ID
-      const userRes = await fetch('/api/profile');
+      const userRes = await authenticatedFetch('/api/profile');
       if (!userRes.ok) {
         if (userRes.status === 401) {
           router.push('/login');
@@ -76,7 +77,7 @@ export default function DocumentsPage() {
       }
 
       // Get provider profile to get providerId
-      const providerRes = await fetch(`/api/providers/${userData.user.id}`);
+      const providerRes = await authenticatedFetch(`/api/providers/${userData.user.id}`);
       if (!providerRes.ok) {
         throw new Error('Failed to fetch provider profile');
       }
@@ -85,7 +86,7 @@ export default function DocumentsPage() {
       setProvider(providerData.provider);
 
       // Fetch documents
-      const docsRes = await fetch(
+      const docsRes = await authenticatedFetch(
         `/api/providers/${providerData.provider.id}/documents`
       );
       if (docsRes.ok) {
@@ -233,7 +234,7 @@ export default function DocumentsPage() {
         const fileUrl = await uploadToCloudinary(file);
 
         // Save to database
-        const res = await fetch(`/api/providers/${provider.id}/documents`, {
+        const res = await authenticatedFetch(`/api/providers/${provider.id}/documents`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

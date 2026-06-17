@@ -14,6 +14,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useNotifications } from '@/hooks/useNotifications';
 import DefaultLocationMapModal from './DefaultLocationMapModal';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 interface ProviderData {
   id: string;
@@ -159,7 +160,7 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
 
   const fetchLocationState = async () => {
     try {
-      const response = await fetch('/api/provider/location');
+      const response = await authenticatedFetch('/api/provider/location');
       if (!response.ok) return;
 
       const data = await response.json();
@@ -195,7 +196,7 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
     try {
       setLocationSyncing(true);
 
-      const response = await fetch('/api/provider/location', {
+      const response = await authenticatedFetch('/api/provider/location', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update-current', lat, lng }),
@@ -275,7 +276,7 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
   const applyDefaultLocation = async () => {
     try {
       setLocationSyncing(true);
-      const response = await fetch('/api/provider/location', {
+      const response = await authenticatedFetch('/api/provider/location', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'use-default' }),
@@ -343,7 +344,7 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
     try {
       setLocationSyncing(true);
 
-      const response = await fetch('/api/provider/location', {
+      const response = await authenticatedFetch('/api/provider/location', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'set-default', lat, lng }),
@@ -394,7 +395,7 @@ export const ProviderDashboardHeader: React.FC<ProviderDashboardHeaderProps> = (
 
   const fetchProviderData = async () => {
     try {
-      const response = await fetch('/api/provider/dashboard');
+      const response = await authenticatedFetch('/api/provider/dashboard');
       if (response.ok) {
         const data = await response.json();
         setProvider(data.provider);

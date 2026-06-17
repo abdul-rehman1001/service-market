@@ -4,6 +4,7 @@ import { CalendarDays, LogOut, Menu, Shield } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
+import { authenticatedFetch } from "@/lib/authenticatedFetch";
 
 interface UserData {
   id: string;
@@ -50,12 +51,12 @@ export default function AdminHeader({ onMenuClick }: { onMenuClick: () => void }
   );
 
   useEffect(() => {
-    fetch("/api/profile")
-      .then((res) => {
-        if (res.ok) return res.json();
-        return null;
-      })
-      .then((data) => {
+    const loadProfile = async () => {
+      try {
+        const res = await authenticatedFetch("/api/profile");
+        if (!res.ok) return;
+
+        const data = await res.json();
         if (data?.user) {
           setUser({
             id: data.user.id,
@@ -65,10 +66,12 @@ export default function AdminHeader({ onMenuClick }: { onMenuClick: () => void }
             profileImage: data.user.profileImage,
           });
         }
-      })
-      .catch(() => {
+      } catch {
         // Silent fail
-      });
+      }
+    };
+
+    void loadProfile();
   }, []);
 
   const displayName = user

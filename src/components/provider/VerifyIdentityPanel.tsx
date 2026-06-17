@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { Loader } from 'lucide-react';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 export const VerifyIdentityPanel: React.FC = () => {
   const [frontCNIC, setFrontCNIC] = useState<File | null>(null);
@@ -17,7 +18,7 @@ export const VerifyIdentityPanel: React.FC = () => {
   useEffect(() => {
     const fetchProvider = async () => {
       try {
-        const res = await fetch('/api/provider/dashboard');
+        const res = await authenticatedFetch('/api/provider/dashboard');
         const data = await res.json();
         if (res.ok && data.provider?.id) {
           setProviderId(data.provider.id);
@@ -92,7 +93,7 @@ export const VerifyIdentityPanel: React.FC = () => {
   ) => {
     const fileUrl = await uploadToCloudinary(file);
 
-    const res = await fetch(`/api/providers/${providerId}/documents`, {
+    const res = await authenticatedFetch(`/api/providers/${providerId}/documents`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

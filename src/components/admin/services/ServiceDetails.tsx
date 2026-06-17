@@ -23,6 +23,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { formatPKR } from "@/lib/utils";
+import { authenticatedFetch } from "@/lib/authenticatedFetch";
 
 interface ServiceDetailData {
   id: string;
@@ -102,7 +103,7 @@ export default function ServiceDetails({ serviceId }: Props) {
   const fetchService = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/admin/services/${serviceId}`);
+      const res = await authenticatedFetch(`/api/admin/services/${serviceId}`);
       const data = await res.json();
 
       if (!res.ok) {
@@ -133,7 +134,7 @@ export default function ServiceDetails({ serviceId }: Props) {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const res = await fetch(`/api/admin/services/${serviceId}`, {
+      const res = await authenticatedFetch(`/api/admin/services/${serviceId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -165,7 +166,7 @@ export default function ServiceDetails({ serviceId }: Props) {
   const handleToggleStatus = async () => {
     if (!service) return;
     try {
-      const res = await fetch(`/api/admin/services/${serviceId}`, {
+      const res = await authenticatedFetch(`/api/admin/services/${serviceId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !service.isActive }),
@@ -192,7 +193,7 @@ export default function ServiceDetails({ serviceId }: Props) {
     }
 
     try {
-      const res = await fetch(`/api/admin/services/${serviceId}`, {
+      const res = await authenticatedFetch(`/api/admin/services/${serviceId}`, {
         method: "DELETE",
       });
 

@@ -20,6 +20,7 @@ import {
   HelpCircle,
   MapPin,
 } from "lucide-react";
+import { authenticatedFetch } from "@/lib/authenticatedFetch";
 
 interface QueryDetail {
   id: string;
@@ -98,7 +99,7 @@ export default function QueryDetailPage() {
   const fetchQuery = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/queries/${id}`);
+      const res = await authenticatedFetch(`/api/admin/queries/${id}`);
       if (res.ok) {
         const data = await res.json();
         setQuery(data.query);
@@ -124,7 +125,7 @@ export default function QueryDetailPage() {
     if (!replyText.trim()) return;
     setSending(true);
     try {
-      const res = await fetch(`/api/admin/queries/${id}`, {
+      const res = await authenticatedFetch(`/api/admin/queries/${id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reply: replyText.trim() }),
@@ -146,7 +147,7 @@ export default function QueryDetailPage() {
   const handleStatusChange = async (newStatus: string) => {
     setUpdatingStatus(true);
     try {
-      const res = await fetch(`/api/admin/queries/${id}`, {
+      const res = await authenticatedFetch(`/api/admin/queries/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),

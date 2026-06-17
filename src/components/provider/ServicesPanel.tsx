@@ -6,6 +6,7 @@ import { Loader2, Plus, Edit, Trash2, Tag, Clock, ImageIcon, Briefcase } from 'l
 import ServiceFormModal from './ServiceFormModal';
 import VerificationRequiredModal from './VerificationRequiredModal';
 import { formatPKR } from '@/lib/utils';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 function CategoryIcon({ icon }: { icon: string }) {
   const parts = icon.split(/[\s\n]+/).filter(Boolean);
@@ -61,7 +62,7 @@ export const ServicesPanel: React.FC = () => {
   const fetchServices = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/providers/services');
+      const res = await authenticatedFetch('/api/providers/services');
       const data = await res.json();
 
       if (!res.ok) {
@@ -79,7 +80,7 @@ export const ServicesPanel: React.FC = () => {
 
   const fetchVerificationStatus = async () => {
     try {
-      const res = await fetch('/api/provider/dashboard');
+      const res = await authenticatedFetch('/api/provider/dashboard');
       if (!res.ok) return;
 
       const data = await res.json();
@@ -116,7 +117,7 @@ export const ServicesPanel: React.FC = () => {
 
     try {
       setDeleting(serviceId);
-      const res = await fetch(`/api/providers/services/${serviceId}`, {
+      const res = await authenticatedFetch(`/api/providers/services/${serviceId}`, {
         method: 'DELETE',
       });
 

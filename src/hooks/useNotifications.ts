@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { requestNotificationPermission, onForegroundMessage } from '@/lib/fcm';
 import toast from 'react-hot-toast';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 interface NotificationItem {
   id: string;
@@ -35,7 +36,7 @@ export function useNotifications() {
     }
 
     try {
-      const res = await fetch('/api/notifications');
+      const res = await authenticatedFetch('/api/notifications');
       if (res.status === 401) {
         authBlocked.current = true;
         setLoading(false);
@@ -58,7 +59,7 @@ export function useNotifications() {
     if (authBlocked.current) return;
 
     try {
-      const res = await fetch('/api/notifications/register-token', {
+      const res = await authenticatedFetch('/api/notifications/register-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),
@@ -77,7 +78,7 @@ export function useNotifications() {
     if (authBlocked.current) return;
 
     try {
-      const res = await fetch('/api/notifications/read', {
+      const res = await authenticatedFetch('/api/notifications/read', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notificationId }),
@@ -102,7 +103,7 @@ export function useNotifications() {
     if (authBlocked.current) return;
 
     try {
-      const res = await fetch('/api/notifications/read-all', {
+      const res = await authenticatedFetch('/api/notifications/read-all', {
         method: 'POST',
       });
 

@@ -7,6 +7,7 @@ import {
   ArrowLeft, Loader2, Star, Trash2, User, Mail, Phone,
   Briefcase, Calendar, MapPin, Hash,
 } from "lucide-react";
+import { authenticatedFetch } from "@/lib/authenticatedFetch";
 
 interface ReviewDetail {
   id: string;
@@ -94,7 +95,7 @@ export default function ReviewDetailPage() {
 
   const fetchReview = async () => {
     try {
-      const res = await fetch(`/api/admin/reviews/${params.id}`);
+      const res = await authenticatedFetch(`/api/admin/reviews/${params.id}`);
       if (!res.ok) throw new Error("Failed to fetch review");
       const data = await res.json();
       setReview(data.review);
@@ -109,7 +110,7 @@ export default function ReviewDetailPage() {
     if (!review) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/admin/reviews/${review.id}`, { method: "DELETE" });
+      const res = await authenticatedFetch(`/api/admin/reviews/${review.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete review");
       router.push("/admin/reviews");
     } catch (err: any) {

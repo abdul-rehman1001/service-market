@@ -18,6 +18,7 @@ import {
   FileCheck,
   ExternalLink,
 } from "lucide-react";
+import { authenticatedFetch } from "@/lib/authenticatedFetch";
 
 interface VerificationRequest {
   id: string;
@@ -83,7 +84,7 @@ export default function VerificationRequestsPage() {
 
   const fetchRequests = async () => {
     try {
-      const res = await fetch("/api/admin/verification-requests");
+      const res = await authenticatedFetch("/api/admin/verification-requests");
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {
           router.push("/login");
@@ -109,7 +110,7 @@ export default function VerificationRequestsPage() {
     setMessage({ type: "", text: "" });
 
     try {
-      const res = await fetch(`/api/admin/verification-requests/${providerId}/approve`, {
+      const res = await authenticatedFetch(`/api/admin/verification-requests/${providerId}/approve`, {
         method: "POST",
       });
 
@@ -146,7 +147,7 @@ export default function VerificationRequestsPage() {
     setMessage({ type: "", text: "" });
 
     try {
-      const res = await fetch(
+      const res = await authenticatedFetch(
         `/api/admin/verification-requests/${selectedRequest.id}/reject`,
         {
           method: "POST",

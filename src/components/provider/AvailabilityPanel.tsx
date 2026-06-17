@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { format } from 'date-fns';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 import {
   AlertCircle,
   Clock,
@@ -146,8 +147,8 @@ export const AvailabilityPanel: React.FC = () => {
     try {
       setLoading(true);
       const [availRes, unavailRes] = await Promise.all([
-        fetch('/api/providers/availability'),
-        fetch('/api/providers/unavailability'),
+        authenticatedFetch('/api/providers/availability'),
+        authenticatedFetch('/api/providers/unavailability'),
       ]);
 
       if (!availRes.ok || !unavailRes.ok) {
@@ -230,7 +231,7 @@ export const AvailabilityPanel: React.FC = () => {
 
     try {
       setSaving(true);
-      const response = await fetch('/api/providers/availability', {
+      const response = await authenticatedFetch('/api/providers/availability', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dayOfWeek: selectedDay, startTime, endTime }),
@@ -255,7 +256,9 @@ export const AvailabilityPanel: React.FC = () => {
   const handleDeleteAvailability = async (id: string) => {
     try {
       setSaving(true);
-      const response = await fetch(`/api/providers/availability/${id}`, { method: 'DELETE' });
+      const response = await authenticatedFetch(`/api/providers/availability/${id}`, {
+        method: 'DELETE',
+      });
       if (!response.ok) throw new Error('Failed to delete');
       showAlert('success', 'Availability deleted');
       await fetchData();
@@ -274,7 +277,7 @@ export const AvailabilityPanel: React.FC = () => {
 
     try {
       setSaving(true);
-      const response = await fetch('/api/providers/unavailability', {
+      const response = await authenticatedFetch('/api/providers/unavailability', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -302,7 +305,9 @@ export const AvailabilityPanel: React.FC = () => {
   const handleDeleteUnavailableDate = async (id: string) => {
     try {
       setSaving(true);
-      const response = await fetch(`/api/providers/unavailability/${id}`, { method: 'DELETE' });
+      const response = await authenticatedFetch(`/api/providers/unavailability/${id}`, {
+        method: 'DELETE',
+      });
       if (!response.ok) throw new Error('Failed to delete');
       showAlert('success', 'Unavailable date removed');
       await fetchData();

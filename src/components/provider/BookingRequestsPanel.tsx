@@ -21,6 +21,7 @@ import {
   Activity,
   CircleCheck,
 } from 'lucide-react';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 interface BookingItem {
   id: string;
@@ -146,7 +147,7 @@ export const BookingRequestsPanel: React.FC = () => {
   const fetchBookings = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/provider/bookings');
+      const response = await authenticatedFetch('/api/provider/bookings');
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch bookings');
@@ -192,7 +193,7 @@ export const BookingRequestsPanel: React.FC = () => {
   const respond = async (bookingId: string, type: 'ACCEPT' | 'REJECT') => {
     try {
       setActionLoading(bookingId);
-      const response = await fetch(`/api/provider/bookings/${bookingId}/respond`, {
+      const response = await authenticatedFetch(`/api/provider/bookings/${bookingId}/respond`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type }),
@@ -215,7 +216,7 @@ export const BookingRequestsPanel: React.FC = () => {
       setActionLoading(bookingId);
       setStatusUpdateError(null);
 
-      const response = await fetch(`/api/bookings/${bookingId}/status`, {
+      const response = await authenticatedFetch(`/api/bookings/${bookingId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

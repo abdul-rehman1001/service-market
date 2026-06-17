@@ -14,6 +14,7 @@ import {
   ToggleLeft,
   ToggleRight,
 } from 'lucide-react';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 interface Category {
   id: string;
@@ -65,7 +66,7 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
     const fetchCategories = async () => {
       try {
         setLoadingCategories(true);
-        const res = await fetch('/api/categories');
+        const res = await authenticatedFetch('/api/categories');
         const data = await res.json();
 
         if (res.ok && data.success) {
@@ -207,7 +208,7 @@ export default function ServiceFormModal({ service, onClose }: ServiceFormModalP
 
       const method = service ? 'PATCH' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await authenticatedFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { authenticatedFetch } from "@/lib/authenticatedFetch";
 
 interface CategoryFormProps {
   initialData?: {
@@ -40,7 +41,7 @@ export default function CategoryForm({ initialData }: CategoryFormProps) {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const res = await fetch('/api/admin/categories');
+        const res = await authenticatedFetch('/api/admin/categories');
         const data = await res.json();
 
         if (res.ok) {
@@ -77,7 +78,7 @@ export default function CategoryForm({ initialData }: CategoryFormProps) {
 
       const method = initialData ? 'PATCH' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await authenticatedFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

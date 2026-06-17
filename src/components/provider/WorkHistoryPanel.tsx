@@ -16,6 +16,7 @@ import {
   Calendar,
   MessageSquare,
 } from 'lucide-react';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 interface WorkHistoryItem {
   id: string;
@@ -118,7 +119,7 @@ export const WorkHistoryPanel: React.FC = () => {
   const fetchWorkHistory = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/provider/bookings');
+      const response = await authenticatedFetch('/api/provider/bookings');
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch bookings');

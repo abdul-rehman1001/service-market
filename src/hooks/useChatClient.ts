@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Conversation, Message } from '@/components/chat/types';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 interface UseChatClientOptions {
   initialBookingId?: string | null;
@@ -155,7 +156,7 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
 
       setLoading(true);
       try {
-        const res = await fetch('/api/chat/conversations', { cache: 'no-store' });
+        const res = await authenticatedFetch('/api/chat/conversations', { cache: 'no-store' });
         if (res.status === 401) {
           setError('Please log in to view messages');
           setConversations([]);
@@ -232,7 +233,7 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
     let cancelled = false;
     const fetchUser = async () => {
       try {
-        const res = await fetch('/api/user', { cache: 'no-store' });
+        const res = await authenticatedFetch('/api/user', { cache: 'no-store' });
         if (!res.ok) return;
         const data = await res.json();
         if (cancelled) return;
@@ -332,7 +333,7 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
         if (isPermissionDenied) {
           const fetchServerMessages = async () => {
             try {
-              const res = await fetch(`/api/chat/messages?conversationId=${activeConversationId}`);
+              const res = await authenticatedFetch(`/api/chat/messages?conversationId=${activeConversationId}`);
               if (!res.ok) {
                 console.error('Server messages fetch failed', res.status);
                 return;
@@ -375,7 +376,7 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
 
     const markRead = async () => {
       try {
-        await fetch('/api/chat/messages/read', {
+        await authenticatedFetch('/api/chat/messages/read', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ conversationId: conversation.id }),
@@ -405,7 +406,7 @@ export function useChatClient(options: UseChatClientOptions = {}): UseChatClient
 
       setSending(true);
       try {
-        const res = await fetch('/api/chat/messages', {
+        const res = await authenticatedFetch('/api/chat/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -19,6 +19,7 @@ import {
   FileCheck,
   FileX,
 } from 'lucide-react';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 interface ProviderData {
   id: string;
@@ -175,7 +176,7 @@ export const DocumentManagementPanel: React.FC = () => {
   const fetchProviderData = useCallback(async () => {
     try {
       setLoading(true);
-      const providerRes = await fetch('/api/provider/dashboard');
+      const providerRes = await authenticatedFetch('/api/provider/dashboard');
       if (!providerRes.ok) {
         const data = await providerRes.json();
         throw new Error(data.error || 'Failed to fetch provider data');
@@ -193,7 +194,7 @@ export const DocumentManagementPanel: React.FC = () => {
         cnicNumber: providerData.provider.cnic || prev.cnicNumber,
       }));
 
-      const docsRes = await fetch(`/api/providers/${providerInfo.id}/documents`);
+      const docsRes = await authenticatedFetch(`/api/providers/${providerInfo.id}/documents`);
       if (!docsRes.ok) {
         const data = await docsRes.json();
         throw new Error(data.error || 'Failed to fetch documents');
@@ -328,7 +329,7 @@ export const DocumentManagementPanel: React.FC = () => {
         uploadToCloudinary(cnicForm.backFile),
       ]);
 
-      const res = await fetch(`/api/providers/${provider.id}/documents/cnic-request`, {
+      const res = await authenticatedFetch(`/api/providers/${provider.id}/documents/cnic-request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -395,7 +396,7 @@ export const DocumentManagementPanel: React.FC = () => {
       for (const file of supportingForm.files) {
         const fileUrl = await uploadToCloudinary(file);
 
-        const res = await fetch(`/api/providers/${provider.id}/documents`, {
+        const res = await authenticatedFetch(`/api/providers/${provider.id}/documents`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

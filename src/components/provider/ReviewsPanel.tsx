@@ -12,6 +12,7 @@ import {
   Calendar,
   Wrench,
 } from 'lucide-react';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 interface Review {
   id: string;
@@ -110,7 +111,7 @@ export const ReviewsPanel: React.FC = () => {
   const fetchReviews = useCallback(async (id: string) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/providers/${id}/reviews?limit=50`);
+      const res = await authenticatedFetch(`/api/providers/${id}/reviews?limit=50`);
       const data = await res.json();
 
       if (!res.ok) {
@@ -160,7 +161,7 @@ export const ReviewsPanel: React.FC = () => {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/provider/dashboard');
+      const res = await authenticatedFetch('/api/provider/dashboard');
       const data = await res.json();
       if (data.provider?.id) {
         await fetchReviews(data.provider.id);

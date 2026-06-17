@@ -24,6 +24,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 interface BookingData {
   id: string;
@@ -117,7 +118,7 @@ export const AnalyticsPanel: React.FC = () => {
   const fetchAnalytics = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/provider/bookings');
+      const response = await authenticatedFetch('/api/provider/bookings');
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch analytics data');

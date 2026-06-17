@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import AuthCard from '@/components/auth/AuthCard';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 export default function ProviderVerification() {
   const [frontImage, setFrontImage] = useState<File | null>(null);
@@ -61,7 +62,7 @@ export default function ProviderVerification() {
       formData.append('frontImage', frontImage);
       formData.append('backImage', backImage);
 
-      const res = await fetch('/api/provider/verify-identity', {
+      const res = await authenticatedFetch('/api/provider/verify-identity', {
         method: 'POST',
         body: formData,
       });

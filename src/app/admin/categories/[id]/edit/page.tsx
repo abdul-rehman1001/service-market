@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import CategoryForm from "@/components/admin/categories/CategoryForm";
 import { Loader2 } from "lucide-react";
+import { authenticatedFetch } from "@/lib/authenticatedFetch";
 
 export default function EditCategoryPage() {
   const params = useParams();
@@ -19,7 +20,7 @@ export default function EditCategoryPage() {
       try {
         setLoading(true);
         // Fetch all categories and find the one we need
-        const res = await fetch('/api/admin/categories');
+        const res = await authenticatedFetch('/api/admin/categories');
         const data = await res.json();
 
         if (!res.ok) {

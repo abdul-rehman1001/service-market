@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Loader, AlertCircle, Clock } from 'lucide-react';
+import { authenticatedFetch } from '@/lib/authenticatedFetch';
 
 interface Appointment {
   id: string;
@@ -43,7 +44,7 @@ export const AppointmentsPanel: React.FC = () => {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/provider/bookings');
+      const response = await authenticatedFetch('/api/provider/bookings');
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch bookings');

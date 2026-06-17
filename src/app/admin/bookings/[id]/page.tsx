@@ -7,6 +7,7 @@ import {
   ArrowLeft, Loader2, MapPin, Calendar, Clock, User, Phone, Mail,
   Star, Briefcase, XCircle, Tag, FileText, MessageSquare,
 } from "lucide-react";
+import { authenticatedFetch } from "@/lib/authenticatedFetch";
 
 interface BookingDetail {
   id: string;
@@ -96,7 +97,7 @@ export default function BookingDetailPage() {
 
   const fetchBooking = async () => {
     try {
-      const res = await fetch(`/api/admin/bookings/${params.id}`);
+      const res = await authenticatedFetch(`/api/admin/bookings/${params.id}`);
       if (!res.ok) throw new Error("Failed to fetch booking");
       const data = await res.json();
       setBooking(data.booking);
@@ -111,7 +112,7 @@ export default function BookingDetailPage() {
     if (!booking || !cancelReason.trim()) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/admin/bookings/${booking.id}/cancel`, {
+      const res = await authenticatedFetch(`/api/admin/bookings/${booking.id}/cancel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason: cancelReason.trim() }),
