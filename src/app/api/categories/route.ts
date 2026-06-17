@@ -45,7 +45,11 @@ export async function GET(req: NextRequest) {
         _count: {
           select: {
             children: true,
-            services: true,
+            services: {
+              where: {
+                isActive: true,
+              },
+            },
           },
         },
       },

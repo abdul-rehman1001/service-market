@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
+import { validateCategoryIcon } from '@/lib/categoryIcon';
+
+function parseDisplayOrder(value: unknown): { ok: true; value: number } | { ok: false; error: string } {
+  if (value === undefined || value === null) {
+    return { ok: true, value: 0 };
+  }
+
+  const parsed = typeof value === 'number' ? value : Number.parseInt(String(value), 10);
+
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    return { ok: false, error: 'Display order must be 0 or a positive whole number' };
+  }
+
+  return { ok: true, value: parsed };
+}
 
 /**
  * PATCH /api/admin/categories/:id
@@ -116,10 +131,22 @@ export async function PATCH(
     const updateData: any = {};
     if (name !== undefined) updateData.name = name.trim();
     if (description !== undefined) updateData.description = description?.trim() || null;
-    if (icon !== undefined) updateData.icon = icon?.trim() || null;
+    if (icon !== undefined) {
+      const iconResult = validateCategoryIcon(icon);
+      if (!iconResult.ok) {
+        return NextResponse.json({ error: iconResult.error }, { status: 400 });
+      }
+      updateData.icon = iconResult.value;
+    }
     if (parentId !== undefined) updateData.parentId = parentId || null;
     if (typeof isActive === 'boolean') updateData.isActive = isActive;
-    if (typeof displayOrder === 'number') updateData.displayOrder = displayOrder;
+    if (displayOrder !== undefined) {
+      const displayOrderResult = parseDisplayOrder(displayOrder);
+      if (!displayOrderResult.ok) {
+        return NextResponse.json({ error: displayOrderResult.error }, { status: 400 });
+      }
+      updateData.displayOrder = displayOrderResult.value;
+    }
 
     // Update the category
     const updatedCategory = await prisma.serviceCategory.update({

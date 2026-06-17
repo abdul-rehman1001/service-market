@@ -4,6 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { authenticatedFetch } from "@/lib/authenticatedFetch";
+import {
+  MAX_CATEGORY_ICON_EMOJIS,
+  normalizeCategoryIconInput,
+  splitEmojiGraphemes,
+} from "@/lib/categoryIcon";
 
 interface CategoryFormProps {
   initialData?: {
@@ -61,11 +66,39 @@ export default function CategoryForm({ initialData }: CategoryFormProps) {
     fetchCategories();
   }, [initialData]);
 
+  const handleIconChange = (rawValue: string) => {
+    setIcon(normalizeCategoryIconInput(rawValue));
+  };
+
+  const handleDisplayOrderChange = (rawValue: string) => {
+    if (rawValue === '') {
+      setDisplayOrder(0);
+      return;
+    }
+
+    const parsed = Number.parseInt(rawValue, 10);
+    if (Number.isNaN(parsed) || parsed < 0) {
+      return;
+    }
+
+    setDisplayOrder(parsed);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name.trim()) {
       alert('Category name is required');
+      return;
+    }
+
+    if (!Number.isInteger(displayOrder) || displayOrder < 0) {
+      alert('Display order must be 0 or a positive whole number');
+      return;
+    }
+
+    if (icon.trim() && splitEmojiGraphemes(icon).length > MAX_CATEGORY_ICON_EMOJIS) {
+      alert(`Icon can include at most ${MAX_CATEGORY_ICON_EMOJIS} emojis`);
       return;
     }
 
@@ -84,7 +117,7 @@ export default function CategoryForm({ initialData }: CategoryFormProps) {
         body: JSON.stringify({
           name: name.trim(),
           description: description.trim() || null,
-          icon: icon.trim() || null,
+          icon: icon.trim() ? normalizeCategoryIconInput(icon) : null,
           parentId: parentId || null,
           isActive,
           displayOrder,
@@ -143,12 +176,14 @@ export default function CategoryForm({ initialData }: CategoryFormProps) {
         <input
           type="text"
           value={icon}
-          onChange={(e) => setIcon(e.target.value)}
+          onChange={(e) => handleIconChange(e.target.value)}
           className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-          placeholder="e.g. 🔧 or ⚡"
-          maxLength={2}
+          placeholder="e.g. 🔧🚗"
+          inputMode="text"
         />
-        <p className="text-xs text-gray-500 mt-1">Optional emoji icon for this category</p>
+        <p className="text-xs text-gray-500 mt-1">
+          Optional. Up to {MAX_CATEGORY_ICON_EMOJIS} emojis (e.g. 🔧🚗 for Auto Mechanic).
+        </p>
       </div>
 
       <div>
@@ -176,12 +211,14 @@ export default function CategoryForm({ initialData }: CategoryFormProps) {
         </label>
         <input
           type="number"
+          min={0}
+          step={1}
           value={displayOrder}
-          onChange={(e) => setDisplayOrder(parseInt(e.target.value) || 0)}
+          onChange={(e) => handleDisplayOrderChange(e.target.value)}
           className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
           placeholder="0"
         />
-        <p className="text-xs text-gray-500 mt-1">Lower numbers appear first</p>
+        <p className="text-xs text-gray-500 mt-1">Use 0 or a positive whole number. Lower numbers appear first.</p>
       </div>
 
       <div className="flex items-center gap-2">

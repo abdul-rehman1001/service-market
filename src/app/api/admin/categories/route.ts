@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
+import { validateCategoryIcon } from '@/lib/categoryIcon';
+
+function parseDisplayOrder(value: unknown): { ok: true; value: number } | { ok: false; error: string } {
+  if (value === undefined || value === null) {
+    return { ok: true, value: 0 };
+  }
+
+  const parsed = typeof value === 'number' ? value : Number.parseInt(String(value), 10);
+
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    return { ok: false, error: 'Display order must be 0 or a positive whole number' };
+  }
+
+  return { ok: true, value: parsed };
+}
 
 /**
  * GET /api/admin/categories
@@ -138,15 +153,25 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const displayOrderResult = parseDisplayOrder(displayOrder);
+    if (!displayOrderResult.ok) {
+      return NextResponse.json({ error: displayOrderResult.error }, { status: 400 });
+    }
+
+    const iconResult = validateCategoryIcon(icon);
+    if (!iconResult.ok) {
+      return NextResponse.json({ error: iconResult.error }, { status: 400 });
+    }
+
     // Create the category
     const category = await prisma.serviceCategory.create({
       data: {
         name: name.trim(),
         description: description?.trim() || null,
-        icon: icon?.trim() || null,
+        icon: iconResult.value,
         parentId: parentId || null,
         isActive: typeof isActive === 'boolean' ? isActive : true,
-        displayOrder: typeof displayOrder === 'number' ? displayOrder : 0,
+        displayOrder: displayOrderResult.value,
       },
       include: {
         parent: true,
