@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+/** Services visible on the public marketplace (matches provider listing filters). */
+const marketplaceServiceWhere = {
+  isActive: true,
+  provider: {
+    verificationStatus: 'APPROVED' as const,
+    isAvailable: true,
+  },
+};
+
 /**
  * GET /api/categories → Fetch all active categories (Public)
  * Used for dropdowns, listings, etc. Anyone can access
@@ -34,27 +43,38 @@ export async function GET(req: NextRequest) {
             name: true,
           },
         },
-        ...(includeChildren && {
-          children: {
-            where: {
-              isActive: true,
-            },
-            orderBy: [{ displayOrder: 'asc' }, { name: 'asc' }],
+        children: {
+          where: {
+            isActive: true,
           },
-        }),
+          orderBy: [{ displayOrder: 'asc' }, { name: 'asc' }],
+        },
         _count: {
           select: {
             children: true,
-            services: {
-              where: {
-                isActive: true,
-              },
-            },
           },
         },
       },
       orderBy: [{ displayOrder: 'asc' }, { name: 'asc' }],
     });
+
+    const serviceCountsByCategory = await prisma.service.groupBy({
+      by: ['categoryId'],
+      where: marketplaceServiceWhere,
+      _count: { _all: true },
+    });
+
+    const activeServiceCountByCategoryId = new Map(
+      serviceCountsByCategory.map((row) => [row.categoryId, row._count._all])
+    );
+
+    const countActiveServices = (categoryId: string, childIds: string[]) => {
+      const ids = parentOnly ? [categoryId, ...childIds] : [categoryId];
+      return ids.reduce(
+        (sum, id) => sum + (activeServiceCountByCategoryId.get(id) ?? 0),
+        0
+      );
+    };
 
     // Format response for easier frontend consumption
     const formattedCategories = categories.map(cat => ({
@@ -66,8 +86,11 @@ export async function GET(req: NextRequest) {
       parentId: cat.parentId,
       parent: cat.parent,
       childrenCount: cat._count.children,
-      servicesCount: cat._count.services,
-      ...(includeChildren && cat.children && { children: cat.children }),
+      servicesCount: countActiveServices(
+        cat.id,
+        cat.children.map((child) => child.id)
+      ),
+      ...(includeChildren && { children: cat.children }),
     }));
 
     return NextResponse.json(
