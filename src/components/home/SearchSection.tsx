@@ -689,7 +689,7 @@ export default function SearchSection({ onClearSearch }: SearchSectionProps) {
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-bold text-gray-600 group-hover:text-emerald-600 transition">
-                              {(match.similarity * 100).toFixed(0)}%
+                              {(match.similarity * 100).toFixed(1)}%
                             </span>
                             <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-600 transition" />
                           </div>

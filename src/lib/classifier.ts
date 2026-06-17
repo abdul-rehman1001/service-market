@@ -105,6 +105,19 @@ let dbCategoryMap: Record<string, DbCategoryMapping[]> | null = null;
 let dbMapExpiry = 0;
 const DB_MAP_TTL = 5 * 60 * 1000; // refresh every 5 min
 
+function normalizeCategoryName(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+/**
+ * Maps AI category keys → active DB categories.
+ *
+ * Primary: exact match on ai-categories.json `name` ↔ ServiceCategory.name
+ * (e.g. car_ac_technician → "AC Technician (Automotive)").
+ *
+ * Fallback: keyword match for keys without an exact name hit. Keyword-only
+ * matches exclude DB rows already claimed by another key's exact name.
+ */
 async function getDbCategoryMap(): Promise<Record<string, DbCategoryMapping[]>> {
   const now = Date.now();
   if (dbCategoryMap && now < dbMapExpiry) return dbCategoryMap;
@@ -114,6 +127,7 @@ async function getDbCategoryMap(): Promise<Record<string, DbCategoryMapping[]>> 
     categories = await prisma.serviceCategory.findMany({
       where: { isActive: true },
       select: { id: true, name: true, parentId: true },
+      orderBy: [{ displayOrder: 'asc' }, { name: 'asc' }],
     });
   } catch (err) {
     // DB hiccup: serve the stale map instead of failing the whole request.
@@ -124,14 +138,61 @@ async function getDbCategoryMap(): Promise<Record<string, DbCategoryMapping[]>> 
     throw err;
   }
 
-  const map: Record<string, DbCategoryMapping[]> = {};
+  const dbByNormName = new Map(
+    categories.map((c) => [normalizeCategoryName(c.name), c] as const)
+  );
 
+  const map: Record<string, DbCategoryMapping[]> = {};
+  const claimedDbIds = new Set<string>();
+
+  // 1. Exact catalog name → DB row (most reliable; fixes car AC mapping).
+  for (const aiCat of aiCategories) {
+    const dbCat = dbByNormName.get(normalizeCategoryName(aiCat.name));
+    if (!dbCat) continue;
+    map[aiCat.key] = [
+      { id: dbCat.id, name: dbCat.name, parentId: dbCat.parentId },
+    ];
+    claimedDbIds.add(dbCat.id);
+  }
+
+  // 2. Keyword fallback for any key still unmapped.
   for (const [key, keywords] of Object.entries(categoryKeywords)) {
-    const matched = categories.filter((cat) =>
-      keywords.some((kw) => cat.name.toLowerCase().includes(kw.toLowerCase()))
-    );
+    if (map[key]?.length) continue;
+
+    const catalogName = aiCategories.find((c) => c.key === key)?.name;
+    const sortedKeywords = [...keywords].sort((a, b) => b.length - a.length);
+
+    const matched = categories
+      .filter((cat) => {
+        if (claimedDbIds.has(cat.id)) return false;
+        const normName = normalizeCategoryName(cat.name);
+        return sortedKeywords.some((kw) =>
+          normName.includes(kw.toLowerCase())
+        );
+      })
+      .sort((a, b) => {
+        // Prefer the DB name closest to the catalog display name.
+        if (catalogName) {
+          const aExact =
+            normalizeCategoryName(a.name) === normalizeCategoryName(catalogName)
+              ? 1
+              : 0;
+          const bExact =
+            normalizeCategoryName(b.name) === normalizeCategoryName(catalogName)
+              ? 1
+              : 0;
+          if (bExact !== aExact) return bExact - aExact;
+        }
+        return a.name.length - b.name.length;
+      });
+
     if (matched.length > 0) {
-      map[key] = matched.map((c) => ({ id: c.id, name: c.name, parentId: c.parentId }));
+      map[key] = matched.map((c) => ({
+        id: c.id,
+        name: c.name,
+        parentId: c.parentId,
+      }));
+      for (const c of matched) claimedDbIds.add(c.id);
     }
   }
 
