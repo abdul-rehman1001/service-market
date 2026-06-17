@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
+import { sendNotification } from '@/lib/notifications';
 
 /**
  * POST /api/admin/bookings/:id/cancel
@@ -43,11 +44,22 @@ export async function POST(
 
     const booking = await prisma.booking.findUnique({
       where: { id },
-      select: { id: true, status: true, bookingNumber: true },
+      select: {
+        id: true,
+        status: true,
+        bookingNumber: true,
+        seekerId: true,
+        provider: { select: { userId: true } },
+        service: { select: { name: true } },
+      },
     });
 
     if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+    }
+
+    if (!booking.provider?.userId) {
+      return NextResponse.json({ error: 'Provider not found for booking' }, { status: 404 });
     }
 
     // Only allow cancellation of non-terminal bookings
@@ -58,12 +70,14 @@ export async function POST(
       );
     }
 
+    const trimmedReason = reason.trim();
+
     const updated = await prisma.booking.update({
       where: { id },
       data: {
         status: 'CANCELLED',
         cancelledBy: 'ADMIN',
-        cancellationReason: reason.trim(),
+        cancellationReason: trimmedReason,
       },
       select: {
         id: true,
@@ -72,6 +86,28 @@ export async function POST(
         cancelledBy: true,
         cancellationReason: true,
       },
+    });
+
+    const notificationData = {
+      bookingNumber: updated.bookingNumber,
+      serviceName: booking.service?.name || '',
+      bookingId: id,
+      reason: trimmedReason,
+      cancelledBy: 'ADMIN',
+    };
+
+    sendNotification({
+      userId: booking.seekerId,
+      type: 'BOOKING_CANCELLED',
+      bookingId: id,
+      data: notificationData,
+    });
+
+    sendNotification({
+      userId: booking.provider.userId,
+      type: 'BOOKING_CANCELLED',
+      bookingId: id,
+      data: notificationData,
     });
 
     return NextResponse.json({

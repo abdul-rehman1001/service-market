@@ -79,7 +79,10 @@ export function getNotificationDetails(type: string, data?: Record<string, strin
     },
     BOOKING_CANCELLED: {
       title: 'Booking Cancelled',
-      body: `Booking${bookingNumber ? ` #${bookingNumber}` : ''} has been cancelled.`,
+      body:
+        data?.cancelledBy === 'ADMIN'
+          ? `Booking${bookingNumber ? ` #${bookingNumber}` : ''} has been cancelled by admin.${data?.reason ? ` Reason: ${data.reason}` : ''}`
+          : `Booking${bookingNumber ? ` #${bookingNumber}` : ''} has been cancelled.${data?.reason ? ` Reason: ${data.reason}` : ''}`,
       url: '/bookings',
     },
     BOOKING_RESCHEDULED: {

@@ -23,6 +23,18 @@ interface SendNotificationParams {
 }
 
 // Get notification title and body based on type
+function buildBookingCancelledBody(
+  bookingNumber: string,
+  data?: Record<string, string>
+): string {
+  const byAdmin = data?.cancelledBy === 'ADMIN';
+  const base = byAdmin
+    ? `Booking${bookingNumber ? ` #${bookingNumber}` : ''} has been cancelled by admin.`
+    : `Booking${bookingNumber ? ` #${bookingNumber}` : ''} has been cancelled.`;
+
+  return `${base}${data?.reason ? ` Reason: ${data.reason}` : ''}`;
+}
+
 function getNotificationContent(type: NotificationType, data?: Record<string, string>) {
   const bookingNumber = data?.bookingNumber || '';
   const serviceName = data?.serviceName || '';
@@ -38,7 +50,7 @@ function getNotificationContent(type: NotificationType, data?: Record<string, st
     },
     BOOKING_CANCELLED: {
       title: 'Booking Cancelled',
-      body: `Booking${bookingNumber ? ` #${bookingNumber}` : ''} has been cancelled.${data?.reason ? ` Reason: ${data.reason}` : ''}`,
+      body: buildBookingCancelledBody(bookingNumber, data),
     },
     BOOKING_RESCHEDULED: {
       title: 'Booking Rescheduled',
