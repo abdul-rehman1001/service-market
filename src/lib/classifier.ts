@@ -17,6 +17,21 @@ import { getOutOfScopeScore } from './ai/out-of-scope';
 const MIN_MATCH_CONFIDENCE = 0.45;
 
 /**
+ * Keyword matches below this threshold do NOT short-circuit the pipeline;
+ * embeddings still run and the higher of the two confidence scores is used.
+ *
+ * The keyword formula tops out at ~0.95 for a one-word query (e.g. "plumber"),
+ * but for natural-language queries like "my sink pipe is leaking" it only
+ * reaches ~0.75 because the matched keyword ("pipe", 4 chars) is short
+ * relative to the full query. Setting this threshold to 0.88 means those
+ * borderline keyword hits fall through to the embedding path, which has been
+ * trained with rich conversational examples and regularly scores 85 %+.
+ * Very short, unambiguous queries (e.g. bare keyword "plumber", "puncture")
+ * still score above 0.88 and skip the slower embedding step.
+ */
+const KEYWORD_SHORT_CIRCUIT_THRESHOLD = 0.88;
+
+/**
  * Max time the embedding pipeline may take before we fall back to keyword
  * matching. Keeps the API responsive even while a cold serverless instance
  * is still downloading the model.
@@ -177,7 +192,7 @@ export async function classifyQuery(query: string): Promise<ClassificationResult
 
   // 1. Try fast keyword match first
   const kwMatch = keywordMatch(query);
-  if (kwMatch && kwMatch.score >= 0.75) {
+  if (kwMatch && kwMatch.score >= KEYWORD_SHORT_CIRCUIT_THRESHOLD) {
     const dbEntry = dbMap[kwMatch.key]?.[0];
     const allMatches = buildAllMatchesFromKeywords(query, dbMap);
     return {

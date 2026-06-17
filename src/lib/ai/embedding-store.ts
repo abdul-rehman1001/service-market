@@ -19,6 +19,14 @@ export interface NewCategoryEmbedding {
   embedding: number[];
 }
 
+export function embeddingRecordKey(record: {
+  categoryKey: string;
+  sourceType: EmbeddingSourceType;
+  sourceText: string;
+}): string {
+  return `${record.categoryKey}|${record.sourceType}|${record.sourceText}`;
+}
+
 export interface CategoryEmbeddingStore {
   /**
    * Upserts embeddings by unique key (categoryKey, sourceType, sourceText).
@@ -31,6 +39,13 @@ export interface CategoryEmbeddingStore {
    * Note: current implementation is equivalent to upsertMany (no delete).
    */
   replaceAll(records: NewCategoryEmbedding[]): Promise<void>;
+
+  /**
+   * Returns keys for all stored rows (no vectors). Used to skip re-embedding
+   * existing catalog entries during incremental syncs.
+   */
+  getExistingKeys(): Promise<Set<string>>;
+
   getAll(): Promise<StoredCategoryEmbedding[]>;
 }
 
@@ -72,6 +87,18 @@ export class PrismaCategoryEmbeddingStore implements CategoryEmbeddingStore {
     // For safety with large catalogs, we no longer delete everything.
     // This preserves existing embeddings if a sync is interrupted.
     await this.upsertMany(records);
+  }
+
+  async getExistingKeys(): Promise<Set<string>> {
+    const rows = await prisma.aiCategoryEmbedding.findMany({
+      select: {
+        categoryKey: true,
+        sourceType: true,
+        sourceText: true,
+      },
+    });
+
+    return new Set(rows.map((row) => embeddingRecordKey(row)));
   }
 
   async getAll(): Promise<StoredCategoryEmbedding[]> {

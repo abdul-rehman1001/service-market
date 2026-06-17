@@ -7,7 +7,8 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "ai:sync-embeddings": "tsx scripts/sync-ai-embeddings.ts"
+    "ai:sync-embeddings": "tsx scripts/sync-ai-embeddings.ts",
+    "ai:sync-embeddings:new": "tsx scripts/sync-ai-embeddings.ts --only-new --skip-labeled-data"
   },
   "dependencies": {
     "@mapbox/search-js-core": "^1.5.1",

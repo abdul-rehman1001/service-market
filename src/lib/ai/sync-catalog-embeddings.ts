@@ -2,16 +2,35 @@ import { getEmbedding } from '../embeddings';
 import { aiCategories, aiCategoryQueries } from '../training-data';
 import {
   categoryEmbeddingStore,
+  embeddingRecordKey,
   type NewCategoryEmbedding,
 } from './embedding-store';
+
+export type CatalogSyncOptions = {
+  /**
+   * When true, skip rows that already exist in AiCategoryEmbedding (by unique key).
+   * Only new/changed sourceText entries are embedded and upserted.
+   */
+  onlyNew?: boolean;
+  /**
+   * When true, skip the large labeled `data` array in ai-categories.json.
+   * Use when you only added examples under categories[].examples.
+   */
+  skipLabeledData?: boolean;
+};
 
 export type CatalogSyncSummary = {
   totalCategories: number;
   totalExampleQueries: number;
   totalEmbeddingsStored: number;
+  totalSkipped: number;
 };
 
-export async function syncCatalogEmbeddings(): Promise<CatalogSyncSummary> {
+export async function syncCatalogEmbeddings(
+  options: CatalogSyncOptions = {}
+): Promise<CatalogSyncSummary> {
+  const onlyNew = options.onlyNew ?? false;
+  const skipLabeledData = options.skipLabeledData ?? false;
   const dbBatchSize = Number.parseInt(
     process.env.AI_EMBED_DB_BATCH_SIZE ?? '100',
     10
@@ -30,10 +49,23 @@ export async function syncCatalogEmbeddings(): Promise<CatalogSyncSummary> {
 
   let pending: NewCategoryEmbedding[] = [];
   let totalEmbeddingsStored = 0;
+  let totalSkipped = 0;
   let totalExampleQueries = 0;
   let processedCategories = 0;
 
   const seen = new Set<string>();
+  const existingKeys = onlyNew
+    ? await categoryEmbeddingStore.getExistingKeys()
+    : new Set<string>();
+
+  if (onlyNew) {
+    console.log(
+      `Incremental sync: ${existingKeys.size} embeddings already in DB will be skipped.`
+    );
+  }
+  if (skipLabeledData) {
+    console.log('Skipping labeled data array (categories[].examples only).');
+  }
 
   async function flush(): Promise<void> {
     if (pending.length === 0) return;
@@ -49,10 +81,19 @@ export async function syncCatalogEmbeddings(): Promise<CatalogSyncSummary> {
   }
 
   function pushRecord(record: NewCategoryEmbedding): void {
-    const key = `${record.categoryKey}|${record.sourceType}|${record.sourceText}`;
+    const key = embeddingRecordKey(record);
     if (seen.has(key)) return;
     seen.add(key);
     pending.push(record);
+  }
+
+  function isAlreadyStored(record: {
+    categoryKey: string;
+    sourceType: NewCategoryEmbedding['sourceType'];
+    sourceText: string;
+  }): boolean {
+    if (!onlyNew) return false;
+    return existingKeys.has(embeddingRecordKey(record));
   }
 
   const categoryNameByKey = new Map(
@@ -69,13 +110,17 @@ export async function syncCatalogEmbeddings(): Promise<CatalogSyncSummary> {
     if (!categoryKey) continue;
     if (!categoryName) continue;
 
-    pushRecord({
-      categoryKey: category.key,
-      categoryName,
-      sourceType: 'CATEGORY',
-      sourceText: categoryName,
-      embedding: await getEmbedding(categoryName),
-    });
+    if (isAlreadyStored({ categoryKey, sourceType: 'CATEGORY', sourceText: categoryName })) {
+      totalSkipped += 1;
+    } else {
+      pushRecord({
+        categoryKey: category.key,
+        categoryName,
+        sourceType: 'CATEGORY',
+        sourceText: categoryName,
+        embedding: await getEmbedding(categoryName),
+      });
+    }
 
     if (pending.length >= dbBatchSize) await flush();
 
@@ -90,8 +135,20 @@ export async function syncCatalogEmbeddings(): Promise<CatalogSyncSummary> {
 
       if (chunk.length === 0) continue;
 
+      const toEmbed = chunk.filter(
+        (query) =>
+          !isAlreadyStored({
+            categoryKey,
+            sourceType: 'EXAMPLE',
+            sourceText: query,
+          })
+      );
+      totalSkipped += chunk.length - toEmbed.length;
+
+      if (toEmbed.length === 0) continue;
+
       const chunkEmbeddings = await Promise.all(
-        chunk.map(async (query) => ({
+        toEmbed.map(async (query) => ({
           query,
           embedding: await getEmbedding(query),
         }))
@@ -112,7 +169,7 @@ export async function syncCatalogEmbeddings(): Promise<CatalogSyncSummary> {
   }
 
   // Additional labeled queries (e.g., 25k rows) stored under ai-categories.json:data
-  if (aiCategoryQueries.length > 0) {
+  if (!skipLabeledData && aiCategoryQueries.length > 0) {
     console.log(`Embedding labeled dataset queries: ${aiCategoryQueries.length}`);
   }
 
@@ -140,8 +197,20 @@ export async function syncCatalogEmbeddings(): Promise<CatalogSyncSummary> {
     if (normalized.length === 0) continue;
     totalExampleQueries += normalized.length;
 
+    const toEmbed = normalized.filter(
+      (row) =>
+        !isAlreadyStored({
+          categoryKey: row.categoryKey,
+          sourceType: 'EXAMPLE',
+          sourceText: row.query,
+        })
+    );
+    totalSkipped += normalized.length - toEmbed.length;
+
+    if (toEmbed.length === 0) continue;
+
     const chunkEmbeddings = await Promise.all(
-      normalized.map(async (row) => ({
+      toEmbed.map(async (row) => ({
         row,
         embedding: await getEmbedding(row.query),
       }))
@@ -173,5 +242,6 @@ export async function syncCatalogEmbeddings(): Promise<CatalogSyncSummary> {
     totalCategories: aiCategories.length,
     totalExampleQueries,
     totalEmbeddingsStored,
+    totalSkipped,
   };
 }
