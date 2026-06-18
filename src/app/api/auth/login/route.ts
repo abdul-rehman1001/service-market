@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import { setPreferredModeCookie } from '@/lib/cookies';
 import { resolveInitialActiveMode } from '@/lib/auth';
 import { establishAuthSession } from '@/lib/session';
+import { isBlockedAccountStatus } from '@/lib/accountAccess';
 
 export async function POST(req: NextRequest) {
   const { email, password, rememberMe } = await req.json();
@@ -25,11 +26,12 @@ export async function POST(req: NextRequest) {
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
 
-  if (user.status === 'SUSPENDED') {
-    return NextResponse.json(
-      { error: 'Your account is suspended. Please contact the Servizo team for further details.' },
-      { status: 403 }
-    );
+  if (user.role !== 'ADMIN' && isBlockedAccountStatus(user.status)) {
+    const message =
+      user.status === 'DELETED'
+        ? 'This account has been deleted. Please contact the Servizo team if you believe this is a mistake.'
+        : 'Your account is suspended. Please contact the Servizo team for further details.';
+    return NextResponse.json({ error: message }, { status: 403 });
   }
 
   if (user.role !== 'ADMIN' && !user.emailVerified) {

@@ -104,7 +104,10 @@ export default function UserDetailsPage() {
     setActionLoading(true);
     try {
       const res = await authenticatedFetch(`/api/admin/users/${user.id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete user");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to delete user");
+      }
       router.push("/admin/users");
     } catch (err: any) {
       setError(err.message);
@@ -363,8 +366,10 @@ export default function UserDetailsPage() {
           <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl space-y-4">
             <h3 className="text-lg font-semibold text-red-600">Delete User</h3>
             <p className="text-sm text-slate-600">
-              Are you sure you want to permanently delete <strong>{user.firstName} {user.lastName}</strong>?
-              This action cannot be undone. A confirmation email will be sent to the user.
+              Are you sure you want to delete <strong>{user.firstName} {user.lastName}</strong>?
+              This action cannot be undone. Any of their active bookings will be cancelled and
+              both parties notified by email. Past booking history is preserved for the other
+              parties.
             </p>
             <div className="flex justify-end gap-3">
               <button

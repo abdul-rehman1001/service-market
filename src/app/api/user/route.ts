@@ -3,7 +3,12 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthFromRequest } from '@/lib/auth';
-import { setPreferredModeCookie, setSessionModeCookie } from '@/lib/cookies';
+import {
+  clearAuthCookies,
+  setPreferredModeCookie,
+  setSessionModeCookie,
+} from '@/lib/cookies';
+import { isBlockedAccountStatus } from '@/lib/accountAccess';
 
 // GET /api/user — get the current logged-in user's basic info
 export async function GET(req: NextRequest) {
@@ -21,6 +26,7 @@ export async function GET(req: NextRequest) {
         lastName: true,
         email: true,
         role: true,
+        status: true,
         profileImage: true,
         providerProfile: {
           select: {
@@ -33,6 +39,17 @@ export async function GET(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Account was suspended/deleted during an active session: force logout by
+    // clearing cookies so the client drops to a guest state immediately.
+    if (user.role !== 'ADMIN' && isBlockedAccountStatus(user.status)) {
+      const res = NextResponse.json(
+        { error: 'ACCOUNT_BLOCKED' },
+        { status: 401 }
+      );
+      clearAuthCookies(res);
+      return res;
     }
 
     const hasProviderProfile = Boolean(user.providerProfile);

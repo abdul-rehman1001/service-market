@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
-import { revokeAllUserRefreshTokens } from '@/lib/session';
+import { deactivateUserAccount } from '@/lib/admin/account-deactivation';
 
 /**
  * PATCH /api/admin/users/:id/status
@@ -52,16 +52,46 @@ export async function PATCH(
 
     const user = await prisma.user.findUnique({
       where: { id },
-      select: { id: true, status: true },
+      select: { id: true, role: true, status: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const updated = await prisma.user.update({
+    if (user.role === 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Admin account status cannot be changed' },
+        { status: 400 }
+      );
+    }
+
+    // A deleted account is terminal — it cannot be re-activated or suspended.
+    if (user.status === 'DELETED') {
+      return NextResponse.json(
+        { error: 'This account has been deleted and cannot be modified' },
+        { status: 400 }
+      );
+    }
+
+    let cancelledBookings = 0;
+
+    if (status === 'SUSPENDED') {
+      // Cancels active bookings (both seeker & provider sides), revokes sessions,
+      // and notifies both parties + the suspended user.
+      const result = await deactivateUserAccount(id, { mode: 'SUSPENDED' });
+      cancelledBookings = result.cancelledBookings;
+    } else {
+      // Reactivation only flips the status back; previously cancelled bookings
+      // are not restored.
+      await prisma.user.update({
+        where: { id },
+        data: { status: 'ACTIVE' },
+      });
+    }
+
+    const updated = await prisma.user.findUnique({
       where: { id },
-      data: { status },
       select: {
         id: true,
         firstName: true,
@@ -71,13 +101,10 @@ export async function PATCH(
       },
     });
 
-    if (status === 'SUSPENDED') {
-      await revokeAllUserRefreshTokens(id);
-    }
-
     return NextResponse.json({
       message: `User ${status === 'SUSPENDED' ? 'suspended' : 'activated'} successfully`,
       user: updated,
+      ...(status === 'SUSPENDED' ? { cancelledBookings } : {}),
     });
   } catch (error: any) {
     console.error('Error updating user status:', error);

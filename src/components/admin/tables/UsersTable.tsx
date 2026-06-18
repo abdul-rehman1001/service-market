@@ -375,8 +375,9 @@ export default function UsersTable({
               </h3>
             </div>
             <p className="text-sm text-[#6B7280]">
-              Are you sure you want to permanently delete this user? This action cannot be
-              undone. A confirmation email will be sent to the user.
+              Are you sure you want to delete this user? This action cannot be undone. Any
+              of their active bookings will be cancelled and both parties notified by email.
+              Past booking history is preserved for the other parties.
             </p>
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
               <button

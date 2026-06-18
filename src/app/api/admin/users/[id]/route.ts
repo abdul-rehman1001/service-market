@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
-import { sendEmail } from '@/lib/email';
+import { deactivateUserAccount } from '@/lib/admin/account-deactivation';
 
 /**
  * GET /api/admin/users/:id
@@ -94,7 +94,13 @@ export async function GET(
 
 /**
  * DELETE /api/admin/users/:id
- * Permanently delete a user account and send confirmation email (Admin only)
+ * Deactivate (soft-delete) a user account (Admin only).
+ *
+ * Marks the account as DELETED rather than removing the row, so the booking
+ * history of any provider/seeker the user interacted with stays intact. Any
+ * still-active bookings are cancelled, both parties are notified by email +
+ * push, and all sessions are revoked. Deleted users are hidden from the admin
+ * list and can no longer sign in.
  */
 export async function DELETE(
   req: NextRequest,
@@ -129,42 +135,37 @@ export async function DELETE(
       );
     }
 
-    // Fetch user before deletion for email
     const user = await prisma.user.findUnique({
       where: { id },
-      select: { email: true, firstName: true, lastName: true },
+      select: { id: true, role: true, status: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Delete the user (cascade will handle related records)
-    await prisma.user.delete({ where: { id } });
-
-    // Send deletion confirmation email
-    try {
-      await sendEmail(
-        user.email,
-        'Account Deleted – Service Market',
-        `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h2 style="color: #dc2626;">Account Deleted</h2>
-          <p>Dear ${user.firstName} ${user.lastName},</p>
-          <p>Your account on <strong>Service Market</strong> has been permanently deleted by an administrator.</p>
-          <p>All your data, including profile information, bookings, and reviews, has been removed from our platform.</p>
-          <p>If you believe this was done in error, please contact our support team.</p>
-          <br/>
-          <p style="color: #6b7280; font-size: 0.875rem;">– Service Market Team</p>
-        </div>
-        `
+    if (user.role === 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Admin accounts cannot be deleted' },
+        { status: 400 }
       );
-    } catch (emailError) {
-      console.error('Failed to send deletion email:', emailError);
-      // Don't fail the request if email fails
     }
 
-    return NextResponse.json({ message: 'User permanently deleted' });
+    if (user.status === 'DELETED') {
+      return NextResponse.json(
+        { error: 'User is already deleted' },
+        { status: 400 }
+      );
+    }
+
+    const { cancelledBookings } = await deactivateUserAccount(id, {
+      mode: 'DELETED',
+    });
+
+    return NextResponse.json({
+      message: 'User account deleted',
+      cancelledBookings,
+    });
   } catch (error: any) {
     console.error('Error deleting user:', error);
     return NextResponse.json(

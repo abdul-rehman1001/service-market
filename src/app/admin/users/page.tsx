@@ -143,7 +143,8 @@ export default function AdminUsersPage() {
         return;
       }
       if (!res.ok) {
-        setError("Failed to delete user");
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Failed to delete user");
         return;
       }
       fetchUsers(pagination.page);
