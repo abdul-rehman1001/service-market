@@ -11,8 +11,8 @@ import ImageUploader from '@/components/auth/ImageUploader';
 import Input from '@/components/auth/Input';
 import PasswordInput from '@/components/auth/PasswordInput';
 import PasswordRequirements from '@/components/auth/PasswordRequirements';
+import PakistanPhoneInput from '@/components/auth/PakistanPhoneInput';
 import {
-  formatPakistanPhoneInput,
   normalizeAddress,
   normalizePakistanPhone,
   validateAddress,
@@ -21,7 +21,6 @@ import {
   validateLastName,
   validatePakistanPhone,
   validatePassword,
-  PAKISTAN_PHONE_LOCAL_LENGTH,
 } from '@/lib/validation/authValidation';
 import { cn } from '@/lib/utils';
 
@@ -158,13 +157,6 @@ export default function RegisterProvider() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    if (name === 'phone') {
-      const formattedPhone = formatPakistanPhoneInput(value);
-      setForm({ ...form, phone: formattedPhone });
-      updateFieldValidation('phone', formattedPhone, touchedFields.phone);
-      return;
-    }
-
     setForm({ ...form, [name]: value });
 
     if (
@@ -176,6 +168,16 @@ export default function RegisterProvider() {
     ) {
       updateFieldValidation(name, value, touchedFields[name]);
     }
+  };
+
+  const handlePhoneChange = (phone: string) => {
+    setForm({ ...form, phone });
+    updateFieldValidation('phone', phone, touchedFields.phone);
+  };
+
+  const handlePhoneBlur = () => {
+    setTouchedFields((prev) => ({ ...prev, phone: true }));
+    updateFieldValidation('phone', form.phone, true);
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -356,23 +358,14 @@ export default function RegisterProvider() {
           {fieldErrors.email ? (
             <p className="-mt-2 text-sm text-[#EF4444]">{fieldErrors.email}</p>
           ) : null}
-          <Input
-            placeholder="03001234567"
+          <PakistanPhoneInput
             name="phone"
-            type="tel"
-            inputMode="numeric"
-            maxLength={PAKISTAN_PHONE_LOCAL_LENGTH}
-            pattern="03[0-9]{9}"
             value={form.phone}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            autoComplete="tel"
+            onChange={handlePhoneChange}
+            onBlur={handlePhoneBlur}
             aria-invalid={Boolean(fieldErrors.phone)}
             required
           />
-          <p className="-mt-2 text-xs text-[#6B7280]">
-            Enter 11-digit Pakistan mobile number starting with 03
-          </p>
           {fieldErrors.phone ? (
             <p className="-mt-2 text-sm text-[#EF4444]">{fieldErrors.phone}</p>
           ) : null}

@@ -91,70 +91,96 @@ export function validatePassword(password: string): ValidationResult {
   return { isValid: true };
 }
 
-/** Pakistan mobile local format: 03XX XXXXXXX (11 digits) */
-export const PAKISTAN_PHONE_LOCAL_LENGTH = 11;
-const PAKISTAN_PHONE_LOCAL_REGEX = /^03\d{9}$/;
+/** Digits the user enters after the fixed +92 prefix (e.g. 3001234567). */
+export const PAKISTAN_PHONE_NATIONAL_LENGTH = 10;
+
+const PAKISTAN_PHONE_NATIONAL_REGEX = /^3\d{9}$/;
 
 /** Stored in DB as E.164: +923XXXXXXXXX */
 const PAKISTAN_MOBILE_E164_REGEX = /^\+923\d{9}$/;
 
 /**
- * Keeps only digits and caps length for the registration input field.
- * Users must enter the local format: 03XXXXXXXXX
+ * Normalizes user input to the national suffix (10 digits, leading 3).
+ * Strips non-digits and common paste patterns (03…, 92…, +92…).
  */
 export function formatPakistanPhoneInput(value: string): string {
-  return value.replace(/\D/g, '').slice(0, PAKISTAN_PHONE_LOCAL_LENGTH);
+  let digits = value.replace(/\D/g, '');
+
+  if (digits.startsWith('92') && digits.length > PAKISTAN_PHONE_NATIONAL_LENGTH) {
+    digits = digits.slice(2);
+  }
+
+  if (digits.startsWith('0')) {
+    digits = digits.slice(1);
+  }
+
+  return digits.slice(0, PAKISTAN_PHONE_NATIONAL_LENGTH);
 }
 
 /**
- * Converts local format (03001234567) to E.164 (+923001234567) for storage.
- * Call only after validatePakistanPhone passes.
+ * Converts user suffix or legacy formats to E.164 (+923XXXXXXXXX) for storage.
  */
 export function normalizePakistanPhone(phone: string): string {
-  const digits = formatPakistanPhoneInput(phone);
-  return `+92${digits.slice(1)}`;
+  const trimmed = phone.trim();
+
+  if (PAKISTAN_MOBILE_E164_REGEX.test(trimmed)) {
+    return trimmed;
+  }
+
+  const digits = formatPakistanPhoneInput(trimmed);
+  return `+92${digits}`;
 }
 
 export function validatePakistanPhone(phone: string): ValidationResult {
-  const digits = formatPakistanPhoneInput(phone);
+  const trimmed = phone.trim();
+
+  if (!trimmed) {
+    return { isValid: false, error: 'Phone number is required' };
+  }
+
+  // Full E.164 (e.g. from API or normalized submit payload)
+  if (trimmed.startsWith('+')) {
+    if (!PAKISTAN_MOBILE_E164_REGEX.test(trimmed)) {
+      return {
+        isValid: false,
+        error: 'Enter a valid Pakistan mobile number (e.g. 300 1234567)',
+      };
+    }
+    return { isValid: true };
+  }
+
+  const digits = formatPakistanPhoneInput(trimmed);
 
   if (!digits) {
     return { isValid: false, error: 'Phone number is required' };
   }
 
-  if (digits.length < PAKISTAN_PHONE_LOCAL_LENGTH) {
+  if (digits.length < PAKISTAN_PHONE_NATIONAL_LENGTH) {
     return {
       isValid: false,
-      error: `Mobile number must be exactly ${PAKISTAN_PHONE_LOCAL_LENGTH} digits`,
+      error: `Enter all ${PAKISTAN_PHONE_NATIONAL_LENGTH} digits after +92`,
     };
   }
 
-  if (digits.length > PAKISTAN_PHONE_LOCAL_LENGTH) {
+  if (!digits.startsWith('3')) {
     return {
       isValid: false,
-      error: `Mobile number cannot be more than ${PAKISTAN_PHONE_LOCAL_LENGTH} digits`,
+      error: 'Mobile number must start with 3 (e.g. 300 1234567)',
     };
   }
 
-  if (!digits.startsWith('03')) {
+  if (!PAKISTAN_PHONE_NATIONAL_REGEX.test(digits)) {
     return {
       isValid: false,
-      error: 'Mobile number must start with 03 (e.g. 03001234567)',
+      error: 'Enter a valid Pakistan mobile number (e.g. 300 1234567)',
     };
   }
 
-  if (!PAKISTAN_PHONE_LOCAL_REGEX.test(digits)) {
-    return {
-      isValid: false,
-      error: 'Enter a valid Pakistan mobile number (03001234567)',
-    };
-  }
-
-  const e164 = normalizePakistanPhone(digits);
+  const e164 = `+92${digits}`;
   if (!PAKISTAN_MOBILE_E164_REGEX.test(e164)) {
     return {
       isValid: false,
-      error: 'Enter a valid Pakistan mobile number (03001234567)',
+      error: 'Enter a valid Pakistan mobile number (e.g. 300 1234567)',
     };
   }
 
