@@ -90,7 +90,7 @@ export default function HomePage() {
         categoryName,
       });
 
-      // Drive FeaturedProviders filtering (same UX as Categories section)
+      // Drive FeaturedProviders filtering 
       window.dispatchEvent(
         new CustomEvent("filterProviders", {
           detail: {

@@ -23,7 +23,7 @@ export const providers: Provider[] = [
   { id: 3, name: "Mike Ross", role: "Personal Trainer", rating: 4.8, reviews: 210, description: "Certified trainer focused on strength conditioning and personalized fitness programs.", image: landingImages.allInOne },
 ];
 
-// Subcategories by category
+
 export const categoriesData: Record<string, Subcategory[]> = {
   Plumbing: [
     { id: 1, name: "Residential Plumbing" },

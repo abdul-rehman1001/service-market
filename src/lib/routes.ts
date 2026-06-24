@@ -24,10 +24,8 @@ const GUEST_ONLY_PREFIXES = [
   '/register',
   '/forgot-password',
   '/reset-password',
-  '/verify-otp',
   '/verify-email',
   '/verify-registration',
-  '/verify-otp-registration',
   '/verify-email-registration',
 ] as const;
 

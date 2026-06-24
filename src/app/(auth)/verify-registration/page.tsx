@@ -16,7 +16,7 @@ function VerifyRegistrationContent() {
     if (userId) qs.set('userId', userId);
     if (emailToken) qs.set('emailToken', emailToken);
 
-    // This page used to include phone OTP. It now redirects to the email verification page.
+  
     const url = qs.toString()
       ? `/verify-email-registration?${qs.toString()}`
       : '/verify-email-registration';

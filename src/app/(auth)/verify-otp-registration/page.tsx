@@ -22,7 +22,7 @@ function VerifyOtpContent() {
           <Phone size={48} className="mx-auto text-emerald-600 mb-4" />
           <h2 className="text-3xl font-bold mb-2">Phone Verification Disabled</h2>
           <p className="text-gray-600 text-sm">
-            Phone OTP verification has been removed. If you’ve verified your email, you can sign in.
+            If you’ve verified your email, you can sign in.
           </p>
           <p className="text-gray-500 text-sm mt-2">Redirecting to login…</p>
         </div>
